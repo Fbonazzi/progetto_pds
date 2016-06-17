@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:KnightElfServer">
-    <Viewbox x:Key="SettingsIcon" Width="24" Height="24" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+    <Viewbox x:Key="SettingsIcon" Width="16" Height="16" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
         <Rectangle Width="24" Height="24">
             <Rectangle.Fill>
                 <DrawingBrush>
