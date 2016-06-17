@@ -36,7 +36,7 @@
             </Rectangle.Fill>
         </Rectangle>
     </Viewbox>
-    <Viewbox x:Key="DisconnectIcon" Width="24" Height="24" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+    <Viewbox x:Key="DisconnectIcon" Width="22" Height="22" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
         <Rectangle Width="24" Height="24">
             <Rectangle.Fill>
                 <DrawingBrush>
