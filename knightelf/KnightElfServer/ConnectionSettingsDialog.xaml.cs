@@ -22,6 +22,14 @@ namespace KnightElfServer
         public ConnectionSettingsDialog()
         {
             InitializeComponent();
+
+            //TODO: Populate the ListBox with feasible IPs
+
+        }
+
+        private void btnDialogSave_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = true;
         }
     }
 }

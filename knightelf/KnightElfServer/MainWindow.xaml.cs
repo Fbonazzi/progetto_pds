@@ -27,7 +27,11 @@ namespace KnightElfServer
 
         private void btnSettings_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Hello, world!", "KnightElf ServerApp");
+            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog();
+            if(cSettingsDlg.ShowDialog() == true)
+            {
+                //TODO: save data, show IP
+            }
         }
     }
 }
