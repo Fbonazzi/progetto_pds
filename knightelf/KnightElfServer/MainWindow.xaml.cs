@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using KnightElfLibrary;
+using System.IO;
 
 namespace KnightElfServer
 {
@@ -23,14 +25,26 @@ namespace KnightElfServer
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Connected to Console.Out allows to print in a TextBox instead than
+        /// on the console.
+        /// </summary>
+        private TextBoxWriter tbwLogger;
+
         //Connection settings
         private IPAddress IPaddr;
         private int port = 50000;
         private string password ="";
+        
 
         public MainWindow()
         {
             InitializeComponent();
+
+            // Set console output to logger TextBox
+            tbwLogger = new TextBoxWriter(tbLogger);
+            Console.SetOut(tbwLogger);;
+
         }
 
         private void btnSettings_Click(object sender, RoutedEventArgs e)
@@ -45,6 +59,7 @@ namespace KnightElfServer
                 //update UI
                 btnConnect.IsEnabled = true;
                 labelIPaddr.Content = cSettingsDlg.IPaddr;
+                Console.WriteLine("Connection settings saved.");
             }
         }
     }
