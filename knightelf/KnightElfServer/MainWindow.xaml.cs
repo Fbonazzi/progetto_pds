@@ -20,18 +20,21 @@ namespace KnightElfServer
     /// </summary>
     public partial class MainWindow : Window
     {
+        ConnectionSettingsDialog cSettingsDlg;
+
         public MainWindow()
         {
             InitializeComponent();
+            cSettingsDlg = new ConnectionSettingsDialog();
         }
 
         private void btnSettings_Click(object sender, RoutedEventArgs e)
         {
-            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog();
             if(cSettingsDlg.ShowDialog() == true)
             {
                 //TODO: show IP?
                 btnConnect.IsEnabled = true;
+                labelIPaddr.Content = cSettingsDlg.IPaddr;
             }
         }
     }
