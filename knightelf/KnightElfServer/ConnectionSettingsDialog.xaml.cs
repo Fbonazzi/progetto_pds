@@ -38,7 +38,7 @@ namespace KnightElfServer
         {
             if (lbIPAddr.SelectedItem != null &&
                 int.TryParse(tbPort.Text, out _port) &&
-                pswBox.Password != null                 )
+                pswBox.Password != ""                 )
             {
                 _IPaddr = lbIPAddr.SelectedItem.ToString();
                 _password = pswBox.Password;
