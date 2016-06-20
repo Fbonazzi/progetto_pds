@@ -23,15 +23,24 @@ namespace KnightElfServer
         private string _password, _IPaddr;
         private int _port;
 
-        public ConnectionSettingsDialog()
+        public ConnectionSettingsDialog(string IPaddr, int port, string password)
         {
             InitializeComponent();
+
+            _IPaddr = IPaddr;
+            _port = port;
+            _password = password;
 
             //TODO: Populate the ListBox with feasible IPs
             IPaddrList.Add("128.1.1.4");
             IPaddrList.Add("128.1.1.34");
 
             lbIPAddr.ItemsSource = IPaddrList;
+
+            //Set previous settings in the UI
+            lbIPAddr.SelectedIndex = lbIPAddr.Items.IndexOf(IPaddr);
+            tbPort.Text = _port.ToString();
+            pswBox.Password = _password;
         }
 
         private void btnDialogSave_Click(object sender, RoutedEventArgs e)
