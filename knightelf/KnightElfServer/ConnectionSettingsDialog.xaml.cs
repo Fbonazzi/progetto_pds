@@ -1,16 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace KnightElfServer
 {
@@ -19,11 +11,11 @@ namespace KnightElfServer
     /// </summary>
     public partial class ConnectionSettingsDialog : Window
     {
-        private List<String> IPaddrList = new List<String>(); //change to ObservableCollection<string> if you want to change it after window creation
-        private string _password, _IPaddr;
+        private IPAddress _IPaddr;
         private int _port;
+        private string _password;
 
-        public ConnectionSettingsDialog(string IPaddr, int port, string password)
+        public ConnectionSettingsDialog(IPAddress IPaddr, int port, string password)
         {
             InitializeComponent();
 
@@ -31,14 +23,11 @@ namespace KnightElfServer
             _port = port;
             _password = password;
 
-            //TODO: Populate the ListBox with feasible IPs
-            IPaddrList.Add("128.1.1.4");
-            IPaddrList.Add("128.1.1.34");
-
-            lbIPAddr.ItemsSource = IPaddrList;
+            //Populate the ListBox with feasible  IPv4 addresses
+            lbIPAddr.ItemsSource = LocalAddress();
 
             //Set previous settings in the UI
-            lbIPAddr.SelectedIndex = lbIPAddr.Items.IndexOf(IPaddr);
+            lbIPAddr.SelectedIndex = lbIPAddr.Items.IndexOf(_IPaddr);
             tbPort.Text = _port.ToString();
             pswBox.Password = _password;
         }
@@ -49,7 +38,7 @@ namespace KnightElfServer
                 int.TryParse(tbPort.Text, out _port) &&
                 pswBox.Password != ""                 )
             {
-                _IPaddr = lbIPAddr.SelectedItem.ToString();
+                _IPaddr = (IPAddress) lbIPAddr.SelectedItem;
                 _password = pswBox.Password;
 
                 DialogResult = true;
@@ -65,8 +54,20 @@ namespace KnightElfServer
             }
         }
 
-        public string IPaddr { get { return _IPaddr; } }
+        public IPAddress IPaddr { get { return _IPaddr; } }
         public int Port { get { return _port; } }
         public string Password { get { return _password; } }
+
+
+        /// <summary>
+        /// Retrieve host's IPv4 addresses.
+        /// </summary>
+        /// <returns>An array containing all the corresponding IPAddress objects</returns>
+        private IPAddress[] LocalAddress()
+        {
+            IPHostEntry host;
+            host = Dns.GetHostEntry(Dns.GetHostName());
+            return Array.FindAll(host.AddressList, ip =>ip.AddressFamily == AddressFamily.InterNetwork);
+        }
     }
 }

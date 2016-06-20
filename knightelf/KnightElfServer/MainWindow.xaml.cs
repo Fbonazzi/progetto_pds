@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
+using System.Net.NetworkInformation;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -20,7 +23,8 @@ namespace KnightElfServer
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string IPaddr = "0.0.0.0";
+        //Connection settings
+        private IPAddress IPaddr;
         private int port = 50000;
         private string password ="";
 
@@ -38,7 +42,7 @@ namespace KnightElfServer
                 IPaddr = cSettingsDlg.IPaddr;
                 port = cSettingsDlg.Port;
                 password = cSettingsDlg.Password;
-
+                //update UI
                 btnConnect.IsEnabled = true;
                 labelIPaddr.Content = cSettingsDlg.IPaddr;
             }
