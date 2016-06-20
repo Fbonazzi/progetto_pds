@@ -30,7 +30,8 @@ namespace KnightElfServer
             ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog();
             if(cSettingsDlg.ShowDialog() == true)
             {
-                //TODO: save data, show IP
+                //TODO: show IP?
+                btnConnect.IsEnabled = true;
             }
         }
     }

@@ -18,8 +18,8 @@
         <DockPanel>
             <ToolBarPanel DockPanel.Dock="Top" Orientation="Horizontal" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
                 <Button x:Name="btnSettings" Content="{StaticResource SettingsIcon}" Height="28" BorderBrush="{x:Null}" Width="28" VerticalAlignment="Center" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" Click="btnSettings_Click"/>
-                <Button x:Name="Connect" Content="{StaticResource ConnectIcon}" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center" Width="28" BorderBrush="{x:Null}" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
-                <Button x:Name="Disconnect" Content="{StaticResource DisconnectIcon}" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center" Width="28" BorderBrush="{x:Null}" RenderTransformOrigin="3.773,0.433" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
+                <Button x:Name="btnConnect" Content="{StaticResource ConnectIcon}" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center" Width="28" BorderBrush="{x:Null}" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" IsEnabled="False"/>
+                <Button x:Name="btnDisconnect" Content="{StaticResource DisconnectIcon}" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center" Width="28" BorderBrush="{x:Null}" RenderTransformOrigin="3.773,0.433" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" IsEnabled="False"/>
             </ToolBarPanel>
 
             <StatusBar DockPanel.Dock="Bottom" Grid.Row="3" Grid.ColumnSpan="2" Height="20" FontSize="10" FlowDirection="RightToLeft">
