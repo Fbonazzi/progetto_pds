@@ -25,7 +25,9 @@ namespace KnightElfServer
     /// </summary>
     public partial class MainWindow : Window
     {
-        private DataModel _dataModel = new DataModel() {
+
+        // View Model
+        private ViewModel _viewModel = new ViewModel() {
             // Default connection parameters 
             ConnParams = new ConnectionParams() {
                 IPaddr = null,
@@ -34,10 +36,6 @@ namespace KnightElfServer
             }
         };
 
-        /// <summary>
-        /// Connected to Console.Out allows to print in a TextBox instead than
-        /// on the console.
-        /// </summary>
         private TextBoxWriter tbwLogger;
 
         
@@ -45,48 +43,12 @@ namespace KnightElfServer
         {
             InitializeComponent();
 
-            // bind the Date to the UI
-            DataContext = _dataModel;
-
             // Set console output to logger TextBox
             tbwLogger = new TextBoxWriter(tbLogger);
-            Console.SetOut(tbwLogger);;
+            Console.SetOut(tbwLogger);
 
-        }
-
-        private void btnSettings_Click(object sender, RoutedEventArgs e)
-        {
-            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog(_dataModel.ConnParams);
-            if (cSettingsDlg.ShowDialog() == true)
-            {
-                //get settings
-                _dataModel.ConnParams = cSettingsDlg.ConnectionParams;
-                //update UI
-                btnConnect.IsEnabled = true;
-                //labelIPaddr.Content = connectionParams.IPaddr;
-                Console.WriteLine("Connection settings saved.");
-            }
-        }
-
-        private void btnConnect_Click(object sender, RoutedEventArgs e)
-        {
-            Console.WriteLine("Waiting for client connection...");
-
-            //TODO: maybe it should be managed with WPF commands?
-            btnDisconnect.IsEnabled = true;
-            btnConnect.IsEnabled = false;
-            btnSettings.IsEnabled = false;
-
-
-        }
-
-        private void btnDisconnect_Click(object sender, RoutedEventArgs e)
-        {
-            Console.WriteLine("Closing connection...");
-
-            btnConnect.IsEnabled = true;
-            btnSettings.IsEnabled = true;
-            btnDisconnect.IsEnabled = false;
+            // bind the Date to the UI
+            DataContext = _viewModel;
         }
     }
 }
