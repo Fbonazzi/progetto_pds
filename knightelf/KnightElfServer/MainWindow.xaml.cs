@@ -25,17 +25,6 @@ namespace KnightElfServer
     /// </summary>
     public partial class MainWindow : Window
     {
-
-        // View Model
-        private ViewModel _viewModel = new ViewModel() {
-            // Default connection parameters 
-            ConnParams = new ConnectionParams() {
-                IPaddr = null,
-                Port = 50000,
-                Password = ""
-            }
-        };
-
         private TextBoxWriter tbwLogger;
 
         
@@ -48,7 +37,7 @@ namespace KnightElfServer
             Console.SetOut(tbwLogger);
 
             // bind the Date to the UI
-            DataContext = _viewModel;
+            DataContext = new ViewModel();
         }
     }
 }

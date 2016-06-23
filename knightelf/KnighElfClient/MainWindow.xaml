@@ -6,6 +6,15 @@
         xmlns:local="clr-namespace:KnighElfClient"
         mc:Ignorable="d"
         Title="MainWindow" Height="500" Width="800">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Dictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
     <Grid>
         <DockPanel x:Name="dockPanel" Margin="0">
             <ToolBarPanel DockPanel.Dock="Top" MinHeight="25"
@@ -29,18 +38,36 @@
 
                 <Expander IsExpanded="True" ExpandDirection="Left" Margin="0,0,0.2,0">
                     <GroupBox Header="Log console"
-                          ClipToBounds="True" Margin="10,54,3.2,9.8" 
-                          BorderThickness="0" FontSize="10" MinWidth="200">
+                          Margin="10,54,3.2,10" 
+                          BorderThickness="0" MinWidth="200">
                         <Border BorderThickness="1" BorderBrush="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
                             Margin="10,10,-2.8,3">
                             <ScrollViewer>
-                                <TextBox x:Name="tbLogger" Background="Black" Foreground="White" TextWrapping="Wrap"/>
+                                <TextBox x:Name="tbLogger" FontSize="10" Background="Black" Foreground="White" TextWrapping="Wrap"/>
                             </ScrollViewer>
                         </Border>
                     </GroupBox>
                 </Expander>
-                <ListBox x:Name="listBox" Grid.Column="2" Margin="0"/>
                 
+                <GroupBox Grid.Column="1"
+                          Header="Server Connections"
+                          Margin="10,54,10,10" 
+                          BorderThickness="0">
+                <ListBox x:Name="lbServers" Margin="10" >
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,0,5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Label Content="{Binding ConnectionParams.IPAddr}" />
+                                <Label Grid.Row="1" Content="{Binding ConnectionParams.Port}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                </GroupBox>
             </Grid>
 
         </DockPanel>

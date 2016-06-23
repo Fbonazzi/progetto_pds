@@ -1,5 +1,6 @@
 ﻿using KnightElfLibrary;
 using System;
+using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -23,6 +24,13 @@ namespace KnightElfServer
 
         public ViewModel()
         {
+            // default connection parameters
+            ConnParams = new ConnectionParams()
+            {
+                IPaddr = IPAddress.Parse("0.0.0.0"),
+                Port = 50000,
+                Password = ""
+            };
 
             // Create State Machine and Commands
             SM = new StateMachine(

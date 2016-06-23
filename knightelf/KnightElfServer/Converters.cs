@@ -22,19 +22,6 @@ namespace KnightElfServer
         }
     }
 
-    class IPtoStringConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            System.Net.IPAddress ip = value as System.Net.IPAddress;
-            return (ip == null) ? "0.0.0.0" : ip.ToString();
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
 
     class SMDisconnectConverter : IMultiValueConverter
     {

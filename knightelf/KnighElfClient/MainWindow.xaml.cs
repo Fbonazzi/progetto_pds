@@ -29,6 +29,8 @@ namespace KnighElfClient
 
             _viewModel = new ViewModel();
             DataContext = _viewModel;
+
+            lbServers.ItemsSource = _viewModel.Connections;
         }
     }
 }

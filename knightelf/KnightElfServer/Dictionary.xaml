@@ -1,7 +1,9 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:KnightElfServer">
+
     <local:SMDisconnectConverter x:Key="SMDisconnectConverter" />
+
     <Viewbox x:Key="SettingsIcon" Width="16" Height="16" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
         <Rectangle Width="24" Height="24">
             <Rectangle.Fill>
