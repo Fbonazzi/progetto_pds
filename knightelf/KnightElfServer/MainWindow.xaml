@@ -14,6 +14,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Dictionary.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <local:IPtoStringConverter x:Key="IPtoStringConverter"/>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -45,7 +46,9 @@
             <StatusBar DockPanel.Dock="Bottom" Grid.Row="3" Grid.ColumnSpan="2" Height="20" FontSize="10" FlowDirection="RightToLeft">
                 <StatusBarItem Content="{StaticResource StatusOffline}"/>
                 <Separator Background="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
-                <Label x:Name="labelIPaddr" Content="{Binding ConnParams.IPaddr}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Right" Padding="0" RenderTransformOrigin="0.492,0.534" Margin="0.5,0" FlowDirection="LeftToRight" />
+                <Label x:Name="labelPort" Content="{Binding ConnParams.Port}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Right" Padding="0" RenderTransformOrigin="0.492,0.534" Margin="0.5,0" FlowDirection="LeftToRight" />
+                <Label Content="Port:" Padding="0" FlowDirection="LeftToRight"/>
+                <Label x:Name="labelIPaddr" Content="{Binding ConnParams.IPaddr, Converter={StaticResource IPtoStringConverter}}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Right" Padding="0" RenderTransformOrigin="0.492,0.534" Margin="0.5,0" FlowDirection="LeftToRight" />
                 <Label Content="Selected IP:" Padding="0" FlowDirection="LeftToRight"/>
             </StatusBar>
 

@@ -23,7 +23,7 @@ namespace KnightElfLibrary
         {
             base.Write(value);
 
-            //Dispatcher prevents threading problems.
+            //Dispatcher prevents threading problems: text can be appended even if not in the UIThread.
             textBox.Dispatcher.BeginInvoke(new Action(() =>
             {
                 textBox.AppendText(value.ToString());

@@ -51,6 +51,8 @@ namespace KnightElfServer
 
             Configure(SMStates.Connected)
                 .SubstateOf(SMStates.WaitClientConnect)
+                // in this way going from WaitClient to Connect shouldn't fire intWaitAction
+                // since the state is the same
                 .Permit(SMTriggers.Disconnect, SMStates.Ready)
                 .OnExit(disconnectAction);     
                        

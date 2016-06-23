@@ -71,13 +71,22 @@ namespace KnightElfServer
 
         private async Task StartConnection()
         {
+            //// Sgancio il thread per gestire la connessione in entrata
+            //Connecter = new Thread(new ThreadStart(StartListen));
+            //Connecter.SetApartmentState(ApartmentState.STA);
+            //Connecter.Start();
+
+            //// Sgancio il thread che inietterà gli eventi ricevuti nella coda di sistema (se non c'è già)
+            //if (Injecter == null)
+            //{
+            //    Injecter = new Thread(new ThreadStart(Inject));
+            //    Injecter.SetApartmentState(ApartmentState.STA);
+            //    Injecter.Start();
+            //}
+
+            // Wait Client Connection
             Console.WriteLine("Waiting for client connection...");
-
-            //TODO: maybe it should be managed with WPF commands?
-            //btnDisconnect.IsEnabled = true;
-            //btnConnect.IsEnabled = false;
-            //btnSettings.IsEnabled = false;
-
+            
             //fake a long running process
             await Task.Delay(2000);
             //throw new NotImplementedException();
@@ -92,11 +101,7 @@ namespace KnightElfServer
         private void Disconnect()
         {
             Console.WriteLine("Closing connection...");
-
-            //btnConnect.IsEnabled = true;
-            //btnSettings.IsEnabled = true;
-            //btnDisconnect.IsEnabled = false;
-
+            //throw new NotImplementedException();
             Console.WriteLine("Connection closed.");
         }
         #endregion

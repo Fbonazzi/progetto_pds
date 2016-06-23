@@ -9,14 +9,25 @@ using System.Windows.Data;
 
 namespace KnightElfServer
 {
-    class StateMachineIsEnabledConverter : IValueConverter
+    class SMIconConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string state = value != null ? value.ToString() : String.Empty;
-            string targetState = parameter.ToString();
+            throw new NotImplementedException();
+        }
 
-            return state == targetState ?  true : false;
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    class IPtoStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            System.Net.IPAddress ip = value as System.Net.IPAddress;
+            return (ip == null) ? "0.0.0.0" : ip.ToString();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

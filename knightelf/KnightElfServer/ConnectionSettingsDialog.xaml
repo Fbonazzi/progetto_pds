@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:KnightElfServer"
         xmlns:KnightElfLibrary="clr-namespace:KnightElfLibrary;assembly=KnightElfLibrary" x:Class="KnightElfServer.ConnectionSettingsDialog"
         mc:Ignorable="d"
-        Title="Connection Settings" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner">
+        Title="Connection Settings" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <Window.DataContext>
         <KnightElfLibrary:ConnectionParams/>
     </Window.DataContext>
@@ -35,7 +35,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Content="Password:" Target="{Binding ElementName=pswBox}"/>
-            <PasswordBox x:Name="pswBox" ToolTip="This password will be required to client to connect to this server." MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" />
+            <PasswordBox x:Name="pswBox" ToolTip="This password will be required to client to connect to this server." MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Width="195" />
         </Grid>
         <WrapPanel HorizontalAlignment="Right" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0" VerticalAlignment="Bottom">
             <Button IsDefault="True" x:Name="btnDialogSave" Click="btnDialogSave_Click" MinWidth="60" Margin="0,0,10,0" Content="_Save"/>
