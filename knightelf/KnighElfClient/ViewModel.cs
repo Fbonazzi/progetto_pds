@@ -10,7 +10,7 @@ namespace KnighElfClient
 {
     class ViewModel
     {
-        public List<ConnectionParams> Connections { get; protected set; }
+        public List<ConnectionParams> Connections { get; set; }
 
         public ViewModel()
         {

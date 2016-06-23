@@ -67,8 +67,6 @@ namespace KnightElfServer
                                         t.Source, t.Destination, t.Trigger);
                   }
             );
-
-            
         }
 
         #region INotifyPropertyChanged implementation

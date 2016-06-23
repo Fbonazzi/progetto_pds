@@ -13,6 +13,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Dictionary.xaml"/>
+                <ResourceDictionary Source="Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
@@ -24,22 +25,13 @@
                           Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
                 <Button x:Name="btnSettings" Command="{Binding SetConnectionCommand}"
                         Content="{StaticResource SettingsIcon}"
-                        Height="28" Width="28"
-                        VerticalAlignment="Center" HorizontalAlignment="Center"
-                        BorderBrush="{x:Null}" 
-                        Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
+                        Style="{StaticResource IconBtnStyle}"/>
                 <Button x:Name="btnConnect" Command="{Binding ConnectCommand}"
                         Content="{StaticResource ConnectIcon}"
-                        Height="28" Width="28"
-                        HorizontalAlignment="Center" VerticalAlignment="Center" 
-                        BorderBrush="{x:Null}"
-                        Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
+                        Style="{StaticResource IconBtnStyle}"/>
                 <Button x:Name="btnDisconnect" Command="{Binding DisconnectCommand}"
                         Content="{StaticResource DisconnectIcon}"
-                        Height="28" Width="28"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                        BorderBrush="{x:Null}"
-                        Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
+                        Style="{StaticResource IconBtnStyle}">
                     <!--Button.Command>
                         <MultiBinding Converter="{StaticResource SMDisconnectConverter}">
                             <Binding Path="SM.State"/>
