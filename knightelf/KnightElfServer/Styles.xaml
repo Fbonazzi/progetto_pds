@@ -7,6 +7,7 @@
         <Setter Property="FontSize" Value="24" />
         <Setter Property="Height" Value="28"/>
         <Setter Property="Width" Value="28"/>
+        <Setter Property="Margin" Value="3"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="BorderBrush" Value="{x:Null}" />
@@ -14,23 +15,36 @@
 
         <Style.Triggers>
             <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Opacity" Value="50" />
+                <Setter Property="Opacity" Value="0.3" />
+                <Setter Property="BorderBrush" Value="{x:Null}" />
             </Trigger>
-            <!--Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Foreground" Value="Red" />
-            </Trigger-->
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
+                <Setter Property="BorderThickness" Value="2" />
+            </Trigger>
         </Style.Triggers>
-    </Style>
 
-    <!--Setter Property="Template">
+        <!--<Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
-                    <Button
-					IsEnabled="{TemplateBinding IsEnabled}"
-					Content="{TemplateBinding Content}"
-					Background="{TemplateBinding Background}"
-					/>
+                    <Border Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.3" />
+                            <Setter Property="BorderBrush" Value="{x:Null}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" />
+                            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
+                            <Setter Property="BorderThickness" Value="2" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
-        </-->
+        </Setter>-->
+    </Style>
+
 </ResourceDictionary>
