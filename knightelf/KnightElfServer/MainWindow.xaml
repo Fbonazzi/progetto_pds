@@ -20,19 +20,27 @@
 
     <Grid>
         <DockPanel>
-            <ToolBarPanel DockPanel.Dock="Top" Orientation="Horizontal" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
-                <Button x:Name="btnSettings" Content="{StaticResource SettingsIcon}"
+            <ToolBarPanel DockPanel.Dock="Top"
+                          Orientation="Horizontal"
+                          Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
+                <Button x:Name="btnSettings" Command="{Binding SetConnectionCommand}"
+                        Content="{StaticResource SettingsIcon}"
                         Height="28" Width="28"
-                        BorderBrush="{x:Null}" VerticalAlignment="Center"
-                        Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"
-                        Command="{Binding SetConnectionCommand}"/>
-                <Button x:Name="btnConnect" Content="{StaticResource ConnectIcon}" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center" Width="28" BorderBrush="{x:Null}" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" Command="{Binding ConnectCommand}"/>
-                <Button x:Name="btnDisconnect"
-                        Content="{StaticResource DisconnectIcon}"
-                        Height="28" Width="28" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                        BorderBrush="{x:Null}" 
+                        Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
+                <Button x:Name="btnConnect" Command="{Binding ConnectCommand}"
+                        Content="{StaticResource ConnectIcon}"
+                        Height="28" Width="28"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" 
                         BorderBrush="{x:Null}"
-                        Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"
-                        Command="{Binding DisconnectCommand}">
+                        Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
+                <Button x:Name="btnDisconnect" Command="{Binding DisconnectCommand}"
+                        Content="{StaticResource DisconnectIcon}"
+                        Height="28" Width="28"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        BorderBrush="{x:Null}"
+                        Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
                     <!--Button.Command>
                         <MultiBinding Converter="{StaticResource SMDisconnectConverter}">
                             <Binding Path="SM.State"/>
@@ -46,17 +54,24 @@
             <StatusBar DockPanel.Dock="Bottom" Grid.Row="3" Grid.ColumnSpan="2" Height="20" FontSize="10" FlowDirection="RightToLeft">
                 <StatusBarItem Content="{StaticResource StatusOffline}"/>
                 <Separator Background="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
-                <Label x:Name="labelPort" Content="{Binding ConnParams.Port}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Right" Padding="0" RenderTransformOrigin="0.492,0.534" Margin="0.5,0" FlowDirection="LeftToRight" />
+                <Label x:Name="labelPort"
+                       Content="{Binding ConnParams.Port}"
+                       VerticalContentAlignment="Stretch" HorizontalContentAlignment="Right"
+                       Padding="0" Margin="0.5,0" FlowDirection="LeftToRight" />
                 <Label Content="Port:" Padding="0" FlowDirection="LeftToRight"/>
-                <Label x:Name="labelIPaddr" Content="{Binding ConnParams.IPaddr, Converter={StaticResource IPtoStringConverter}}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Right" Padding="0" RenderTransformOrigin="0.492,0.534" Margin="0.5,0" FlowDirection="LeftToRight" />
+                <Label x:Name="labelIPaddr"
+                       Content="{Binding ConnParams.IPaddr, Converter={StaticResource IPtoStringConverter}}"
+                       VerticalContentAlignment="Stretch" HorizontalContentAlignment="Right"
+                       Padding="0" Margin="0.5,0" FlowDirection="LeftToRight" />
                 <Label Content="Selected IP:" Padding="0" FlowDirection="LeftToRight"/>
             </StatusBar>
 
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
+                
                 <GroupBox Header="Clipboard content" ClipToBounds="True" Grid.Column="1" Margin="16.8,54,10.4,9.8" FontSize="10" BorderThickness="0">
                     <Border BorderThickness="1" BorderBrush="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="10,10,3.6,3">
                         <ScrollViewer>
@@ -64,13 +79,16 @@
                         </ScrollViewer>
                     </Border>
                 </GroupBox>
-                <GroupBox ClipToBounds="True" Margin="10,54,3.2,9.8" Header="Log console" BorderThickness="0" FontSize="10">
-                    <Border BorderThickness="1" BorderBrush="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="10,10,-2.8,3">
-                        <ScrollViewer>
-                            <TextBox x:Name="tbLogger" Background="Black" Foreground="White" TextWrapping="Wrap"/>
-                        </ScrollViewer>
-                    </Border>
-                </GroupBox>
+                <Expander IsExpanded="True" ExpandDirection="Left">
+                    <!-- TODO: meh.. fa un po' cagare l'expander -->
+                        <GroupBox ClipToBounds="True" Margin="10,54,3.2,9.8" Header="Log console" BorderThickness="0" FontSize="10">
+                        <Border BorderThickness="1" BorderBrush="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="10,10,-2.8,3">
+                            <ScrollViewer MinWidth="150">
+                                <TextBox x:Name="tbLogger" Background="Black" Foreground="White" TextWrapping="Wrap"/>
+                            </ScrollViewer>
+                        </Border>
+                    </GroupBox>
+                </Expander>
             </Grid>
 
         </DockPanel>
