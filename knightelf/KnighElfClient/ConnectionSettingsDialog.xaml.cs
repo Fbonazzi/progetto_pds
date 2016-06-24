@@ -5,26 +5,21 @@ using System.Windows;
 using System.Windows.Input;
 using KnightElfLibrary;
 
-namespace KnightElfServer
+namespace KnightElfClient
 {
     /// <summary>
     /// Interaction logic for ConnectionSettingsDialog.xaml
     /// </summary>
     public partial class ConnectionSettingsDialog : Window
     {
-        private ConnectionParams _connectionParams; //TODO: add Data Binding
+        private ConnectionParams _connectionParams;
 
-        public ConnectionSettingsDialog(IPAddress IPaddr, int port, string password)
+        public ConnectionSettingsDialog()
         {
             InitializeComponent();
 
-            //Populate the ListBox with feasible  IPv4 addresses
-            lbIPAddr.ItemsSource = LocalAddress();
-
-            //Set previous settings in the UI
-            lbIPAddr.SelectedIndex = lbIPAddr.Items.IndexOf(IPaddr);
-            tbPort.Text = port.ToString();
-            pswBox.Password = password;
+            _connectionParams = new ConnectionParams();
+            DataContext = _connectionParams;
         }
 
         public ConnectionSettingsDialog(ConnectionParams connectionParams)
@@ -34,37 +29,28 @@ namespace KnightElfServer
             _connectionParams = connectionParams;
             DataContext = _connectionParams;
 
-            //Populate the ListBox with feasible  IPv4 addresses
-            lbIPAddr.ItemsSource = LocalAddress();
-
-            //Set previous settings in the UI
-            lbIPAddr.SelectedIndex = lbIPAddr.Items.IndexOf(_connectionParams.IPaddr);
-            //tbPort.Text = _connectionParams.Port.ToString();
+            // Password doesn't support data binding for security reasons
             pswBox.Password = _connectionParams.Password;
         }
 
         private void btnDialogSave_Click(object sender, RoutedEventArgs e)
         {
-            int port;
-            if (lbIPAddr.SelectedItem != null &&
-                int.TryParse(tbPort.Text, out port) &&
-                pswBox.Password != ""                 )
-            {
-                _connectionParams.IPaddr = (IPAddress) lbIPAddr.SelectedItem;
-                _connectionParams.Port = port;
-                _connectionParams.Password = pswBox.Password;
+            //try
+            //{
+            //    _connectionParams.IPaddr
+            //}
+            //int port;
+            //if (tbIPAddr.Parse != null &&
+            //    int.TryParse(tbPort.Text, out port) &&
+            //    pswBox.Password != ""                 )
+            //{
+            //    _connectionParams.IPaddr = (IPAddress) lbIPAddr.SelectedItem;
+            //    _connectionParams.Port = port;
+            //    _connectionParams.Password = pswBox.Password;
 
-                DialogResult = true;
-            }
-            else DialogResult = false;            
-        }
-
-        private void tbPort_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            if (!char.IsDigit(e.Text, e.Text.Length - 1))
-            {
-                e.Handled = true;
-            }
+            //    DialogResult = true;
+            //}
+            //else DialogResult = false;            
         }
 
         public ConnectionParams ConnectionParams{ get { return _connectionParams; } }

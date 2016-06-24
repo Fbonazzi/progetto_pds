@@ -14,19 +14,6 @@ namespace KnightElfServer
     {
         private ConnectionParams _connectionParams; //TODO: add Data Binding
 
-        public ConnectionSettingsDialog(IPAddress IPaddr, int port, string password)
-        {
-            InitializeComponent();
-
-            //Populate the ListBox with feasible  IPv4 addresses
-            lbIPAddr.ItemsSource = LocalAddress();
-
-            //Set previous settings in the UI
-            lbIPAddr.SelectedIndex = lbIPAddr.Items.IndexOf(IPaddr);
-            tbPort.Text = port.ToString();
-            pswBox.Password = password;
-        }
-
         public ConnectionSettingsDialog(ConnectionParams connectionParams)
         {
             InitializeComponent();

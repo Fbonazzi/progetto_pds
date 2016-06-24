@@ -14,7 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using KnightElfLibrary;
 
-namespace KnighElfClient
+namespace KnightElfClient
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -27,10 +27,14 @@ namespace KnighElfClient
         {
             InitializeComponent();
 
+            // Connect console output with logger TextBox
+            Console.SetOut(new TextBoxWriter(tbLogger));
+
             _viewModel = new ViewModel();
             DataContext = _viewModel;
 
-            lbServers.ItemsSource = _viewModel.Connections;
+            //Bind Connection list with ListBox
+            lbServers.ItemsSource = _viewModel.Servers;
         }
     }
 }

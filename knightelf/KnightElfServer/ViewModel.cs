@@ -68,9 +68,7 @@ namespace KnightElfServer
             {
                 //get settings
                 ConnParams = cSettingsDlg.ConnectionParams;
-                //TODO: create value conversion 
                 //update UI
-                //btnConnect.IsEnabled = true;
                 Console.WriteLine("Connection settings saved.");
                 SM.Fire(SMTriggers.SaveConnection);
             }

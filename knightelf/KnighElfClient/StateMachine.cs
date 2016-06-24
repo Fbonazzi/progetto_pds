@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Stateless;
-using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Input;
 
-namespace KnighElfClient
+namespace KnightElfClient
 {
     public enum SMStates
     {
@@ -30,7 +24,7 @@ namespace KnighElfClient
 
     class StateMachine : Stateless.StateMachine<SMStates, SMTriggers>, INotifyPropertyChanged
     {   
-        public StateMachine(Func<bool> existsServer,
+        public StateMachine(    Func<bool> existsServer,
                                 Func<bool> isConnectedServer,
                                 Action launchAddDlgAction,
                                 Action launchEditDlgAction,
@@ -62,6 +56,17 @@ namespace KnighElfClient
                 .Permit(SMTriggers.Disconnect,SMStates.ServerSelected)  //o connected?
                 .Permit(SMTriggers.NetworkError, SMStates.ServerSelected)
                 .OnExit(disconnectAction);
+
+            OnTransitioned(
+                  (t) =>
+                  {
+                      OnPropertyChanged("State");
+                      CommandManager.InvalidateRequerySuggested();
+                      //used to debug commands and UI components
+                      Debug.WriteLine("State Machine transitioned from {0} -> {1} [{2}]",
+                                        t.Source, t.Destination, t.Trigger);
+                  }
+            );
 
         }
 

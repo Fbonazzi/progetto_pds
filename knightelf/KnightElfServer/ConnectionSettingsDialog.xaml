@@ -23,11 +23,15 @@
 
         <WrapPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" Orientation="Vertical">
             <Label Content="IP Address:" Target="{Binding ElementName=lbIPAddr}" HorizontalAlignment="Left" Width="71"/>
-            <ListBox x:Name="lbIPAddr" Margin="0" MinWidth="150" MinHeight="20" />
+            <ListBox x:Name="lbIPAddr" Margin="0" MinWidth="150" MinHeight="20"/>
+            <!-- TODO: This is not the way things will be done in the MVVM model, maybe change it in future -->
+            <!--SelectedItem="{Binding IPaddr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/-->
         </WrapPanel>
         <WrapPanel Grid.Column="1" HorizontalAlignment="Right" Margin="15,25,0,0" VerticalAlignment="Center">
             <Label Target="{Binding ElementName=tbPort}"  Content="Port:"/>
-            <TextBox x:Name="tbPort" Text="{Binding Port}" TextAlignment="Right" VerticalAlignment="Center" Width="60" MinWidth="40" Margin="10,0,0,0" PreviewTextInput="tbPort_PreviewTextInput" />
+            <TextBox x:Name="tbPort" Text="{Binding Port}"
+                     PreviewTextInput="tbPort_PreviewTextInput"
+                     TextAlignment="Right" VerticalAlignment="Center" Width="60" MinWidth="40" Margin="10,0,0,0"/>
         </WrapPanel>
         <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,15,0,0">
             <Grid.ColumnDefinitions>

@@ -3,10 +3,20 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:KnightElfServer"
-        xmlns:KnightElfLibrary="clr-namespace:KnightElfLibrary;assembly=KnightElfLibrary" x:Class="KnightElfServer.ConnectionSettingsDialog"
+        xmlns:local="clr-namespace:KnightElfClient"
+        xmlns:KnightElfLibrary="clr-namespace:KnightElfLibrary;assembly=KnightElfLibrary"
+        x:Class="KnightElfClient.ConnectionSettingsDialog"
         mc:Ignorable="d"
         Title="Connection Settings" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Dictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
     <Window.DataContext>
         <KnightElfLibrary:ConnectionParams/>
     </Window.DataContext>
@@ -22,12 +32,16 @@
         </Grid.ColumnDefinitions>
 
         <WrapPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" Orientation="Vertical">
-            <Label Content="IP Address:" Target="{Binding ElementName=lbIPAddr}" HorizontalAlignment="Left" Width="71"/>
-            <ListBox x:Name="lbIPAddr" Margin="0" MinWidth="150" MinHeight="20" />
+            <Label Content="IP Address:" Target="{Binding ElementName=tbIPAddr}" HorizontalAlignment="Left" Width="71"/>
+            <TextBox x:Name="tbIPAddr"
+                     Text="{Binding IPaddr, ValidatesOnDataErrors=True}" 
+                     Margin="0" MinWidth="150" MinHeight="20" />
         </WrapPanel>
-        <WrapPanel Grid.Column="1" HorizontalAlignment="Right" Margin="15,25,0,0" VerticalAlignment="Center">
-            <Label Target="{Binding ElementName=tbPort}"  Content="Port:"/>
-            <TextBox x:Name="tbPort" Text="{Binding Port}" TextAlignment="Right" VerticalAlignment="Center" Width="60" MinWidth="40" Margin="10,0,0,0" PreviewTextInput="tbPort_PreviewTextInput" />
+        <WrapPanel Grid.Column="1" Margin="15,0,0,0" Orientation="Vertical">
+            <Label Content="Port:" Target="{Binding ElementName=tbPort}"/>
+            <TextBox x:Name="tbPort" Text="{Binding Port}"
+                     TextAlignment="Right"
+                     Width="60" Height="20" MinWidth="40" Margin="0"/>
         </WrapPanel>
         <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,15,0,0">
             <Grid.ColumnDefinitions>
@@ -35,10 +49,19 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Content="Password:" Target="{Binding ElementName=pswBox}"/>
-            <PasswordBox x:Name="pswBox" ToolTip="This password will be required to client to connect to this server." MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Width="195" />
+            <PasswordBox x:Name="pswBox" ToolTip="This password will be required to client to connect to this server."
+                         MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20" />
         </Grid>
         <WrapPanel HorizontalAlignment="Right" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0" VerticalAlignment="Bottom">
-            <Button IsDefault="True" x:Name="btnDialogSave" Click="btnDialogSave_Click" MinWidth="60" Margin="0,0,10,0" Content="_Add"/>
+            <Button IsDefault="True" x:Name="btnDialogAdd" MinWidth="60" Margin="0,0,10,0" Content="_Add" Click="btnDialogSave_Click">
+                <Button.IsEnabled>
+                    <MultiBinding Converter="{StaticResource HasErrorToVisibilityConverter}" Mode="TwoWay">
+                        <Binding ElementName="tbIPAddr" Path="(Validation.HasError)" />
+                        <Binding ElementName="tbPort" Path="(Validation.HasError)" />
+                        <Binding ElementName="pswBox" Path="(Validation.HasError)" />
+                    </MultiBinding>
+                </Button.IsEnabled>
+            </Button>
             <Button IsCancel="True" MinWidth="60" Content="_Cancel"/>
         </WrapPanel>
 
