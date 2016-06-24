@@ -13,7 +13,7 @@ namespace KnightElfLibrary
     public enum Messages { Suspend, Resume, Close };
     public enum State { Disconnected, Connected, Authenticated, Running, Suspended, Closed};
 
-    class RemoteServer
+    public class RemoteServer
     {
         // Sockets
         public Socket ControlSocket;
@@ -29,7 +29,17 @@ namespace KnightElfLibrary
         // Threads
         public Thread ConnectionHandler;
         public Thread DataHandler;
-        // public Thread ClipboardHandler;
+        public Thread ClipboardHandler;
+        // Locks
+        public readonly object RunningLock = new object();
+        public readonly object StateLock = new object();
+        public readonly object ClipboardLock = new object();
+        public readonly object ConnectionLock = new object();
+
+        // Crypto stuff
+        public ECDiffieHellmanCng ECDHClient;
+        private byte[] SessionKey;
+        private HMACSHA256 Hmac;
 
         public RemoteServer(IPAddress IP, int Port, string Password)
         {
@@ -41,10 +51,19 @@ namespace KnightElfLibrary
             this.ControlSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.DataSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.CurrentState = State.Disconnected;
+            // Configure ECDH
+            this.ECDHClient = new ECDiffieHellmanCng();
+            this.ECDHClient.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hmac;
+            // Derive a key from the password and the IP:Port representation
+            PasswordDeriveBytes PasswordDerive = new PasswordDeriveBytes(Password, Encoding.Default.GetBytes(IP.ToString() + ":" + Port.ToString()));
+            this.ECDHClient.HmacKey = PasswordDerive.CryptDeriveKey("HMAC", "SHA-256", 256, null);
         }
 
         ~RemoteServer()
         {
+            // Clear out the ECDH object
+            this.ECDHClient.Clear();
+            // Clear threads
             if (ConnectionHandler != null)
             {
                 if (ConnectionHandler.IsAlive)
@@ -60,9 +79,9 @@ namespace KnightElfLibrary
             this.ControlSocket.Connect(this.EndPoint);
         }
 
-        public byte[] Authenticate(ECDiffieHellmanCng Client)
+        public bool Authenticate()
         {
-            byte[] ClientPubKey = Client.PublicKey.ToByteArray();
+            byte[] ClientPubKey = this.ECDHClient.PublicKey.ToByteArray();
             byte[] ServerPubKey = new byte[ClientPubKey.Length];
             SHA256Cng Hasher = new SHA256Cng();
             int ReceivedBytes;
@@ -80,12 +99,12 @@ namespace KnightElfLibrary
             }
             if (ServerPubKey.Length != ReceivedBytes)
             {
-                return null;
+                return false;
             }
 
             // Compute the session key
             CngKey k = CngKey.Import(ServerPubKey, CngKeyBlobFormat.EccPublicBlob);
-            byte[] SessionKey = Client.DeriveKeyMaterial(k);
+            byte[] SessionKey = this.ECDHClient.DeriveKeyMaterial(k);
             byte[] KeyVerificationKey = Hasher.ComputeHash(SessionKey);
             // Create the HMAC
             HMACSHA256 Hmac = new HMACSHA256(KeyVerificationKey);
@@ -107,7 +126,7 @@ namespace KnightElfLibrary
             }
             if (ServerDoneMsg.Length != ReceivedBytes)
             {
-                return null;
+                return false;
             }
 
             // Verify the ServerDoneMsg
@@ -115,40 +134,42 @@ namespace KnightElfLibrary
             if (ServerDoneMsg.SequenceEqual(VerifServer))
             {
                 // Authentication successful
-                return SessionKey;
+                this.SessionKey = SessionKey;
+                this.Hmac = new HMACSHA256(this.SessionKey);
+                return true;
             }
             else
             {
                 // Authentication failed
-                return null;
+                return false;
             }
         }
 
-        public void Suspend(byte[] SessionKey)
+        public void Suspend()
         {
-            SendMessage(SessionKey, Messages.Suspend);
+            SendMessage(Messages.Suspend);
         }
 
-        public void Resume(byte[] SessionKey)
+        public void Resume()
         {
-            SendMessage(SessionKey, Messages.Resume);
+            SendMessage(Messages.Resume);
         }
 
-        public void Close(byte[] SessionKey)
+        public void Close()
         {
-            SendMessage(SessionKey, Messages.Close);
+            SendMessage(Messages.Close);
             DataSocket.Close();
             ControlSocket.Close();
         }
 
-        private void SendMessage(byte[] SessionKey, Messages message)
+        private void SendMessage(Messages message)
         {
-            HMACSHA256 Hmac = new HMACSHA256(SessionKey);
-            byte[] msg = new byte[512];
-            byte[] Suspend = Encoding.Default.GetBytes(message.ToString());
-            byte[] tag = Hmac.ComputeHash(Suspend);
+            long Ticks = DateTime.Now.Ticks;
+            byte[] MessageBytes = Encoding.Default.GetBytes(message.ToString() + ":" + Ticks.ToString());
+            byte[] tag = this.Hmac.ComputeHash(MessageBytes);
+            byte[] msg = new byte[tag.Length + MessageBytes.Length];
             tag.CopyTo(msg, 0);
-            Suspend.CopyTo(msg, 256);
+            MessageBytes.CopyTo(msg, tag.Length);
 
             // Send the message
             try
