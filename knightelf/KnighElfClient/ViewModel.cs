@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KnightElfLibrary;
 
-namespace KnighElfClient
+namespace KnightElfClient
 {
     class ViewModel
     {

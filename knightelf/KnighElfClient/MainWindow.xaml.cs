@@ -14,7 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using KnightElfLibrary;
 
-namespace KnighElfClient
+namespace KnightElfClient
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

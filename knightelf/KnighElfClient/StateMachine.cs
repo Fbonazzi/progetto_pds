@@ -9,7 +9,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Input;
 
-namespace KnighElfClient
+namespace KnightElfClient
 {
     public enum SMStates
     {
