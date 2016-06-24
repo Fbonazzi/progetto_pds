@@ -2,17 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using KnightElfLibrary;
 using System.Threading;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 
 namespace KnightElfClient
 {
     class Client
     {
-        private byte[] SessionKey;
         private RemoteServer CurrentServer;
         private State ConnectionState;
         private readonly object ConnectionLock = new object();
@@ -24,6 +21,10 @@ namespace KnightElfClient
         }
 
         // TODO: probably set to public
+        /// <summary>
+        /// Connect to a server and start sending events
+        /// </summary>
+        /// <param name="s">The remote server to connect to</param>
         private void ConnectToServer(RemoteServer s)
         {
             // Act based the state of the current server
@@ -54,6 +55,12 @@ namespace KnightElfClient
             }
         }
 
+        /// <summary>
+        /// Handle the whole lifecycle of the connection to a specific RemoteServer.
+        /// 
+        /// This function is run in a dedicated thread.
+        /// The thread is suspended when the connection to the specific RemoteServer is suspended.
+        /// </summary>
         private void Connect()
         {
             // TODO: log
@@ -262,7 +269,7 @@ namespace KnightElfClient
                             // TODO: Signal crash?
                         }
 
-                        // Notify ClipboardHandler of pause, must e.g. copy across
+                        // Notify ClipboardHandler of suspension, must e.g. copy across
                         lock (CurrentServer.ClipboardLock)
                         {
                             Monitor.Pulse(CurrentServer.ClipboardLock);
