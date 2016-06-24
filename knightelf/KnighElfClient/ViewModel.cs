@@ -50,16 +50,24 @@ namespace KnightElfClient
 
             // Create State Machine
             SM = new StateMachine(
-                    existsServer: () => { return Servers.Count > 0; },
-                    isConnectedServer: () => { throw new NotImplementedException(); },
-                    launchAddDlgAction: () => LaunchAddDlg(),
-                    launchEditDlgAction: () => LaunchAddDlg(SelectedServer),
-                    disconnectAction: () => Disconnect(),
-                    removeServerAction: () => Connect()
+                    existsServer:           () => { return Servers.Count > 0; },
+                    isEditableServer:       () => { throw new NotImplementedException(); /*return SelectedServer.isConnected();*/ },
+                    isConnectedServer:      () => { throw new NotImplementedException(); /*return SelectedServer.isConnected();*/ },
+                    isReadyServer:          () => { throw new NotImplementedException(); /*return SelectedServer.isReady();*/},
+                    launchAddDlgAction:     () => LaunchAddDlg(),
+                    launchEditDlgAction:    () => LaunchAddDlg(SelectedServer),
+                    disconnectAction:       () => Disconnect(),
+                    removeServerAction:     () => Connect()
                 );
 
             // Create Commands
-            //SetConnectionCommand = SM.CreateCommand(SMTriggers.SetConnection);
+            AddCommand = SM.CreateCommand(SMTriggers.Add);
+            EditCommand = SM.CreateCommand(SMTriggers.Edit);
+            RemoveCommand = SM.CreateCommand(SMTriggers.Remove);
+            ConnectCommand = SM.CreateCommand(SMTriggers.Connect);
+            DisconnectCommand = SM.CreateCommand(SMTriggers.Disconnect);
+            RunCommand = SM.CreateCommand(SMTriggers.Run);
+            PauseCommand = SM.CreateCommand(SMTriggers.Pause);
 
             //TODO: remove fake list
             Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.1"), Port = 50000, Password = "prova1" });
@@ -78,33 +86,47 @@ namespace KnightElfClient
             throw new NotImplementedException();
         }
 
-        private void LaunchAddDlg(ConnectionParams selectedServer)
-        {
-            throw new NotImplementedException();
-        }
 
         private void LaunchAddDlg()
         {
-            //ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog(ConnParams);
-            //if (cSettingsDlg.ShowDialog() == true)
-            //{
-            //    //get settings
-            //    ConnParams = cSettingsDlg.ConnectionParams;
-            //    //TODO: create value conversion 
-            //    //update UI
-            //    //btnConnect.IsEnabled = true;
-            //    Console.WriteLine("Connection settings saved.");
-            //    SM.Fire(SMTriggers.SaveConnection);
-            //}
-            //else SM.Fire(SMTriggers.CancelConnection);
+            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog();
+            if (cSettingsDlg.ShowDialog() == true)
+            {
+                //get settings
+                Servers.Add(cSettingsDlg.ConnectionParams);
+                Console.WriteLine("New Server Connection added.");
+
+                SM.Fire(SMTriggers.Save);
+            }
+            else SM.Fire(SMTriggers.Cancel);
         }
+
+        private void LaunchAddDlg(ConnectionParams selectedServer)
+        {
+            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog(selectedServer);
+            if (cSettingsDlg.ShowDialog() == true)
+            {
+                SelectedServer = cSettingsDlg.ConnectionParams;
+                Console.WriteLine("Server edit saved.");
+                SM.Fire(SMTriggers.Save);
+            }
+            else SM.Fire(SMTriggers.Cancel);
+        }
+
+
 
         #region State Machine
 
         public StateMachine SM { get; private set; }
 
         // Commands
-        //public ICommand ConnectCommand { get; private set; }
+        public ICommand AddCommand { get; private set; }
+        public ICommand EditCommand { get; private set; }
+        public ICommand RemoveCommand { get; private set; }
+        public ICommand ConnectCommand { get; private set; }
+        public ICommand DisconnectCommand { get; private set; }
+        public ICommand RunCommand { get; private set; }
+        public ICommand PauseCommand { get; private set; }
 
         #endregion
 

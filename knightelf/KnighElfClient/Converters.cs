@@ -19,15 +19,11 @@ namespace KnightElfClient
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            //try
-            //{
-            //    return IPAddress.Parse(value as string);
-            //}
-            //catch (FormatException e)
-            //{
-
-            //}
-            throw new NotImplementedException();
+            IPAddress ip;
+            if (IPAddress.TryParse(value as string, out ip))
+                return ip;
+            else
+                return DependencyProperty.UnsetValue;
         }
     }
 

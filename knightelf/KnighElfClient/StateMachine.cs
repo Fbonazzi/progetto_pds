@@ -7,55 +7,58 @@ namespace KnightElfClient
 {
     public enum SMStates
     {
-        Disconnected,
+        Start,
         AddingServer,
         ServerSelected,
         EditingServer,
-        Connected
+        WorkingRemote
     }
     public enum SMTriggers
     {
-        Add, Remove,
+        Add, Edit, Remove,
         Save, Cancel,
         Select, Deselect,
-        Edit, EndEdit,
-        Connect, Disconnect, NetworkError
+        Connect, Disconnect,
+        Run, Pause
     }
 
     class StateMachine : Stateless.StateMachine<SMStates, SMTriggers>, INotifyPropertyChanged
     {   
         public StateMachine(    Func<bool> existsServer,
+                                Func<bool> isEditableServer,
                                 Func<bool> isConnectedServer,
+                                Func<bool> isReadyServer,
                                 Action launchAddDlgAction,
                                 Action launchEditDlgAction,
                                 Action disconnectAction,
-                                Action removeServerAction) : base(SMStates.Disconnected)
+                                Action removeServerAction) : base(SMStates.Start)
         {
-            Configure(SMStates.Disconnected)
+            Configure(SMStates.Start)
                 .Permit(SMTriggers.Add,SMStates.AddingServer)
                 .PermitIf(SMTriggers.Select,SMStates.ServerSelected, existsServer)
                 .OnEntryFrom(SMTriggers.Remove,removeServerAction); //non sono sicura che funzioni..
 
             Configure(SMStates.ServerSelected)
-                .SubstateOf(SMStates.Disconnected)
-                .PermitIf(SMTriggers.Remove,SMStates.Disconnected, existsServer)
-                .Permit(SMTriggers.Deselect,SMStates.Disconnected)
-                .Permit(SMTriggers.Edit,SMStates.EditingServer)
-                .PermitIf(SMTriggers.Connect,SMStates.Connected,isConnectedServer);
+                .SubstateOf(SMStates.Start)
+                .Permit(SMTriggers.Deselect, SMStates.Start)
+                .PermitIf(SMTriggers.Remove,SMStates.Start, existsServer)
+                .PermitIf(SMTriggers.Edit, SMStates.EditingServer, isEditableServer)
+                .PermitIf(SMTriggers.Connect, SMStates.EditingServer, isReadyServer)
+                .PermitIf(SMTriggers.Disconnect, SMStates.EditingServer, isConnectedServer)
+                .PermitIf(SMTriggers.Run, SMStates.WorkingRemote, isConnectedServer);
 
             Configure(SMStates.AddingServer)
                 .OnEntry(launchAddDlgAction)
-                .Permit(SMTriggers.Save, SMStates.Disconnected)
-                .Permit(SMTriggers.Cancel, SMStates.Disconnected);
+                .Permit(SMTriggers.Save, SMStates.Start)
+                .Permit(SMTriggers.Cancel, SMStates.Start);
 
             Configure(SMStates.EditingServer)
                 .OnEntry(launchEditDlgAction)
-                .Permit(SMTriggers.EndEdit,SMStates.ServerSelected);
+                .Permit(SMTriggers.Save, SMStates.Start)
+                .Permit(SMTriggers.Cancel, SMStates.Start);
 
-            Configure(SMStates.Connected)
-                .Permit(SMTriggers.Disconnect,SMStates.ServerSelected)  //o connected?
-                .Permit(SMTriggers.NetworkError, SMStates.ServerSelected)
-                .OnExit(disconnectAction);
+            Configure(SMStates.WorkingRemote)
+                .Permit(SMTriggers.Pause, SMStates.ServerSelected);
 
             OnTransitioned(
                   (t) =>

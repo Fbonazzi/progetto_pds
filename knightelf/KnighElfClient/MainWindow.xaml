@@ -15,6 +15,9 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
+    <Window.DataContext>
+        <local:ViewModel/>
+    </Window.DataContext>
 
     <Grid>
         <DockPanel x:Name="dockPanel" Margin="0">
@@ -22,7 +25,8 @@
                           Orientation="Horizontal"
                           Background = "{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
                 <Button x:Name="btnAdd" Style="{StaticResource IconBtnStyle}"
-                        Content="{StaticResource AddIcon}"/>
+                        Content="{StaticResource AddIcon}"
+                        Command="{Binding AddCommand}"/>
                 <Button x:Name="btnRemove" Style="{StaticResource IconBtnStyle}"
                         Content="{StaticResource RemoveIcon}"/>
                 <Button x:Name="btnEdit" Style="{StaticResource IconBtnStyle}"

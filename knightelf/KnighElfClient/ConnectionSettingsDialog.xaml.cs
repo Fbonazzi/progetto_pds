@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Input;
 using KnightElfLibrary;
+using System.Windows.Controls;
 
 namespace KnightElfClient
 {
@@ -46,9 +47,8 @@ namespace KnightElfClient
             //{
             //    _connectionParams.IPaddr = (IPAddress) lbIPAddr.SelectedItem;
             //    _connectionParams.Port = port;
-            //    _connectionParams.Password = pswBox.Password;
-
-            //    DialogResult = true;
+            _connectionParams.Password = pswBox.Password;
+            DialogResult = true;
             //}
             //else DialogResult = false;            
         }
@@ -65,5 +65,19 @@ namespace KnightElfClient
             host = Dns.GetHostEntry(Dns.GetHostName());
             return Array.FindAll(host.AddressList, ip =>ip.AddressFamily == AddressFamily.InterNetwork);
         }
+
+        #region Validation Rules
+        public class StringToIPValidationRule : ValidationRule
+        {
+            public override ValidationResult Validate(object value, System.Globalization.CultureInfo cultureInfo)
+            {
+                IPAddress ip;
+                if (IPAddress.TryParse(value.ToString(), out ip))
+                    return new ValidationResult(true, null);
+
+                return new ValidationResult(false, "Please enter a valid IP address.");
+            }
+        }
+        #endregion
     }
 }

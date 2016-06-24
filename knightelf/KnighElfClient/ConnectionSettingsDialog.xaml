@@ -35,7 +35,16 @@
             <Label Content="IP Address:" Target="{Binding ElementName=tbIPAddr}" HorizontalAlignment="Left" Width="71"/>
             <TextBox x:Name="tbIPAddr"
                      Text="{Binding IPaddr, ValidatesOnDataErrors=True}" 
-                     Margin="0" MinWidth="150" MinHeight="20" />
+                     Margin="0" MinWidth="150" MinHeight="20" >
+                <!--<TextBox.Text>
+                    <Binding Path="IPaddr">
+                        UpdateSourceTrigger="PropertyChanged" >
+                        <Binding.ValidationRules>
+                            <c:AgeRangeRule Min="21" Max="130"/>
+                        </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>-->
+            </TextBox>
         </WrapPanel>
         <WrapPanel Grid.Column="1" Margin="15,0,0,0" Orientation="Vertical">
             <Label Content="Port:" Target="{Binding ElementName=tbPort}"/>
