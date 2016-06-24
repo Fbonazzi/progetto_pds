@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnightElfServer", "KnightElfServer\KnightElfServer.csproj", "{A61F62C4-9960-42E2-980B-F7EF7E2D4341}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnighElfClient", "KnighElfClient\KnighElfClient.csproj", "{9E73C135-A346-4EFF-8A49-41D08B8F0A33}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnightElfClient", "KnighElfClient\KnightElfClient.csproj", "{9E73C135-A346-4EFF-8A49-41D08B8F0A33}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnightElfLibrary", "KnightElfLibrary\KnightElfLibrary.csproj", "{20D58DF3-3B0B-40CE-83EA-8845A2A0CE53}"
 EndProject
