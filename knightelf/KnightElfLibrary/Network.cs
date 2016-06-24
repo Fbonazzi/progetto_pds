@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace KnightElfLibrary
 {
     public enum Messages { Suspend, Resume, Close };
-    public enum State { Disconnected, Connected, Authenticated, Running, Suspended, Closed};
+    public enum State { Disconnected, Connected, Authenticated, Running, Suspended, Closed };
 
     public class RemoteServer
     {
@@ -25,7 +25,7 @@ namespace KnightElfLibrary
         public string Password;
         public State CurrentState;
         // Clipboard
-        // public ClipboardConnection ClipboardConn; ?
+        public ClipboardConnection Clipboard;
         // Threads
         public Thread ConnectionHandler;
         public Thread DataHandler;
@@ -40,6 +40,7 @@ namespace KnightElfLibrary
         public ECDiffieHellmanCng ECDHClient;
         private byte[] SessionKey;
         private HMACSHA256 Hmac;
+        SHA256Cng Hasher;
 
         public RemoteServer(IPAddress IP, int Port, string Password)
         {
@@ -57,6 +58,7 @@ namespace KnightElfLibrary
             // Derive a key from the password and the IP:Port representation
             PasswordDeriveBytes PasswordDerive = new PasswordDeriveBytes(Password, Encoding.Default.GetBytes(IP.ToString() + ":" + Port.ToString()));
             this.ECDHClient.HmacKey = PasswordDerive.CryptDeriveKey("HMAC", "SHA-256", 256, null);
+            this.Hasher = new SHA256Cng();
         }
 
         ~RemoteServer()
@@ -74,18 +76,29 @@ namespace KnightElfLibrary
             }
         }
 
+        /// <summary>
+        /// Connect the control socket to the remote server
+        /// </summary>
         public void Connect()
         {
             this.ControlSocket.Connect(this.EndPoint);
         }
 
+        /// <summary>
+        /// Authenticate the remote server.
+        /// 
+        /// Perform an Elliptic Curve Diffie-Hellman key exchange to obtain key material.
+        /// Generate a session key from the obtained key material and provided password using an HMAC keyed hash function.
+        /// Perform key confirmation to guarantee the remote server shares the secret password.
+        /// </summary>
+        /// <returns></returns>
         public bool Authenticate()
         {
             byte[] ClientPubKey = this.ECDHClient.PublicKey.ToByteArray();
             byte[] ServerPubKey = new byte[ClientPubKey.Length];
-            SHA256Cng Hasher = new SHA256Cng();
             int ReceivedBytes;
 
+            #region AUTHENTICATE_EXCHANGE_KEY_MATERIAL
             // Exchange public keys
             try
             {
@@ -101,18 +114,36 @@ namespace KnightElfLibrary
             {
                 return false;
             }
+            #endregion
 
+            #region AUTHENTICATE_COMPUTE_SESSION_KEYS
             // Compute the session key
             CngKey k = CngKey.Import(ServerPubKey, CngKeyBlobFormat.EccPublicBlob);
             byte[] SessionKey = this.ECDHClient.DeriveKeyMaterial(k);
             byte[] KeyVerificationKey = Hasher.ComputeHash(SessionKey);
-            // Create the HMAC
+            #endregion
+
+            #region AUTHENTICATE_KEY_CONFIRMATION
+            // Create the key confirmation HMAC hasher
             HMACSHA256 Hmac = new HMACSHA256(KeyVerificationKey);
 
+            #region AUTHENTICATE_CREATE_CLIENT_MSG
+            // Prepare the message
+            long Ticks = DateTime.Now.Ticks;
+            byte[] ClientDone = Encoding.Default.GetBytes("ClientDone:" + Ticks.ToString());
             // Create the Tag
-            byte[] ClientDoneMsg = Hmac.ComputeHash(Encoding.Default.GetBytes("ClientDone"));
+            byte[] tag = Hmac.ComputeHash(ClientDone);
+            // Prepare the tagged message
+            byte[] ClientDoneMsg = new byte[tag.Length + ClientDone.Length];
+            tag.CopyTo(ClientDoneMsg, 0);
+            ClientDone.CopyTo(ClientDoneMsg, tag.Length);
+            #endregion
+
+            #region AUTHENTICATE_EXCHANGE_VERIF_MESSAGES
             // Prepare the ServerDone buffer
-            byte[] ServerDoneMsg = new byte[256];
+            // Make it 1 byte longer to account for possible increase of digits when 999->1000
+            byte[] ServerDoneMsg = new byte[ClientDoneMsg.Length + 1];
+
             // Exchange hashed confirmation messages
             try
             {
@@ -124,14 +155,36 @@ namespace KnightElfLibrary
                 // TODO: do something
                 throw e;
             }
-            if (ServerDoneMsg.Length != ReceivedBytes)
+            #endregion
+
+            #region AUTHENTICATE_VERIF_SERVER_MSG
+            // Verify the ServerDoneMsg
+            string ServerDone = Encoding.Default.GetString(ServerDoneMsg, tag.Length, ReceivedBytes - tag.Length);
+            // Verify the content of the message
+            string[] Content = ServerDone.Split(':');
+            // Verify the message text
+            if (!Content[0].SequenceEqual("ServerDone"))
             {
+                // Not a ServerDone message
                 return false;
             }
+            // Verify that the message timestamp is close enough
+            long TimestampTicks = Convert.ToInt64(Content[1]);
+            // If the timestamp precedes the client timestamp, or follows it by more than 1 second (10M ticks)
+            if (TimestampTicks < Ticks || TimestampTicks - Ticks > 10000000)
+            {
+                // Timestamp too far
+                return false;
+            }
+            #endregion
 
-            // Verify the ServerDoneMsg
-            byte[] VerifServer = Hmac.ComputeHash(Encoding.Default.GetBytes("ServerDone"));
-            if (ServerDoneMsg.SequenceEqual(VerifServer))
+            #region AUTHENTICATE_VERIF_SERVER_TAG
+            // Extract the server tag
+            byte[] ServerTag = new byte[tag.Length];
+            Array.Copy(ServerDoneMsg, ServerTag, ServerTag.Length);
+            // Verify the ServerDoneMsg signature
+            byte[] VerifServer = Hmac.ComputeHash(Encoding.Default.GetBytes(ServerDone));
+            if (ServerTag.SequenceEqual(VerifServer))
             {
                 // Authentication successful
                 this.SessionKey = SessionKey;
@@ -143,6 +196,8 @@ namespace KnightElfLibrary
                 // Authentication failed
                 return false;
             }
+            #endregion
+            #endregion
         }
 
         public void Suspend()
@@ -182,7 +237,5 @@ namespace KnightElfLibrary
                 throw e;
             }
         }
-
-
     }
 }
