@@ -35,6 +35,12 @@ namespace KnightElfClient
                     case State.Suspended:
                         // Set the current server
                         this.CurrentServer = s;
+                        // Set the required state
+                        lock (CurrentServer.StateLock)
+                        {
+                            ConnectionState = State.Running;
+                        }
+                        // Wake up the thread
                         lock (CurrentServer.RunningLock)
                         {
                             Monitor.Pulse(CurrentServer.RunningLock);
@@ -289,8 +295,24 @@ namespace KnightElfClient
                         // Give back control to client and wait
                         lock (CurrentServer.RunningLock)
                         {
+                            // Wait for the user to give us back control
                             Monitor.Wait(CurrentServer.RunningLock);
-
+                            // The user gave us back control: check what he wants us to do
+                            lock (CurrentServer.ConnectionLock)
+                            {
+                                RequestedState = ConnectionState;
+                            }
+                            // If the user wanted us to close, close immediately without resuming
+                            if (RequestedState == State.Closed)
+                            {
+                                // Wake up the DataHandler so he can be killed by the regular procedure
+                                lock (CurrentServer.StateLock)
+                                {
+                                    CurrentServer.CurrentState = State.Running;
+                                    Monitor.Pulse(CurrentServer.StateLock);
+                                }
+                                goto case State.Closed;
+                            }
                             // The user gave us back control: tell everyone
                             // Set the server state to running and wake up the DataHandler
                             lock (CurrentServer.StateLock)
@@ -343,6 +365,36 @@ namespace KnightElfClient
                 }
             }
             #endregion
+        }
+
+        /// <summary>
+        /// Close the connection to a server.
+        /// 
+        /// The server must be in a suspended state.
+        /// </summary>
+        /// <param name="s">The remote server to disconnect from</param>
+        private void DisconnectFromServer(RemoteServer s)
+        {
+            // Check that the thread is suspended
+            lock (s.StateLock)
+            {
+                if (s.CurrentState != State.Suspended)
+                {
+                    return;
+                }
+            }
+            // Set the current server
+            this.CurrentServer = s;
+            // Set the requested state
+            lock (CurrentServer.StateLock)
+            {
+                ConnectionState = State.Closed;
+            }
+            // Wake up the thread
+            lock (CurrentServer.RunningLock)
+            {
+                Monitor.Pulse(CurrentServer.RunningLock);
+            }
         }
     }
 }
