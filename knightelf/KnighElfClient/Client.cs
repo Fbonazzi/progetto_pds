@@ -5,6 +5,7 @@ using System.Text;
 using KnightElfLibrary;
 using System.Threading;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 
 namespace KnightElfClient
 {
@@ -394,6 +395,143 @@ namespace KnightElfClient
             lock (CurrentServer.RunningLock)
             {
                 Monitor.Pulse(CurrentServer.RunningLock);
+            }
+        }
+
+        /// <summary>
+        /// Handle the whole lifecycle of a Clipboard connection to a specific RemoteServer.
+        /// 
+        /// This function is run in a dedicated thread.
+        /// </summary>
+        private void HandleClipboard()
+        {
+            #region OPEN_CLIPBOARD_CONNECTION
+            // Open a clipboard connection
+            lock (CurrentServer.StateLock)
+            {
+                try
+                {
+                    CurrentServer.Clipboard = new ClipboardConnection(CurrentServer.IP, CurrentServer.Port + 1);
+                }
+                catch (SocketException)
+                {
+                    // Could not create connection
+                    CurrentServer.CurrentState = State.Disconnected;
+                    return;
+                }
+                finally
+                {
+                    Monitor.Pulse(CurrentServer.StateLock);
+                }
+            }
+            #endregion
+
+            #region SEND_FIRST_CLIPBOARD
+            // Ask if we want to transfer the client clipboard to the server
+            try
+            {
+                CurrentServer.Clipboard.Send();
+            }
+            catch (Exception e)
+            {
+                if (e is ExternalException)
+                {
+                    // TODO: log
+                }
+                return;
+            }
+            #endregion
+
+            // Keep monitoring the connection state and act accordingly
+            while (true)
+            {
+                #region CLIPBOARD_DISPATCH
+                lock (CurrentServer.ClipboardLock)
+                {
+                    // Wait for ConnectionHandler to notify us
+                    Monitor.Wait(CurrentServer.ClipboardLock);
+
+                    // Check connection state
+                    lock (CurrentServer.StateLock)
+                    {
+                        switch (CurrentServer.CurrentState)
+                        {
+                            #region CLIPBOARD_SUSPEND
+                            case State.Suspended:
+                                // The user requested the connection be suspended
+                                // TODO: log
+
+                                // Ask if we want to transfer the server clipboard to the client
+                                try
+                                {
+                                    CurrentServer.Clipboard.Receive();
+                                }
+                                catch (Exception e)
+                                {
+                                    if (e is ExternalException)
+                                    {
+                                        // TODO: log
+                                    }
+                                    return;
+                                }
+
+                                // Notify ConnectionHandler we are done
+                                Monitor.Pulse(CurrentServer.ClipboardLock);
+                                break;
+                            #endregion
+                            #region CLIPBOARD_CLOSE
+                            case State.Closed:
+                                // The user requested the connection be closed
+                                // TODO: log
+
+                                // Ask if we want to transfer the server clipboard to the client
+                                try
+                                {
+                                    CurrentServer.Clipboard.Receive();
+                                }
+                                catch (Exception e)
+                                {
+                                    if (e is ExternalException)
+                                    {
+                                        // TODO: log
+                                    }
+                                    return;
+                                }
+
+                                // Notify ConnectionHandler we are done
+                                Monitor.Pulse(CurrentServer.ClipboardLock);
+                                return;
+                            #endregion
+                            #region CLIPBOARD_RESUME
+                            case State.Running:
+                                // The user requested the connection be resumed
+                                // TODO: log
+
+                                // Ask if we want to transfer the client clipboard to the server
+                                try
+                                {
+                                    CurrentServer.Clipboard.Send();
+                                }
+                                catch (Exception e)
+                                {
+                                    if (e is ExternalException)
+                                    {
+                                        // TODO: log
+                                    }
+                                    return;
+                                }
+
+                                // Notify ConnectionHandler we are done
+                                Monitor.Pulse(CurrentServer.ClipboardLock);
+                                break;
+                            #endregion
+                            default:
+                                return;
+
+                        }
+                    }
+                }
+                #endregion
             }
         }
     }
