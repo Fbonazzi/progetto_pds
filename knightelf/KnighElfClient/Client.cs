@@ -6,6 +6,7 @@ using KnightElfLibrary;
 using System.Threading;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace KnightElfClient
 {
@@ -14,10 +15,19 @@ namespace KnightElfClient
         private RemoteServer CurrentServer;
         private State ConnectionState;
         private readonly object ConnectionLock = new object();
+        // Temporary directory
+        public string TempDirName;
+        
 
         public Client()
         {
             this.ConnectionState = State.Disconnected;
+
+            // Create the temporary directory
+            TempDirName = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            TempDirName = Path.Combine(TempDirName, "KnightElf");
+            Directory.CreateDirectory(TempDirName);
+
             // TODO
         }
 
@@ -411,7 +421,7 @@ namespace KnightElfClient
             {
                 try
                 {
-                    CurrentServer.Clipboard = new RemoteClipboard(CurrentServer.IP, CurrentServer.Port + 1, CurrentServer.ClipboardKey, RemoteClipboard.Role.Client);
+                    CurrentServer.Clipboard = new RemoteClipboard(CurrentServer.IP, CurrentServer.Port + 1, CurrentServer.ClipboardKey, RemoteClipboard.Role.Client, TempDirName);
                 }
                 catch (SocketException)
                 {
@@ -464,7 +474,7 @@ namespace KnightElfClient
                                 // Ask if we want to transfer the server clipboard to the client
                                 try
                                 {
-                                    CurrentServer.Clipboard.Receive();
+                                    CurrentServer.Clipboard.ReceiveClipboard();
                                 }
                                 catch (Exception e)
                                 {
@@ -487,7 +497,7 @@ namespace KnightElfClient
                                 // Ask if we want to transfer the server clipboard to the client
                                 try
                                 {
-                                    CurrentServer.Clipboard.Receive();
+                                    CurrentServer.Clipboard.ReceiveClipboard();
                                 }
                                 catch (Exception e)
                                 {
@@ -510,7 +520,7 @@ namespace KnightElfClient
                                 // Ask if we want to transfer the client clipboard to the server
                                 try
                                 {
-                                    CurrentServer.Clipboard.Send();
+                                    CurrentServer.Clipboard.SendClipboard();
                                 }
                                 catch (Exception e)
                                 {
