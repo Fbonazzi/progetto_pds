@@ -37,6 +37,7 @@
                      Margin="0" MinWidth="150" MinHeight="20">
                 <TextBox.Text>
                     <Binding Path="IPaddr" Converter="{StaticResource StringIPConverter}" Mode="TwoWay">
+                        <!--UpdateSourceTrigger="PropertyChanged"-->
                         <Binding.ValidationRules>
                             <local:StringToIPValidationRule ValidationStep="RawProposedValue"/>
                         </Binding.ValidationRules>
@@ -50,7 +51,8 @@
                      TextAlignment="Right"
                      Width="60" Height="20" MinWidth="40" Margin="0">
                 <TextBox.Text>
-                    <Binding Path="Port" Mode="TwoWay">
+                    <Binding Path="Port" Mode="TwoWay" >
+                        <!--UpdateSourceTrigger="PropertyChanged"-->
                         <Binding.ValidationRules>
                             <local:PortValidationRule ValidationStep="RawProposedValue"/>
                         </Binding.ValidationRules>

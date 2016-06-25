@@ -12,11 +12,11 @@ namespace KnightElfClient
 {
     class ViewModel : BindableObject
     {
-        #region Properties
-
-        public ObservableCollection<ConnectionParams> Servers { get; set; }
 
         private ConnectionParams _selectedServer;
+
+        #region Properties
+        public ObservableCollection<ConnectionParams> Servers { get; set; }
         public ConnectionParams SelectedServer
         {
             get
@@ -40,7 +40,6 @@ namespace KnightElfClient
                 }
             }
         }
-
         #endregion
 
         //Constructor
@@ -51,7 +50,7 @@ namespace KnightElfClient
             // Create State Machine
             SM = new StateMachine(
                     existsServer:           () => { return Servers.Count > 0; },
-                    isEditableServer:       () => { throw new NotImplementedException(); /*return SelectedServer.isConnected();*/ },
+                    isEditableServer:       () => { return true; /*return SelectedServer.isEditable();*/ },
                     isConnectedServer:      () => { throw new NotImplementedException(); /*return SelectedServer.isConnected();*/ },
                     isReadyServer:          () => { throw new NotImplementedException(); /*return SelectedServer.isReady();*/},
                     launchAddDlgAction:     () => LaunchAddDlg(),
@@ -76,44 +75,6 @@ namespace KnightElfClient
             Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.4"), Port = 80000, Password = "prova1" });
         }
 
-        private void Connect()
-        {
-            throw new NotImplementedException();
-        }
-
-        private void Disconnect()
-        {
-            throw new NotImplementedException();
-        }
-
-
-        private void LaunchAddDlg()
-        {
-            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog();
-            if (cSettingsDlg.ShowDialog() == true)
-            {
-                //get settings
-                Servers.Add(cSettingsDlg.ConnectionParams);
-                Console.WriteLine("New Server Connection added.");
-
-                SM.Fire(SMTriggers.Save);
-            }
-            else SM.Fire(SMTriggers.Cancel);
-        }
-
-        private void LaunchAddDlg(ConnectionParams selectedServer)
-        {
-            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog(selectedServer);
-            if (cSettingsDlg.ShowDialog() == true)
-            {
-                SelectedServer = cSettingsDlg.ConnectionParams;
-                Console.WriteLine("Server edit saved.");
-                SM.Fire(SMTriggers.Save);
-            }
-            else SM.Fire(SMTriggers.Cancel);
-        }
-
-
 
         #region State Machine
 
@@ -131,6 +92,48 @@ namespace KnightElfClient
         #endregion
 
         #region Actions
+
+        private void LaunchAddDlg()
+        {
+            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog();
+            if (cSettingsDlg.ShowDialog() == true)
+            {
+                //get settings
+                SM.Fire(SMTriggers.Save);
+                Servers.Add(cSettingsDlg.ConnectionParams);
+                Console.WriteLine("New Server Connection added.");
+            }
+            else SM.Fire(SMTriggers.Cancel);
+        }
+
+        private void LaunchAddDlg(ConnectionParams selectedServer)
+        {
+            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog(selectedServer);
+            if (cSettingsDlg.ShowDialog() == true)
+            {
+                SM.Fire(SMTriggers.Save);
+
+                //change each field to update the original data in the list
+                SelectedServer.IPaddr = cSettingsDlg.ConnectionParams.IPaddr;
+                SelectedServer.Port = cSettingsDlg.ConnectionParams.Port;
+                SelectedServer.Password = cSettingsDlg.ConnectionParams.Password;
+
+                Console.WriteLine("Server edit saved.");
+            }
+            else SM.Fire(SMTriggers.Cancel);
+        }
+
+        private void Connect()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Disconnect()
+        {
+            throw new NotImplementedException();
+        }
+
+
         //private async Task LoadEmployees()
         //{
         //    try

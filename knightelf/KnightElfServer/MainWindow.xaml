@@ -18,6 +18,10 @@
         </ResourceDictionary>
     </Window.Resources>
 
+    <Window.DataContext>
+        <local:ViewModel/>
+    </Window.DataContext>
+
     <Grid>
         <DockPanel>
             <ToolBarPanel DockPanel.Dock="Top"

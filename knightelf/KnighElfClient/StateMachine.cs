@@ -49,13 +49,13 @@ namespace KnightElfClient
 
             Configure(SMStates.AddingServer)
                 .OnEntry(launchAddDlgAction)
-                .Permit(SMTriggers.Save, SMStates.Start)
+                .Permit(SMTriggers.Save, SMStates.ServerSelected)
                 .Permit(SMTriggers.Cancel, SMStates.Start);
 
             Configure(SMStates.EditingServer)
                 .OnEntry(launchEditDlgAction)
-                .Permit(SMTriggers.Save, SMStates.Start)
-                .Permit(SMTriggers.Cancel, SMStates.Start);
+                .Permit(SMTriggers.Save, SMStates.ServerSelected)
+                .Permit(SMTriggers.Cancel, SMStates.ServerSelected);
 
             Configure(SMStates.WorkingRemote)
                 .Permit(SMTriggers.Pause, SMStates.ServerSelected);

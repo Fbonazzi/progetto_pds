@@ -28,9 +28,11 @@
                         Content="{StaticResource AddIcon}"
                         Command="{Binding AddCommand}"/>
                 <Button x:Name="btnRemove" Style="{StaticResource IconBtnStyle}"
-                        Content="{StaticResource RemoveIcon}"/>
+                        Content="{StaticResource RemoveIcon}"
+                        Command="{Binding RemoveCommand}"/>
                 <Button x:Name="btnEdit" Style="{StaticResource IconBtnStyle}"
-                        Content="{StaticResource EditIcon}"/>
+                        Content="{StaticResource EditIcon}"
+                        Command="{Binding EditCommand}"/>
             </ToolBarPanel>
             
             <StatusBar DockPanel.Dock="Bottom"
@@ -64,7 +66,9 @@
                           Header="Server Connections"
                           Margin="10,64,10,10" 
                           BorderThickness="0">
-                <ListBox x:Name="lbServers" Margin="10" >
+                    <ListBox x:Name="lbServers" Margin="10"
+                             SelectedItem="{Binding SelectedServer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             SelectedIndex="{Binding SelectedServerIdx, Mode=TwoWay}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="0,0,0,5">

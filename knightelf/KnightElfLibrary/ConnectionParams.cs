@@ -14,6 +14,19 @@ namespace KnightElfLibrary
     public class ConnectionParams : INotifyPropertyChanged
     {
         private IPAddress _IPaddr;
+        private int _port;
+        private string _password;
+
+        public ConnectionParams() { }
+
+        public ConnectionParams(ConnectionParams connectionParams)
+        {
+            _IPaddr = connectionParams._IPaddr;
+            _port = connectionParams.Port;
+            _password = connectionParams.Password;
+        }
+
+        
         public IPAddress IPaddr {
             get { return _IPaddr; }
             set {
@@ -26,8 +39,7 @@ namespace KnightElfLibrary
                 OnPropertyChanged("IsValid");
             }
         }
-
-        private int _port;
+  
         public int Port {
             get { return _port; }
             set
@@ -42,7 +54,6 @@ namespace KnightElfLibrary
             }
         }
 
-        private string _password;
         public string Password {
             get { return _password; }
             set
