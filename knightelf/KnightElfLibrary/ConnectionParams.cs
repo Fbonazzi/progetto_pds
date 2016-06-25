@@ -22,6 +22,8 @@ namespace KnightElfLibrary
 
                 _IPaddr = value;
                 OnPropertyChanged("IPaddr");
+                OnPropertyChanged("HasError");
+                OnPropertyChanged("IsValid");
             }
         }
 
@@ -35,6 +37,8 @@ namespace KnightElfLibrary
 
                 _port = value;
                 OnPropertyChanged("Port");
+                OnPropertyChanged("HasError");
+                OnPropertyChanged("IsValid");
             }
         }
 
@@ -48,6 +52,26 @@ namespace KnightElfLibrary
 
                 _password = value;
                 OnPropertyChanged("Password");
+                OnPropertyChanged("HasError");
+                OnPropertyChanged("IsValid");
+            }
+        }
+
+        public bool IsValid
+        {
+            get
+            {
+                if (IPaddr != null && !string.IsNullOrEmpty(Password))
+                    return true;
+                else return false;
+            }
+        }
+
+        public bool HasError
+        {
+            get
+            {
+                return !IsValid;
             }
         }
 

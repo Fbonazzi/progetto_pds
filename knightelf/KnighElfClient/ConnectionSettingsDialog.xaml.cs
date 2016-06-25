@@ -2,9 +2,8 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Windows;
-using System.Windows.Input;
 using KnightElfLibrary;
-using System.Windows.Controls;
+using System.Diagnostics;
 
 namespace KnightElfClient
 {
@@ -21,6 +20,8 @@ namespace KnightElfClient
 
             _connectionParams = new ConnectionParams();
             DataContext = _connectionParams;
+
+            btnDialogAdd.Content = "_Add";
         }
 
         public ConnectionSettingsDialog(ConnectionParams connectionParams)
@@ -30,27 +31,16 @@ namespace KnightElfClient
             _connectionParams = connectionParams;
             DataContext = _connectionParams;
 
+            btnDialogAdd.Content = "_Save";
+
             // Password doesn't support data binding for security reasons
             pswBox.Password = _connectionParams.Password;
         }
 
         private void btnDialogSave_Click(object sender, RoutedEventArgs e)
         {
-            //try
-            //{
-            //    _connectionParams.IPaddr
-            //}
-            //int port;
-            //if (tbIPAddr.Parse != null &&
-            //    int.TryParse(tbPort.Text, out port) &&
-            //    pswBox.Password != ""                 )
-            //{
-            //    _connectionParams.IPaddr = (IPAddress) lbIPAddr.SelectedItem;
-            //    _connectionParams.Port = port;
-            _connectionParams.Password = pswBox.Password;
+            Debug.Assert(_connectionParams.IsValid, "Add was enabled even if the connection params were invalid!");
             DialogResult = true;
-            //}
-            //else DialogResult = false;            
         }
 
         public ConnectionParams ConnectionParams{ get { return _connectionParams; } }
@@ -66,18 +56,10 @@ namespace KnightElfClient
             return Array.FindAll(host.AddressList, ip =>ip.AddressFamily == AddressFamily.InterNetwork);
         }
 
-        #region Validation Rules
-        public class StringToIPValidationRule : ValidationRule
+        private void pswBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            public override ValidationResult Validate(object value, System.Globalization.CultureInfo cultureInfo)
-            {
-                IPAddress ip;
-                if (IPAddress.TryParse(value.ToString(), out ip))
-                    return new ValidationResult(true, null);
-
-                return new ValidationResult(false, "Please enter a valid IP address.");
-            }
+            _connectionParams.Password = pswBox.Password;
         }
-        #endregion
     }
+
 }
