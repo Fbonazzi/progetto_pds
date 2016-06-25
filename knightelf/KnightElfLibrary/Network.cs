@@ -10,9 +10,20 @@ using System.Threading.Tasks;
 
 namespace KnightElfLibrary
 {
+    /// <summary>
+    /// The connection control messages to exchange between local client and remote server.
+    /// </summary>
     public enum Messages { Suspend, Resume, Close };
+    /// <summary>
+    /// The protocol states for both the local client and the remote server.
+    /// </summary>
     public enum State { Disconnected, Connected, Authenticated, Running, Suspended, Closed };
 
+    /// <summary>
+    /// The client-side representation of the remote server.
+    /// 
+    /// Handles all communication to and from the remote server, exposing functionality through its methods.
+    /// </summary>
     public class RemoteServer
     {
         // Sockets
@@ -42,6 +53,12 @@ namespace KnightElfLibrary
         private HMACSHA256 Hmac;
         SHA256Cng Hasher;
 
+        /// <summary>
+        /// Create a new RemoteServer with the specified parameters.
+        /// </summary>
+        /// <param name="IP">The server IP address</param>
+        /// <param name="Port">The server port</param>
+        /// <param name="Password">The secret password shared with the server</param>
         public RemoteServer(IPAddress IP, int Port, string Password)
         {
             this.IP = IP;
@@ -61,6 +78,9 @@ namespace KnightElfLibrary
             this.Hasher = new SHA256Cng();
         }
 
+        /// <summary>
+        /// Destroy the RemoteServer.
+        /// </summary>
         ~RemoteServer()
         {
             // Clear out the ECDH object
@@ -200,16 +220,27 @@ namespace KnightElfLibrary
             #endregion
         }
 
+        /// <summary>
+        /// Suspend the connection to the remote server
+        /// </summary>
         public void Suspend()
         {
             SendMessage(Messages.Suspend);
         }
 
+        /// <summary>
+        /// Resume the connection to the remote server
+        /// </summary>
         public void Resume()
         {
             SendMessage(Messages.Resume);
         }
 
+        /// <summary>
+        /// Close the connection to the remote server
+        /// 
+        /// This method also closes the Data and Control sockets.
+        /// </summary>
         public void Close()
         {
             SendMessage(Messages.Close);
@@ -217,6 +248,12 @@ namespace KnightElfLibrary
             ControlSocket.Close();
         }
 
+        /// <summary>
+        /// Send a message to the remote server.
+        /// 
+        /// The message is authenticated using an HMAC keyed with the session key.
+        /// </summary>
+        /// <param name="message">The Message to send.</param>
         private void SendMessage(Messages message)
         {
             long Ticks = DateTime.Now.Ticks;
