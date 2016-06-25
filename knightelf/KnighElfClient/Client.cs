@@ -440,7 +440,7 @@ namespace KnightElfClient
             // Ask if we want to transfer the client clipboard to the server
             try
             {
-                CurrentServer.Clipboard.Send();
+                CurrentServer.Clipboard.SendClipboard();
             }
             catch (Exception e)
             {
