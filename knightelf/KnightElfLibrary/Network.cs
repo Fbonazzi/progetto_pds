@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -7,6 +10,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace KnightElfLibrary
 {
@@ -36,7 +41,7 @@ namespace KnightElfLibrary
         public string Password;
         public State CurrentState;
         // Clipboard
-        public ClipboardConnection Clipboard;
+        public RemoteClipboard Clipboard;
         // Threads
         public Thread ConnectionHandler;
         public Thread DataHandler;
@@ -50,6 +55,8 @@ namespace KnightElfLibrary
         // Crypto stuff
         public ECDiffieHellmanCng ECDHClient;
         private byte[] SessionKey;
+        public byte[] ClipboardKey;
+        public byte[] DataKey;
         private HMACSHA256 Hmac;
         SHA256Cng Hasher;
 
@@ -140,7 +147,24 @@ namespace KnightElfLibrary
             // Compute the session key
             CngKey k = CngKey.Import(ServerPubKey, CngKeyBlobFormat.EccPublicBlob);
             byte[] SessionKey = this.ECDHClient.DeriveKeyMaterial(k);
-            byte[] KeyVerificationKey = Hasher.ComputeHash(SessionKey);
+            // Compute the key verification key
+            byte[] KeyVerifKeyBytes = Encoding.Default.GetBytes("KeyVerificationKey");
+            byte[] KeyVerifKeyBuf = new byte[SessionKey.Length + KeyVerifKeyBytes.Length];
+            SessionKey.CopyTo(KeyVerifKeyBuf, 0);
+            KeyVerifKeyBytes.CopyTo(KeyVerifKeyBuf, SessionKey.Length);
+            byte[] KeyVerificationKey = Hasher.ComputeHash(KeyVerifKeyBuf);
+            // Compute the clipboard encryption key
+            byte[] ClipboardKeyBytes = Encoding.Default.GetBytes("ClipboardKey");
+            byte[] ClipboardKeyBuf = new byte[SessionKey.Length + ClipboardKeyBytes.Length];
+            SessionKey.CopyTo(ClipboardKeyBuf, 0);
+            ClipboardKeyBytes.CopyTo(ClipboardKeyBuf, SessionKey.Length);
+            byte[] ClipboardKey = Hasher.ComputeHash(ClipboardKeyBuf);
+            // Compute the data encryption key
+            byte[] DataKeyBytes = Encoding.Default.GetBytes("DataKey");
+            byte[] DataKeyBuf = new byte[SessionKey.Length + DataKeyBytes.Length];
+            SessionKey.CopyTo(DataKeyBuf, 0);
+            DataKeyBytes.CopyTo(DataKeyBuf, SessionKey.Length);
+            byte[] DataKey = Hasher.ComputeHash(DataKeyBuf);
             #endregion
 
             #region AUTHENTICATE_KEY_CONFIRMATION
@@ -209,6 +233,8 @@ namespace KnightElfLibrary
                 // Authentication successful
                 this.SessionKey = SessionKey;
                 this.Hmac = new HMACSHA256(this.SessionKey);
+                this.ClipboardKey = ClipboardKey;
+                this.DataKey = DataKey;
                 return true;
             }
             else
@@ -273,6 +299,589 @@ namespace KnightElfLibrary
                 // TODO: do something
                 throw e;
             }
+        }
+    }
+
+    public class RemoteClipboard
+    {
+        /// <summary>
+        /// The possible roles of a caller when interacting with a remote clipboard
+        /// </summary>
+        public enum Role { Server, Client };
+
+        public enum Messages : byte { ClipboardEmpty, ClipboardFull, ClipboardReceive, ClipboardDontcare, FileReceive, FileDropReceive, DirReceive, Invalid };
+
+        /// <summary>
+        /// All possible types of clipboard content
+        /// </summary>
+        public enum TransferType : byte { Audio, Bitmap, FileDrop, FileDropFile, FileDropDir, Csv, Html, Rtf, Text, UnicodeText, Xaml, Empty };
+
+        // Clipboard
+        private string TempDirName;
+        private string ClipboardFileName;
+
+        // Network
+        private BidirectionalCryptoStream ClipboardStream;
+        private Socket ClipboardSocket;
+        private TcpListener ClipboardListener;
+        public Role CallerRole;
+        private int PacketSize = 4096;
+
+        // Crypto stuff
+        private byte[] ClipboardKey;
+        private HMACSHA256 Hmac;
+
+        /// <summary>
+        /// Create a new RemoteClipboard.
+        /// 
+        /// If you are a Server, the IP and Port parameters are used to listen for a remote Client to connect.
+        /// If you are a Client, the IP and Port parameters are used to connect to a remote Server.
+        /// </summary>
+        /// <param name="IP">The IP of the remote clipboard.</param>
+        /// <param name="Port">The port of the remote clipboard.</param>
+        /// <param name="ClipboardKey">The shared ClipboardKey</param>
+        /// <param name="CallerRole">The Role of the caller (Client, Server).</param>
+        public RemoteClipboard(IPAddress IP, int Port, byte[] ClipboardKey, Role CallerRole, string TempDirName)
+        {
+            // Save the ClipboardKey
+            this.ClipboardKey = ClipboardKey;
+            // Initialize the HMAC
+            this.Hmac = new HMACSHA256(this.ClipboardKey);
+            // Save the CallerRole
+            this.CallerRole = CallerRole;
+            // Save the TempDirName. The directory must exist
+            this.TempDirName = TempDirName;
+            this.ClipboardFileName = Path.Combine(TempDirName, "clipboard.bin");
+            // Initialise depending on the Role
+            if (CallerRole == Role.Client)
+            {
+                // If we are the client, try to open an encrypted TCP connection
+                // Create the socket
+                this.ClipboardSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                this.ClipboardSocket.Connect(IP, Port);
+                ClipboardStream = new BidirectionalCryptoStream(this.ClipboardSocket, ClipboardKey);
+            }
+            else
+            {
+                // If we are the server create a listener, but don't start listening
+                ClipboardListener = new TcpListener(IP, Port);
+            }
+        }
+
+        public void AcceptClient()
+        {
+            ClipboardListener.Start();
+            // Wait for a socket connection from the client
+            this.ClipboardSocket = ClipboardListener.AcceptSocket();
+            ClipboardStream = new BidirectionalCryptoStream(ClipboardSocket, this.ClipboardKey);
+        }
+
+        public void ReceiveClipboard()
+        {
+            byte[] SendBuf;
+            byte[] RecvBuf = new byte[512];
+            int ReceivedBytes;
+
+            // Receive the control message
+            ReceivedBytes = this.ClipboardSocket.Receive(RecvBuf);
+
+            Messages msg = this.UnwrapMessage(RecvBuf, ReceivedBytes);
+            if (msg != Messages.Invalid)
+            {
+                // The message was valid
+                if (msg == Messages.ClipboardFull)
+                {
+                    #region CLIPBOARD_FULL
+                    // The clipboard is full, ask if we want to receive it
+                    bool result = true;
+
+                    if (result == true)
+                    {
+                        #region RECEIVE_CLIPBOARD_YES
+                        // We want to receive the clipboard
+
+                        #endregion
+                    }
+                    else
+                    {
+                        #region RECEIVE_CLIPBOARD_NO
+                        // We don't want to receive the clipboard
+                        SendBuf = this.WrapMessage(Messages.ClipboardDontcare);
+                        this.ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
+                        #endregion
+                    }
+                    #endregion
+                }
+                else
+                {
+                    #region CLIPBOARD_EMPTY
+                    // The clipboard was empty
+                    // TODO: log
+                    #endregion
+                }
+            }
+        }
+
+        public void SendClipboard()
+        {
+            byte[] SendBuf;
+            byte[] RecvBuf;
+            int ReceivedBytes;
+
+            TransferType Type = ClipboardContains();
+            if (Type == TransferType.Empty)
+            {
+                #region SEND_CLIPBOARD_EMPTY
+                // The clipboard is empty or contains unsupported data: notify other end
+                SendBuf = this.WrapMessage(Messages.ClipboardEmpty);
+                this.ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
+                #endregion
+            }
+            else
+            {
+                #region SEND_CLIPBOARD_FULL
+                // The clipboard contains some supported item
+                // TODO: log?
+
+                // Notify other end
+                SendBuf = this.WrapMessage(Messages.ClipboardFull);
+                ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
+
+                // Wait for response
+                RecvBuf = new byte[SendBuf.Length + 1];
+                ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
+                Messages msg = this.UnwrapMessage(RecvBuf, ReceivedBytes);
+
+                if (msg == Messages.ClipboardReceive)
+                {
+                    #region SEND_CLIPBOARD_REQUESTED
+                    // Create a filestream to hold the data
+                    FileStream Tmp = new FileStream(ClipboardFileName, FileMode.Create, FileAccess.ReadWrite);
+                    // Fill the filestream depending on type
+                    switch (Type)
+                    {
+                        case TransferType.Audio:
+                            #region SEND_CLIPBOARD_AUDIO
+                            Tmp = (FileStream)Clipboard.GetAudioStream();
+                            #endregion
+                            break;
+                        case TransferType.Bitmap:
+                            #region SEND_CLIPBOARD_BITMAP
+                            BitmapSource Image = Clipboard.GetImage();
+                            BitmapEncoder encoder = new BmpBitmapEncoder();
+                            encoder.Frames.Add(BitmapFrame.Create(Image));
+                            encoder.Save(Tmp);
+                            #endregion
+                            break;
+                        case TransferType.Csv:
+                            #region SEND_CLIPBOARD_CSV
+                            string TextCsv = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
+                            Tmp.Write(Encoding.Default.GetBytes(TextCsv), 0, Encoding.Default.GetByteCount(TextCsv));
+                            #endregion
+                            break;
+                        case TransferType.Html:
+                            #region SEND_CLIPBOARD_HTML
+                            string TextHtml = Clipboard.GetText(TextDataFormat.Html);
+                            Tmp.Write(Encoding.Default.GetBytes(TextHtml), 0, Encoding.Default.GetByteCount(TextHtml));
+                            #endregion
+                            break;
+                        case TransferType.Rtf:
+                            #region SEND_CLIPBOARD_RTF
+                            string TextRtf = Clipboard.GetText(TextDataFormat.Rtf);
+                            Tmp.Write(Encoding.Default.GetBytes(TextRtf), 0, Encoding.Default.GetByteCount(TextRtf));
+                            #endregion
+                            break;
+                        case TransferType.UnicodeText:
+                            #region SEND_CLIPBOARD_UNICODE
+                            string TextUnicode = Clipboard.GetText(TextDataFormat.UnicodeText);
+                            Tmp.Write(Encoding.Default.GetBytes(TextUnicode), 0, Encoding.Default.GetByteCount(TextUnicode));
+                            #endregion
+                            break;
+                        case TransferType.Xaml:
+                            #region SEND_CLIPBOARD_XAML
+                            string TextXaml = Clipboard.GetText(TextDataFormat.Xaml);
+                            Tmp.Write(Encoding.Default.GetBytes(TextXaml), 0, Encoding.Default.GetByteCount(TextXaml));
+                            #endregion
+                            break;
+                        case TransferType.Text:
+                            #region SEND_CLIPBOARD_TEXT
+                            string Text = Clipboard.GetText();
+                            Tmp.Write(Encoding.Default.GetBytes(Text), 0, Encoding.Default.GetByteCount(Text));
+                            #endregion
+                            break;
+                        case TransferType.FileDrop:
+                            #region SEND_CLIPBOARD_FILEDROP
+                            // Get the list of files in the filedrop
+                            StringCollection Files = Clipboard.GetFileDropList();
+
+                            #region SEND_CLIPBOARD_NOTIFY_FILEDROP
+                            // Notify other end that this is a file drop
+                            // Send FileDrop type and number of elements
+                            SendBuf = new byte[17];
+                            byte[] size = BitConverter.GetBytes((long)Files.Count);
+                            size.CopyTo(SendBuf, 0);
+                            byte[] nonce = GetNonceBytes();
+                            nonce.CopyTo(SendBuf, 8);
+                            SendBuf[16] = (byte)Type;
+                            SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                            ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                            // Wait for a FileDropReceive ack
+                            RecvBuf = new byte[49];
+                            ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
+                            byte[] ack = UnwrapPacket(RecvBuf, ReceivedBytes);
+                            #endregion
+                            if (ack != null)
+                            {
+                                // If the signature and timestamp were valid
+                                byte[] ack_nonce = new byte[8];
+                                Array.Copy(ack, ack_nonce, 8);
+                                if (ack[8] == (byte)Messages.FileDropReceive && nonce.SequenceEqual(ack_nonce))
+                                {
+                                    // If the other end acknowledged the FileDrop
+                                    foreach (string Element in Files)
+                                    {
+                                        // Process file attributes
+                                        FileAttributes Attributes = File.GetAttributes(Element) & FileAttributes.Directory;
+
+                                        if (Attributes != FileAttributes.Directory)
+                                        {
+                                            #region SEND_CLIPBOARD_FILEDROP_FILE
+                                            // Just a file: override Type to signal it
+                                            Type = TransferType.FileDropFile;
+                                            #region SEND_CLIPBOARD_NOTIFY_FILEDROP_FILE
+                                            // Send FileDropFile type and File name
+                                            byte[] filename = Encoding.Default.GetBytes(Element);
+                                            SendBuf = new byte[8 + 1 + filename.Length];
+                                            nonce = GetNonceBytes();
+                                            nonce.CopyTo(SendBuf, 0);
+                                            SendBuf[8] = (byte)Type;
+                                            Array.Copy(filename, 0, SendBuf, 8, filename.Length);
+                                            SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                            ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                            // Wait for a FileReceive ack
+                                            RecvBuf = new byte[49];
+                                            ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
+                                            ack = UnwrapPacket(RecvBuf, ReceivedBytes);
+                                            #endregion
+                                            if (ack != null)
+                                            {
+                                                // If the signature and timestamp were valid
+                                                ack_nonce = new byte[8];
+                                                Array.Copy(ack, ack_nonce, 8);
+                                                if (ack[8] == (byte)Messages.FileReceive && nonce.SequenceEqual(ack_nonce))
+                                                {
+                                                    #region SEND_CLIPBOARD_SEND_FILEDROP_FILE
+                                                    // If the other end acknowledged the File
+                                                    // Create the FileStream
+                                                    Tmp = new FileStream(Element, FileMode.Open, FileAccess.Read);
+                                                    SendOverStream(Tmp, Type);
+                                                    #endregion
+                                                }
+                                            }
+                                            #endregion
+                                        }
+                                        else
+                                        {
+                                            #region SEND_CLIPBOARD_FILEDROP_DIR
+                                            // A directory: override Type to signal it
+                                            Type = TransferType.FileDropDir;
+                                            #region SEND_CLIPBOARD_NOTIFY_FILEDROP_DIR
+                                            // Send FileDropDir type and Dir name
+                                            byte[] filename = Encoding.Default.GetBytes(Element);
+                                            SendBuf = new byte[8 + 1 + filename.Length];
+                                            nonce = GetNonceBytes();
+                                            nonce.CopyTo(SendBuf, 0);
+                                            SendBuf[8] = (byte)Type;
+                                            Array.Copy(filename, 0, SendBuf, 8, filename.Length);
+                                            SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                            ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                            // Wait for a DirReceive ack
+                                            RecvBuf = new byte[49];
+                                            ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
+                                            ack = UnwrapPacket(RecvBuf, ReceivedBytes);
+                                            #endregion
+                                            if (ack != null)
+                                            {
+                                                // If the signature and timestamp were valid
+                                                ack_nonce = new byte[8];
+                                                Array.Copy(ack, ack_nonce, 8);
+                                                if (ack[8] == (byte)Messages.DirReceive && nonce.SequenceEqual(ack_nonce))
+                                                {
+                                                    #region SEND_CLIPBOARD_SEND_FILEDROP_DIR
+                                                    // If the other end acknowledged the Dir
+                                                    // Zip directory
+                                                    string Archive = Path.Combine(TempDirName, "Archive.zip");
+                                                    File.Delete(Archive);
+
+                                                    //////////////////////////////////////////////////////////////////////
+                                                    // TODO: implement
+                                                    // Creo progress bar
+                                                    //lock (LoadLock)
+                                                    //{
+                                                    //    Loader = new Thread(new ThreadStart(ScaricaClipboard));
+                                                    //    Loader.SetApartmentState(ApartmentState.STA);
+                                                    //    Loader.Start();
+
+                                                    //    Monitor.Wait(LoadLock);
+                                                    //}
+
+                                                    //// Etichetta e barra di caricamento
+                                                    //BarraCaricamento.Invoke((MethodInvoker)delegate () { BarraCaricamento.Style = ProgressBarStyle.Marquee; });
+                                                    //Etichetta.Invoke((MethodInvoker)delegate () { Etichetta.Text = "Preparo i file da inviare..."; });
+                                                    //Caricamento.Invoke((MethodInvoker)delegate () { Caricamento.Update(); });
+
+                                                    ZipFile.CreateFromDirectory(Element, Archive);
+
+                                                    // Chiudo finestra
+                                                    // Caricamento.Invoke((MethodInvoker)delegate () { Caricamento.Close(); });
+                                                    //////////////////////////////////////////////////////////////////////
+
+                                                    // Create the FileStream
+                                                    Tmp = new FileStream(Archive, FileMode.Open, FileAccess.Read);
+                                                    SendOverStream(Tmp, Type);
+                                                    #endregion
+                                                }
+                                            }
+                                            #endregion
+                                        }
+                                    }
+                                }
+                            }
+
+                            #endregion
+                            break;
+                    }
+                    if (Clipboard.ContainsFileDropList())
+                    {
+                        Tmp.Close();
+                    }
+                    else
+                    {
+                        SendOverStream(Tmp, Type);
+                        Tmp.Close();
+                        // TODO: should I delete it?
+                        // File.Delete(ClipboardFile)
+                    }
+                    #endregion
+                }
+
+                #endregion
+            }
+        }
+
+        /// <summary>
+        /// Check what supported items does the clipboard contain.
+        /// </summary>
+        /// <returns>A TransferType value.</returns>
+        private TransferType ClipboardContains()
+        {
+            if (Clipboard.ContainsAudio())
+                return TransferType.Audio;
+            else if (Clipboard.ContainsImage())
+                return TransferType.Bitmap;
+            else if (Clipboard.ContainsFileDropList())
+                return TransferType.FileDrop;
+            else if (Clipboard.ContainsText(TextDataFormat.CommaSeparatedValue))
+                return TransferType.Csv;
+            else if (Clipboard.ContainsText(TextDataFormat.Html))
+                return TransferType.Html;
+            else if (Clipboard.ContainsText(TextDataFormat.Rtf))
+                return TransferType.Rtf;
+            else if (Clipboard.ContainsText(TextDataFormat.UnicodeText))
+                return TransferType.UnicodeText;
+            else if (Clipboard.ContainsText(TextDataFormat.Xaml))
+                return TransferType.Xaml;
+            else if (Clipboard.ContainsText(TextDataFormat.Text))
+                return TransferType.Text;
+            else
+                return TransferType.Empty;
+        }
+
+        /// <summary>
+        /// Send a clipboard element to the other end over the encrypted network stream.
+        /// </summary>
+        /// <param name="TheFile">The file stream to transfer</param>
+        /// <param name="Type">The type of file to transfer</param>
+        public void SendOverStream(FileStream TheFile, TransferType Type)
+        {
+            // Compute size and number of packets
+            long LongPacketSize = PacketSize - 40;
+            int LastPacketSize = (int)(TheFile.Length % LongPacketSize);
+            long PacketNo = (TheFile.Length / LongPacketSize);
+            if (LastPacketSize != 0)
+                PacketNo++;
+
+            // Send file type and size
+            byte[] SendBuf = new byte[17];
+            byte[] size = BitConverter.GetBytes(TheFile.Length);
+            size.CopyTo(SendBuf, 0);
+            byte[] nonce = GetNonceBytes();
+            nonce.CopyTo(SendBuf, 8);
+            SendBuf[16] = (byte)Type;
+            SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+            ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+            // Wait for a FileReceive ack
+            byte[] RecvBuf = new byte[49];
+            int ReceivedBytes;
+            ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
+            byte[] ack = UnwrapPacket(RecvBuf, ReceivedBytes);
+            if (ack != null)
+            {
+                // If the signature and timestamp were valid
+                byte[] ack_nonce = new byte[8];
+                Array.Copy(ack, ack_nonce, 8);
+                if (ack[8] == (byte)Messages.FileReceive && nonce.SequenceEqual(ack_nonce))
+                {
+                    // If the other end acked this file (the nonce matched)
+                    TheFile.Seek(0, SeekOrigin.Begin);
+                    // Send
+                    long LengthLeft = TheFile.Length;
+                    int CurrentPacketSize = 0;
+                    for (int i = 0; i < PacketNo; i++)
+                    {
+                        if (i == PacketNo - 1 && LastPacketSize != 0)
+                        {
+                            // If this is the last packet and it's not empty
+                            CurrentPacketSize = LastPacketSize;
+                        }
+                        else
+                        {
+                            // If this is not the last packet or the last packet is full
+                            CurrentPacketSize = PacketSize - 40;
+                        }
+                        // Write the packet content
+                        SendBuf = new byte[CurrentPacketSize];
+                        TheFile.Read(SendBuf, 0, CurrentPacketSize);
+                        // Sign the packet
+                        SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                        // Send the packet
+                        ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                    }
+                }
+            }
+            // Clear the stream
+            ClipboardStream.Flush();
+            // TODO: log?
+        }
+
+        private Messages UnwrapMessage(byte[] Buffer, int Size)
+        {
+            byte[] message = UnwrapPacket(Buffer, Size);
+
+            if (message.Length > 1)
+                return Messages.Invalid;
+
+            switch (message[0])
+            {
+                case (byte)Messages.ClipboardDontcare:
+                    return Messages.ClipboardDontcare;
+                case (byte)Messages.ClipboardEmpty:
+                    return Messages.ClipboardEmpty;
+                case (byte)Messages.ClipboardFull:
+                    return Messages.ClipboardFull;
+                case (byte)Messages.ClipboardReceive:
+                    return Messages.ClipboardReceive;
+                case (byte)Messages.FileReceive:
+                    return Messages.FileReceive;
+                case (byte)Messages.FileDropReceive:
+                    return Messages.FileDropReceive;
+                case (byte)Messages.DirReceive:
+                    return Messages.DirReceive;
+                default:
+                    return Messages.Invalid;
+            }
+        }
+
+        private byte[] WrapMessage(Messages Message)
+        {
+            byte[] msg = new byte[1];
+            msg[0] = (byte)Message;
+            return WrapPacket(msg, 1);
+        }
+
+        /// <summary>
+        /// Verify a packet and remove its tag and timestamp.
+        /// </summary>
+        /// <param name="Buffer">The packet as received</param>
+        /// <param name="Size">The number of bytes received in the buffer</param>
+        /// <returns>Returns a byte array 40B smaller than the original if valid. Returns null if invalid.</returns>
+        private byte[] UnwrapPacket(byte[] Buffer, int Size)
+        {
+            if (Buffer == null || Size <= 40)
+            {
+                // The message is empty or too small
+                return null;
+            }
+            byte[] tag = new byte[32];
+            byte[] msg = new byte[Size - 32];
+
+            #region UNWRAP_VERIFY_TAG
+            Array.Copy(Buffer, tag, 32);
+            Array.Copy(Buffer, 32, msg, 0, Size - 32);
+
+            byte[] VerifTag = this.Hmac.ComputeHash(msg);
+            if (!VerifTag.SequenceEqual(tag))
+            {
+                // Message not authenticated
+                return null;
+            }
+            #endregion
+
+            #region UNWRAP_VERIFY_TIMESTAMP
+            // Convert the 8-byte timestamp in position 32 in the Buffer to a long
+            long TimestampTicks = BitConverter.ToInt64(Buffer, 32);
+            long Ticks = DateTime.Now.Ticks;
+            // If the timestamp is more than 5 seconds away in either direction (50M ticks)
+            if ((TimestampTicks >= Ticks && TimestampTicks - Ticks > 50000000) || (TimestampTicks < Ticks && Ticks - TimestampTicks > 50000000))
+            {
+                // Timestamp too far
+                return null;
+            }
+            #endregion
+
+            // Copy the message out
+            byte[] message = new byte[Size - 40];
+            Array.Copy(Buffer, 40, message, 0, Size - 40);
+            return message;
+        }
+
+        /// <summary>
+        /// Add a timestamp and tag to a packet.
+        /// </summary>
+        /// <param name="Buffer">The original packet</param>
+        /// <param name="Size">The original size</param>
+        /// <returns>A byte array 40B bigger than the original</returns>
+        private byte[] WrapPacket(byte[] Buffer, int Size)
+        {
+            if (Buffer == null || Size <= 0 || Size > this.PacketSize - 40)
+            {
+                // Invalid packet
+                return null;
+            }
+            byte[] newbuf = new byte[Size + 40];
+            byte[] msg = new byte[Size + 8];
+            byte[] tag;
+            byte[] timestamp = BitConverter.GetBytes(DateTime.Now.Ticks);
+
+            #region WRAP_PACKET_CREATE_MESSAGE
+            timestamp.CopyTo(msg, 0);
+            Buffer.CopyTo(msg, 8);
+            #endregion
+
+            #region WRAP_PACKET_SIGN
+            tag = this.Hmac.ComputeHash(msg);
+            tag.CopyTo(newbuf, 0);
+            msg.CopyTo(newbuf, 32);
+            #endregion
+            return newbuf;
+        }
+
+        private static byte[] GetNonceBytes()
+        {
+            byte[] b = new byte[8];
+            RNGCryptoServiceProvider Gen = new RNGCryptoServiceProvider();
+            Gen.GetBytes(b);
+            return b;
         }
     }
 }
