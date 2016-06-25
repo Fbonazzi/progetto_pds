@@ -411,7 +411,7 @@ namespace KnightElfClient
             {
                 try
                 {
-                    CurrentServer.Clipboard = new ClipboardConnection(CurrentServer.IP, CurrentServer.Port + 1);
+                    CurrentServer.Clipboard = new RemoteClipboard(CurrentServer.IP, CurrentServer.Port + 1, CurrentServer.ClipboardKey, RemoteClipboard.Role.Client);
                 }
                 catch (SocketException)
                 {
