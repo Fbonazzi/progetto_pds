@@ -95,7 +95,7 @@ namespace KnightElfLibrary
     /// <summary>
     /// The connection control messages to exchange between local client and remote server.
     /// </summary>
-    public enum Messages { Suspend, Resume, Close };
+    public enum Messages : byte { Disconnect, Suspend, Resume, Close };
     /// <summary>
     /// The protocol states for both the local client and the remote server.
     /// </summary>
@@ -136,6 +136,9 @@ namespace KnightElfLibrary
         public byte[] DataKey;
         private HMACSHA256 Hmac;
         SHA256Cng Hasher;
+
+        // Network
+        private int PacketSize = 4096;
 
         /// <summary>
         /// Create a new RemoteServer with the specified parameters.
@@ -262,8 +265,7 @@ namespace KnightElfLibrary
 
             #region AUTHENTICATE_EXCHANGE_VERIF_MESSAGES
             // Prepare the ServerDone buffer
-            // Make it 1 byte longer to account for possible increase of digits when 999->1000
-            byte[] ServerDoneMsg = new byte[ClientDoneMsg.Length + 1];
+            byte[] ServerDoneMsg = new byte[ClientDoneMsg.Length];
 
             // Exchange hashed confirmation messages
             try
@@ -275,6 +277,10 @@ namespace KnightElfLibrary
             {
                 // TODO: do something
                 throw e;
+            }
+            if (ServerDoneMsg.Length != ReceivedBytes)
+            {
+                return false;
             }
             #endregion
 
@@ -359,24 +365,495 @@ namespace KnightElfLibrary
         /// <param name="message">The Message to send.</param>
         private void SendMessage(Messages message)
         {
-            long Ticks = DateTime.Now.Ticks;
-            byte[] MessageBytes = Encoding.Default.GetBytes(message.ToString() + ":" + Ticks.ToString());
-            byte[] tag = this.Hmac.ComputeHash(MessageBytes);
-            byte[] msg = new byte[tag.Length + MessageBytes.Length];
-            tag.CopyTo(msg, 0);
-            MessageBytes.CopyTo(msg, tag.Length);
+            byte[] msg = new byte[1];
+            msg[0] = (byte)message;
+            byte[] WrappedMsg = WrapPacket(msg, 1);
 
+            if (WrappedMsg == null)
+                return;
+
+            #region SEND
             // Send the message
             try
             {
-                ControlSocket.Send(msg);
+                ControlSocket.Send(WrappedMsg);
             }
             catch (SocketException e)
             {
                 // TODO: do something
                 throw e;
             }
+            #endregion
         }
+
+        /// <summary>
+        /// Verify a packet and remove its tag and timestamp.
+        /// </summary>
+        /// <param name="Buffer">The packet as received</param>
+        /// <param name="Size">The number of bytes received in the buffer</param>
+        /// <returns>Returns a byte array 40B smaller than the original if valid. Returns null if invalid.</returns>
+        private byte[] UnwrapPacket(byte[] Buffer, int Size)
+        {
+            if (Buffer == null || Size <= 40)
+            {
+                // The message is empty or too small
+                return null;
+            }
+            byte[] tag = new byte[32];
+            byte[] msg = new byte[Size - 32];
+
+            #region UNWRAP_VERIFY_TAG
+            Array.Copy(Buffer, tag, 32);
+            Array.Copy(Buffer, 32, msg, 0, Size - 32);
+
+            byte[] VerifTag = this.Hmac.ComputeHash(msg);
+            if (!VerifTag.SequenceEqual(tag))
+            {
+                // Message not authenticated
+                return null;
+            }
+            #endregion
+
+            #region UNWRAP_VERIFY_TIMESTAMP
+            // Convert the 8-byte timestamp in position 32 in the Buffer to a long
+            long TimestampTicks = BitConverter.ToInt64(Buffer, 32);
+            long Ticks = DateTime.Now.Ticks;
+            // If the timestamp is more than 5 seconds away in either direction (50M ticks)
+            if ((TimestampTicks >= Ticks && TimestampTicks - Ticks > 50000000) || (TimestampTicks < Ticks && Ticks - TimestampTicks > 50000000))
+            {
+                // Timestamp too far
+                return null;
+            }
+            #endregion
+
+            // Copy the message out
+            byte[] message = new byte[Size - 40];
+            Array.Copy(Buffer, 40, message, 0, Size - 40);
+            return message;
+        }
+
+        /// <summary>
+        /// Add a timestamp and tag to a packet.
+        /// </summary>
+        /// <param name="Buffer">The original packet</param>
+        /// <param name="Size">The original size</param>
+        /// <returns>A byte array 40B bigger than the original</returns>
+        private byte[] WrapPacket(byte[] Buffer, int Size)
+        {
+            if (Buffer == null || Size <= 0 || Size > this.PacketSize - 40)
+            {
+                // Invalid packet
+                return null;
+            }
+            byte[] newbuf = new byte[Size + 40];
+            byte[] msg = new byte[Size + 8];
+            byte[] tag;
+            byte[] timestamp = BitConverter.GetBytes(DateTime.Now.Ticks);
+
+            #region WRAP_PACKET_CREATE_MESSAGE
+            timestamp.CopyTo(msg, 0);
+            Buffer.CopyTo(msg, 8);
+            #endregion
+
+            #region WRAP_PACKET_SIGN
+            tag = this.Hmac.ComputeHash(msg);
+            tag.CopyTo(newbuf, 0);
+            msg.CopyTo(newbuf, 32);
+            #endregion
+            return newbuf;
+        }
+
+        private static byte[] GetNonceBytes()
+        {
+            byte[] b = new byte[8];
+            RNGCryptoServiceProvider Gen = new RNGCryptoServiceProvider();
+            Gen.GetBytes(b);
+            return b;
+        }
+    }
+
+    public class RemoteClient
+    {
+        // Sockets
+        public Socket ControlSocket;
+        public Socket DataSocket;
+        public Socket ListenerSocket;
+        public Socket DataListenerSocket;
+        // Connection data
+        public IPEndPoint EndPoint;
+        public IPAddress IP;
+        public int Port;
+        public string Password;
+        public State CurrentState;
+        // Clipboard
+        public RemoteClipboard Clipboard;
+        // Threads
+        public Thread ConnectionHandler;
+        public Thread DataHandler;
+        public Thread ClipboardHandler;
+        // Locks
+        public readonly object RunningLock = new object();
+        public readonly object StateLock = new object();
+        public readonly object ClipboardLock = new object();
+
+        // Crypto stuff
+        public ECDiffieHellmanCng ECDHServer;
+        private byte[] SessionKey;
+        public byte[] ClipboardKey;
+        public byte[] DataKey;
+        private HMACSHA256 Hmac;
+        SHA256Cng Hasher;
+
+        // Network
+        private int PacketSize = 4096;
+
+        // TODO: remove/rename
+        public bool InChiusura = false;
+
+        /// <summary>
+        /// Create a new RemoteClient with the specified parameters.
+        /// </summary>
+        /// <param name="IP">The local IP address</param>
+        /// <param name="Port">The local port</param>
+        /// <param name="Password">The shared password</param>
+        public RemoteClient(IPAddress IP, int Port, string Password)
+        {
+            this.IP = IP; // My local IP
+            this.Port = Port; // My local port
+            this.Password = Password;
+            // TODO: necessary? Or different when we listen?
+            this.EndPoint = new IPEndPoint(IP, Port);
+
+            this.ControlSocket = null;
+            this.DataSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            this.ListenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            this.CurrentState = State.Disconnected;
+            // Configure ECDH
+            this.ECDHServer = new ECDiffieHellmanCng();
+            this.ECDHServer.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hmac;
+            // Derive a key from the password and the IP:Port representation
+            PasswordDeriveBytes PasswordDerive = new PasswordDeriveBytes(Password, Encoding.Default.GetBytes(IP.ToString() + ":" + Port.ToString()));
+            this.ECDHServer.HmacKey = PasswordDerive.CryptDeriveKey("HMAC", "SHA-256", 256, null);
+            this.Hasher = new SHA256Cng();
+        }
+
+        /// <summary>
+        /// Destroy the RemoteClient
+        /// </summary>
+        ~RemoteClient()
+        {
+            // Clear out the ECDH object
+            this.ECDHServer.Clear();
+            // Clear threads
+            if (ConnectionHandler != null)
+            {
+                if (ConnectionHandler.IsAlive)
+                {
+                    ConnectionHandler.Abort();
+                    ConnectionHandler.Join();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Listen for a client connection and connect the control socket
+        /// </summary>
+        public void Listen()
+        {
+            // Bind on the selected IP:Port endpoint
+            ListenerSocket.Bind(this.EndPoint);
+
+            // Start listening without blocking
+            ListenerSocket.Listen(0);
+            // TODO: log
+            try
+            {
+                // Wait for a Client to connect
+                ControlSocket = ListenerSocket.Accept();
+            }
+            catch (SocketException e)
+            {
+                // Check the error (user interrupt, network error)
+                if (e.SocketErrorCode == SocketError.Interrupted)
+                {
+                    // User interrupt
+                    if (!InChiusura)
+                    {
+                        // TODO: log
+                        // TODO: close sockets?
+                    }
+                }
+                else
+                {
+                    // Network error
+                    // TODO: close sockets?
+                    ListenerSocket.Close();
+                }
+            }
+        }
+
+        public bool Authenticate()
+        {
+            byte[] ServerPubKey = this.ECDHServer.PublicKey.ToByteArray();
+            byte[] ClientPubKey = new byte[ServerPubKey.Length];
+            int ReceivedBytes;
+
+            #region AUTHENTICATE_KEY_MATERIAL
+            // Exchange public keys
+            try
+            {
+                ReceivedBytes = ControlSocket.Receive(ClientPubKey, ClientPubKey.Length, 0);
+                ControlSocket.Send(ServerPubKey);
+            }
+            catch (SocketException e)
+            {
+                // TODO: do something?
+                throw e;
+            }
+            if (ClientPubKey.Length != ReceivedBytes)
+            {
+                return false;
+            }
+            #endregion
+
+            #region AUTHENTICATE_COMPUTE_SESSION_KEYS
+            // Compute the session key
+            CngKey k = CngKey.Import(ClientPubKey, CngKeyBlobFormat.EccPublicBlob);
+            byte[] SessionKey = this.ECDHServer.DeriveKeyMaterial(k);
+            // Compute the key verification key
+            byte[] KeyVerifKeyBytes = Encoding.Default.GetBytes("KeyVerificationKey");
+            byte[] KeyVerifKeyBuf = new byte[SessionKey.Length + KeyVerifKeyBytes.Length];
+            SessionKey.CopyTo(KeyVerifKeyBuf, 0);
+            KeyVerifKeyBytes.CopyTo(KeyVerifKeyBuf, SessionKey.Length);
+            byte[] KeyVerificationKey = Hasher.ComputeHash(KeyVerifKeyBuf);
+            // Compute the clipboard encryption key
+            byte[] ClipboardKeyBytes = Encoding.Default.GetBytes("ClipboardKey");
+            byte[] ClipboardKeyBuf = new byte[SessionKey.Length + ClipboardKeyBytes.Length];
+            SessionKey.CopyTo(ClipboardKeyBuf, 0);
+            ClipboardKeyBytes.CopyTo(ClipboardKeyBuf, SessionKey.Length);
+            byte[] ClipboardKey = Hasher.ComputeHash(ClipboardKeyBuf);
+            // Compute the data encryption key
+            byte[] DataKeyBytes = Encoding.Default.GetBytes("DataKey");
+            byte[] DataKeyBuf = new byte[SessionKey.Length + DataKeyBytes.Length];
+            SessionKey.CopyTo(DataKeyBuf, 0);
+            DataKeyBytes.CopyTo(DataKeyBuf, SessionKey.Length);
+            byte[] DataKey = Hasher.ComputeHash(DataKeyBuf);
+            #endregion
+
+            #region AUTHENTICATE_KEY_CONFIRMATION
+            // Create the key confirmation HMAC hasher
+            HMACSHA256 Hmac = new HMACSHA256(KeyVerificationKey);
+
+            #region AUTHENTICATE_CREATE_SERVER_MSG
+            // Prepare the message
+            long Ticks = DateTime.Now.Ticks;
+            byte[] ServerDone = Encoding.Default.GetBytes("ServerDone:" + Ticks.ToString());
+            // Create the tag
+            byte[] tag = Hmac.ComputeHash(ServerDone);
+            // Prepare the tagged message
+            byte[] ServerDoneMsg = new byte[tag.Length + ServerDone.Length];
+            tag.CopyTo(ServerDoneMsg, 0);
+            ServerDone.CopyTo(ServerDoneMsg, tag.Length);
+            #endregion
+
+            #region AUTHENTICATE_EXCHANGE_VERIF_MESSAGES
+            // Prepare the ClientDone buffer
+            byte[] ClientDoneMsg = new byte[ServerDoneMsg.Length];
+
+            // Exchanged hashed confirmation messages
+            try
+            {
+                ReceivedBytes = ControlSocket.Receive(ClientDoneMsg, ClientDoneMsg.Length, 0);
+                ControlSocket.Send(ServerDoneMsg);
+            }
+            catch (SocketException e)
+            {
+                // TODO: do something
+                throw e;
+            }
+            if (ClientDoneMsg.Length != ReceivedBytes)
+            {
+                return false;
+            }
+            #endregion
+
+
+            #region AUTHENTICATE_VERIF_CLIENT_MSG
+            // Verify the ClientDoneMsg
+            string ClientDone = Encoding.Default.GetString(ClientDoneMsg, tag.Length, ReceivedBytes - tag.Length);
+            // Verify the content of the message
+            string[] Content = ClientDone.Split(':');
+            // Verify the message text
+            if (!Content[0].SequenceEqual("ClientDone"))
+            {
+                // Not a ClientDone message
+                return false;
+            }
+            // Verify that the message timestamp is close enough
+            long TimestampTicks = Convert.ToInt64(Content[1]);
+            // If the timestamp precedes the client timestamp, or follows it by more than 1 second (10M ticks)
+            if (TimestampTicks < Ticks || TimestampTicks - Ticks > 10000000)
+            {
+                // Timestamp too far
+                return false;
+            }
+            #endregion
+
+            #region AUTHENTICATE_VERIF_CLIENT_TAG
+            // Extract the client tag
+            byte[] ClientTag = new byte[tag.Length];
+            Array.Copy(ClientDoneMsg, ClientTag, ClientTag.Length);
+            // Verify the ClientDoneMsg signature
+            byte[] VerifClient = Hmac.ComputeHash(Encoding.Default.GetBytes(ClientDone));
+            if (ClientTag.SequenceEqual(VerifClient))
+            {
+                // Authentication successful
+                this.SessionKey = SessionKey;
+                this.Hmac = new HMACSHA256(this.SessionKey);
+                this.ClipboardKey = ClipboardKey;
+                this.DataKey = DataKey;
+                return true;
+            }
+            else
+            {
+                // Authentication failed
+                return false;
+            }
+            #endregion
+            #endregion
+        }
+
+        /// <summary>
+        /// Receive a message from the remote client
+        /// </summary>
+        /// <returns></returns>
+        public Messages RecvMessage()
+        {
+            int ReceivedBytes;
+            // Size of a signed message: 41
+            byte[] RecvBuf = new byte[41];
+
+            #region RECEIVE
+            // Receive
+            try
+            {
+                ReceivedBytes = ControlSocket.Receive(RecvBuf);
+            }
+            catch (SocketException e)
+            {
+                // Network error
+                // TODO: do something?
+                throw e;
+            }
+            if (ReceivedBytes != RecvBuf.Length)
+            {
+                // Network error: missing bytes
+                return Messages.Disconnect;
+            }
+            #endregion
+
+            byte[] UnwrappedMsg = UnwrapPacket(RecvBuf, ReceivedBytes);
+            if (UnwrappedMsg == null || UnwrappedMsg.Length > 1)
+                return Messages.Disconnect;
+            switch(UnwrappedMsg[0])
+            {
+                case (byte)Messages.Close:
+                    return Messages.Close;
+                case (byte)Messages.Resume:
+                    return Messages.Resume;
+                case (byte)Messages.Suspend:
+                    return Messages.Suspend;
+                default:
+                    return Messages.Disconnect;
+            }
+
+        }
+
+        /// <summary>
+        /// Verify a packet and remove its tag and timestamp.
+        /// </summary>
+        /// <param name="Buffer">The packet as received</param>
+        /// <param name="Size">The number of bytes received in the buffer</param>
+        /// <returns>Returns a byte array 40B smaller than the original if valid. Returns null if invalid.</returns>
+        private byte[] UnwrapPacket(byte[] Buffer, int Size)
+        {
+            if (Buffer == null || Size <= 40)
+            {
+                // The message is empty or too small
+                return null;
+            }
+            byte[] tag = new byte[32];
+            byte[] msg = new byte[Size - 32];
+
+            #region UNWRAP_VERIFY_TAG
+            Array.Copy(Buffer, tag, 32);
+            Array.Copy(Buffer, 32, msg, 0, Size - 32);
+
+            byte[] VerifTag = this.Hmac.ComputeHash(msg);
+            if (!VerifTag.SequenceEqual(tag))
+            {
+                // Message not authenticated
+                return null;
+            }
+            #endregion
+
+            #region UNWRAP_VERIFY_TIMESTAMP
+            // Convert the 8-byte timestamp in position 32 in the Buffer to a long
+            long TimestampTicks = BitConverter.ToInt64(Buffer, 32);
+            long Ticks = DateTime.Now.Ticks;
+            // If the timestamp is more than 5 seconds away in either direction (50M ticks)
+            if ((TimestampTicks >= Ticks && TimestampTicks - Ticks > 50000000) || (TimestampTicks < Ticks && Ticks - TimestampTicks > 50000000))
+            {
+                // Timestamp too far
+                return null;
+            }
+            #endregion
+
+            // Copy the message out
+            byte[] message = new byte[Size - 40];
+            Array.Copy(Buffer, 40, message, 0, Size - 40);
+            return message;
+        }
+
+        /// <summary>
+        /// Add a timestamp and tag to a packet.
+        /// </summary>
+        /// <param name="Buffer">The original packet</param>
+        /// <param name="Size">The original size</param>
+        /// <returns>A byte array 40B bigger than the original</returns>
+        private byte[] WrapPacket(byte[] Buffer, int Size)
+        {
+            if (Buffer == null || Size <= 0 || Size > this.PacketSize - 40)
+            {
+                // Invalid packet
+                return null;
+            }
+            byte[] newbuf = new byte[Size + 40];
+            byte[] msg = new byte[Size + 8];
+            byte[] tag;
+            byte[] timestamp = BitConverter.GetBytes(DateTime.Now.Ticks);
+
+            #region WRAP_PACKET_CREATE_MESSAGE
+            timestamp.CopyTo(msg, 0);
+            Buffer.CopyTo(msg, 8);
+            #endregion
+
+            #region WRAP_PACKET_SIGN
+            tag = this.Hmac.ComputeHash(msg);
+            tag.CopyTo(newbuf, 0);
+            msg.CopyTo(newbuf, 32);
+            #endregion
+            return newbuf;
+        }
+
+        private static byte[] GetNonceBytes()
+        {
+            byte[] b = new byte[8];
+            RNGCryptoServiceProvider Gen = new RNGCryptoServiceProvider();
+            Gen.GetBytes(b);
+            return b;
+        }
+
     }
 
     public class RemoteClipboard
@@ -1181,6 +1658,11 @@ namespace KnightElfLibrary
                 }
                 #endregion
             }
+        }
+
+        public void Close()
+        {
+            // TODO: implement
         }
 
         /// <summary>

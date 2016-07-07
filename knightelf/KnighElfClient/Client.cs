@@ -106,7 +106,6 @@ namespace KnightElfClient
         {
             // TODO: log
             #region CONNECT
-            // CONNECT
             try
             {
                 CurrentServer.Connect();
@@ -126,8 +125,6 @@ namespace KnightElfClient
             #endregion
 
             #region AUTHENTICATE
-            // AUTHENTICATE
-            // Create authentication parameters
             bool Result = false;
             try
             {
@@ -469,10 +466,10 @@ namespace KnightElfClient
             }
             catch (Exception e)
             {
-                if (e is ExternalException)
-                {
+                //if (e is ExternalException)
+                //{
                     // TODO: log
-                }
+                //}
                 return;
             }
             #endregion
