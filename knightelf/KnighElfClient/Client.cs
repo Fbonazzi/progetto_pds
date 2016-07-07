@@ -7,6 +7,11 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
+using System.Net;
+using System.Windows.Input;
+using System.Windows;
 
 namespace KnightElfClient
 {
@@ -17,7 +22,17 @@ namespace KnightElfClient
         private readonly object ConnectionLock = new object();
         // Temporary directory
         public string TempDirName;
-        
+
+        // The event queue
+        private EventQueue InputQueue;
+
+        // Mouse hook
+        private IntPtr hLocalMouseHook = IntPtr.Zero;
+        private HookProc localMouseHookCallback = null;
+        // Keyboard hook
+        private IntPtr hLocalKeyboardHook = IntPtr.Zero;
+        private HookProc localKeyboardHookCallback = null;
+        private bool Ctrl, Shift, Alt;
 
         public Client()
         {
@@ -27,6 +42,9 @@ namespace KnightElfClient
             TempDirName = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             TempDirName = Path.Combine(TempDirName, "KnightElf");
             Directory.CreateDirectory(TempDirName);
+
+            // Initialise the input queue
+            InputQueue = new EventQueue();
 
             // TODO
         }
@@ -46,6 +64,9 @@ namespace KnightElfClient
                     case State.Suspended:
                         // Set the current server
                         this.CurrentServer = s;
+                        // Enable mouse and keyboard hooks
+                        SetLocalMouseHook();
+                        SetLocalKeyboardHook();
                         // Set the required state
                         lock (CurrentServer.StateLock)
                         {
@@ -61,6 +82,9 @@ namespace KnightElfClient
                     case State.Disconnected:
                         // Set the current server
                         this.CurrentServer = s;
+                        // Enable mouse and keyboard hooks
+                        SetLocalMouseHook();
+                        SetLocalKeyboardHook();
                         CurrentServer.ConnectionHandler = new Thread(new ThreadStart(Connect));
                         // TODO: Why are we doing this?
                         CurrentServer.ConnectionHandler.SetApartmentState(ApartmentState.STA);
@@ -175,11 +199,12 @@ namespace KnightElfClient
                 CurrentServer.DataHandler.SetApartmentState(ApartmentState.STA);
                 CurrentServer.DataHandler.Start();
 
+                // Wait for the DataHandler to start and notify us
                 Monitor.Wait(CurrentServer.StateLock);
 
                 if (CurrentServer.CurrentState == State.Disconnected)
                 {
-                    // ClipboardHandler failed, abort
+                    // DataHandler failed, abort
                     // TODO: log
 
                     // Dispose of resources and return
@@ -201,7 +226,7 @@ namespace KnightElfClient
 
             while (true)
             {
-                lock (CurrentServer.ConnectionLock)
+                lock (ConnectionLock)
                 {
                     // Reset the status to running
                     ConnectionState = State.Running;
@@ -223,10 +248,8 @@ namespace KnightElfClient
 
                             // TODO: log
 
-                            // TODO: adapt
-                            // Chiamo la funzione che svuota la coda ed inietta un messaggio di interruzione della connessione
-                            // In questo modo il sender capisce che deve terminare
-                            // InputQueue.ClearAndClose();
+                            // Empty the input queue and signal the DataHandler to terminate
+                            InputQueue.ClearAndClose();
 
                             // Notify server we're closing and close sockets
                             try
@@ -264,10 +287,10 @@ namespace KnightElfClient
                     #region SUSPENDED
                     case State.Suspended:
                         // The user is suspending the connection
+                        // TODO: lock state lock?
                         CurrentServer.CurrentState = State.Suspended;
-                        // TODO: adapt
-                        // Faccio sapere al sender che deve smetterla di inviare eventi
-                        //InputQueue.ClearAndPause();
+                        // Empty the queue and notify DataHandler to suspend
+                        InputQueue.ClearAndSuspend();
 
                         // Notify the server we're suspending
                         try
@@ -309,10 +332,11 @@ namespace KnightElfClient
                             // Wait for the user to give us back control
                             Monitor.Wait(CurrentServer.RunningLock);
                             // The user gave us back control: check what he wants us to do
-                            lock (CurrentServer.ConnectionLock)
+                            lock (ConnectionLock)
                             {
                                 RequestedState = ConnectionState;
                             }
+                            #region REQUESTED_CLOSE
                             // If the user wanted us to close, close immediately without resuming
                             if (RequestedState == State.Closed)
                             {
@@ -324,6 +348,7 @@ namespace KnightElfClient
                                 }
                                 goto case State.Closed;
                             }
+                            #endregion
                             // The user gave us back control: tell everyone
                             // Set the server state to running and wake up the DataHandler
                             lock (CurrentServer.StateLock)
@@ -544,5 +569,359 @@ namespace KnightElfClient
                 #endregion
             }
         }
+
+        /// <summary>
+        /// Handle the whole lifecycle of an Event connection to a specific RemoteServer.
+        /// 
+        /// This function is run in a dedicated thread.
+        /// </summary>
+        private void HandleData()
+        {
+            IFormatter Formatter = new BinaryFormatter();
+            InputMessage msg;
+
+            #region CONNECT
+            lock (CurrentServer.StateLock)
+            {
+                try
+                {
+                    CurrentServer.DataSocket.Connect(new IPEndPoint(CurrentServer.IP, CurrentServer.Port + 2));
+                }
+                catch (SocketException)
+                {
+                    // Failed to connect
+                    CurrentServer.CurrentState = State.Disconnected;
+                    return;
+                }
+                finally
+                {
+                    // Notify ConnectionHandler and ClipboardHandler
+                    Monitor.Pulse(CurrentServer.StateLock);
+                }
+            }
+            #endregion
+
+            #region DISPATCH
+            while (true)
+            {
+                // Process one message
+                msg = InputQueue.get();
+
+                // Handle different states
+                switch (msg.CurrentConnectionState)
+                {
+                    case State.Closed:
+                        #region CLOSED
+                        // Terminate
+                        return;
+                    #endregion
+                    case State.Suspended:
+                        #region SUSPENDED
+                        // Suspend
+                        lock (CurrentServer.StateLock)
+                        {
+                            // Wait for the ConnectionHandler to wake us up
+                            Monitor.Wait(CurrentServer.StateLock);
+                            // Process a new message
+                            continue;
+                        }
+                    #endregion
+                    default:
+                        #region SEND
+                        // Send the message
+                        MemoryStream stream = new MemoryStream();
+                        Formatter.Serialize(stream, msg);
+                        byte[] SendBuf = stream.ToArray();
+                        // TODO: add encryption, authentication
+
+                        try
+                        {
+                            CurrentServer.DataSocket.Send(SendBuf, 0, SendBuf.Length, 0);
+                        }
+                        catch (SocketException)
+                        {
+                            // Connection failed
+                            lock (ConnectionLock)
+                            {
+                                ConnectionState = State.Disconnected;
+                                // Notify other threads
+                                Monitor.Pulse(ConnectionLock);
+                            }
+                            // Terminate
+                            return;
+                        }
+                        break;
+                        #endregion
+                }
+            }
+            #endregion
+        }
+
+
+        #region MOUSE_HOOK
+        private bool SetLocalMouseHook()
+        {
+            localMouseHookCallback = new HookProc(MouseProc);
+            hLocalMouseHook = NativeMethods.SetWindowsHookEx(HookType.WH_MOUSE, localMouseHookCallback, IntPtr.Zero, NativeMethod.GetCurrentThreadId());
+            return hLocalMouseHook != IntPtr.Zero;
+        }
+
+        private bool RemoveLocalMouseHook()
+        {
+            if (hLocalMouseHook != IntPtr.Zero)
+            {
+                if (!NativeMethods.UnhookWindowsHookEx(hLocalMouseHook))
+                    return false;
+                hLocalMouseHook = IntPtr.Zero;
+            }
+            return true;
+        }
+
+        /// <summary> 
+        /// Mouse hook procedure 
+        /// The system calls this function whenever an application calls the  
+        /// GetMessage or PeekMessage function and there is a mouse message to be  
+        /// processed.  
+        /// </summary> 
+        /// <param name="nCode"> 
+        /// The hook code passed to the current hook procedure. 
+        /// When nCode equals HC_ACTION, the wParam and lParam parameters contain  
+        /// information about a mouse message. 
+        /// When nCode equals HC_NOREMOVE, the wParam and lParam parameters  
+        /// contain information about a mouse message, and the mouse message has  
+        /// not been removed from the message queue. (An application called the  
+        /// PeekMessage function, specifying the PM_NOREMOVE flag.) 
+        /// </param> 
+        /// <param name="wParam">Specifies the identifier of the mouse message.</param> 
+        /// <param name="lParam">Pointer to a MOUSEHOOKSTRUCT structure.</param> 
+        /// <returns></returns> 
+        /// <see cref="http://msdn.microsoft.com/en-us/library/ms644988.aspx"/>
+        private int MouseProc(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode == HookCodes.HC_ACTION)
+            {
+                #region PROCESS_MOUSE
+                MOUSEHOOKSTRUCTEX mouseHookStruct = (MOUSEHOOKSTRUCTEX)Marshal.PtrToStructure(lParam, typeof(MOUSEHOOKSTRUCTEX));
+                MouseMessage wmMouse = (MouseMessage)wParam;
+
+                // Create object
+                InputMessage.INPUT[] payload = new InputMessage.INPUT[1];
+
+                // It's a mouse input
+                payload[0].type = InputMessage.InputType.Mouse;
+
+                // Position
+                Point cursor = NativeMethod.GetCursorPosition();
+                payload[0].mi.dx = (int)(cursor.X * 65535 / SystemParameters.PrimaryScreenWidth);
+                payload[0].mi.dy = (int)(cursor.Y * 65535 / SystemParameters.PrimaryScreenHeight);
+
+                payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_MOVE | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+
+                // Event and Wheel Delta
+                if (wmMouse == MouseMessage.WM_LBUTTONDOWN)
+                {
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_LEFTDOWN | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+                if (wmMouse == MouseMessage.WM_LBUTTONUP)
+                {
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_LEFTUP | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+                if (wmMouse == MouseMessage.WM_LBUTTONDBLCLK)
+                {
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_LEFTDOWN | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+
+
+                if (wmMouse == MouseMessage.WM_RBUTTONDOWN)
+                {
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_RIGHTDOWN | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+                if (wmMouse == MouseMessage.WM_RBUTTONUP)
+                {
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_RIGHTUP | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+                if (wmMouse == MouseMessage.WM_RBUTTONDBLCLK)
+                {
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_RIGHTDOWN | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+
+
+                if (wmMouse == MouseMessage.WM_MBUTTONDOWN)
+                {
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_MIDDLEDOWN | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+                if (wmMouse == MouseMessage.WM_MBUTTONUP)
+                {
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_MIDDLEUP | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+                if (wmMouse == MouseMessage.WM_MBUTTONDBLCLK)
+                {
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_MIDDLEDOWN | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+
+
+                if (wmMouse == MouseMessage.WM_MOUSEWHEEL)
+                {
+                    int delta = mouseHookStruct.delta >> 16;
+                    payload[0].mi.mouseData = delta;
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_WHEEL | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+                if (wmMouse == MouseMessage.WM_MOUSEHWHEEL)
+                {
+                    int delta = mouseHookStruct.delta >> 16;
+                    payload[0].mi.mouseData = delta;
+                    payload[0].mi.dwFlags = (uint)(MouseMessages.MOUSEEVENTF_HWHEEL | MouseMessages.MOUSEEVENTF_ABSOLUTE);
+                }
+
+                // Enqueue the event
+                InputQueue.put(new InputMessage(payload));
+
+                lock (ConnectionLock)
+                {
+                    if (ConnectionState == State.Running)
+                        return HookCodes.HC_SKIP;
+                }
+                #endregion
+            }
+
+            return NativeMethods.CallNextHookEx(hLocalMouseHook, nCode, wParam, lParam);
+        }
+        #endregion
+
+        #region KEYBOARD_HOOK
+        private bool SetLocalKeyboardHook()
+        {
+            localKeyboardHookCallback = new HookProc(this.KeyboardProc);
+            hLocalKeyboardHook = NativeMethods.SetWindowsHookEx(HookType.WH_KEYBOARD, localKeyboardHookCallback, IntPtr.Zero, NativeMethod.GetCurrentThreadId());
+            return hLocalKeyboardHook != IntPtr.Zero;
+        }
+
+        private bool RemoveLocalKeyboardHook()
+        {
+            if (hLocalKeyboardHook != IntPtr.Zero)
+            {
+                if (!NativeMethods.UnhookWindowsHookEx(hLocalKeyboardHook))
+                {
+                    return false;
+                }
+                hLocalKeyboardHook = IntPtr.Zero;
+            }
+            return true;
+        }
+
+        public int KeyboardProc(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode == HookCodes.HC_ACTION)
+            {
+                #region PROCESS_KEYPRESS
+                // Get the WPF key code
+                Key vkCode = KeyInterop.KeyFromVirtualKey(Marshal.ReadInt32(wParam));
+                // Check the 31st bit (0 if key is being pressed, 1 if released)
+                int flag = (int)lParam >> 31;
+
+                if (vkCode == Key.LeftCtrl && flag == 0)
+                    Ctrl = true;
+                else if (vkCode == Key.LeftCtrl && flag != 0)
+                    Ctrl = false;
+
+                if (vkCode == Key.LeftAlt && flag == 0)
+                    Alt = true;
+                else if (vkCode == Key.LeftAlt && flag != 0)
+                    Alt = false;
+
+                if (vkCode == Key.LeftShift && flag == 0)
+                    Shift = true;
+                else if (vkCode == Key.LeftShift && flag != 0)
+                    Shift = false;
+
+                // We have pressed Ctrl, Alt, Shift and Q in a row: close the connection
+                if (Ctrl && Alt && Shift && vkCode == Key.Q)
+                {
+                    #region CLOSE_CONNECTION
+                    lock (CurrentServer.StateLock)
+                    {
+                        if (CurrentServer.CurrentState != State.Suspended)
+                        {
+                            // Remove the mouse and keyboard hooks
+                            RemoveLocalMouseHook();
+                            RemoveLocalKeyboardHook();
+                            // Acquisisco il lock per comunicare con il Connecter
+                            lock (ConnectionLock)
+                            {
+                                // Gli dico che deve chiudere la connessione ed i suoi thread
+                                ConnectionState = State.Closed;
+
+                                // Sblocco il Connecter
+                                Monitor.Pulse(ConnectionLock);
+                            }
+
+                            // TODO: remove
+                            // Rimuovo lo slave dalla listview e dalla mappa
+                            // SlaveList.Items.RemoveByKey(SlaveAttuale.Chiave);
+                            // SlaveConnessi.Remove(SlaveAttuale.Chiave);
+
+                            return HookCodes.HC_SKIP;
+                        }
+                    }
+                    #endregion
+                }
+
+                // We have pressed Ctrl, Alt, Shift and P in a row: suspend the connection
+                if (Ctrl && Alt && Shift && vkCode == Key.P)
+                {
+                    #region SUSPEND_CONNECTION
+                    // Remove the mouse and keyboard hooks
+                    RemoveLocalMouseHook();
+                    RemoveLocalKeyboardHook();
+                    // Acquisisco il lock per comunicare con il Connecter
+                    lock (ConnectionLock)
+                    {
+                        // Gli dico che deve sospendere i suoi thread
+                        ConnectionState = State.Suspended;
+
+                        // Sblocco il Connecter
+                        Monitor.Pulse(ConnectionLock);
+                    }
+
+                    // TODO: remove
+                    // Cambio l'icona allo slave attuale
+                    // SlaveList.Items[SlaveList.Items.IndexOfKey(SlaveAttuale.Chiave)].ImageIndex = 2;
+
+                    return HookCodes.HC_SKIP;
+                    #endregion
+                }
+
+                #region CREATE_EVENT
+                // Create object
+                InputMessage.INPUT[] payload = new InputMessage.INPUT[1];
+                payload[0].type = InputMessage.InputType.Keyboard;
+                payload[0].ki.wVk = (ushort)KeyInterop.VirtualKeyFromKey(vkCode);
+
+                // Down and Up Events
+                if (flag == 0)
+                {
+                    payload[0].ki.dwFlags = (uint)KeyboardMessages.KEYEVENTF_KEYDOWN;
+                }
+                else
+                {
+                    payload[0].ki.dwFlags = (uint)KeyboardMessages.KEYEVENTF_KEYUP;
+                }
+                #endregion
+
+                // Enqueue the event
+                InputQueue.put(new InputMessage(payload));
+
+                #endregion
+            }
+
+            lock (ConnectionLock)
+            {
+                if (ConnectionState == State.Running)
+                    return HookCodes.HC_SKIP;
+            }
+            return NativeMethods.CallNextHookEx(hLocalKeyboardHook, nCode, wParam, lParam);
+        }
+
+        #endregion
     }
 }

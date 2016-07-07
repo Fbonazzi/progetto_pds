@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -15,6 +16,82 @@ using System.Windows.Media.Imaging;
 
 namespace KnightElfLibrary
 {
+    [Serializable]
+    public class InputMessage
+    {
+        public INPUT[] payload;
+        public State CurrentConnectionState = State.Connected;
+        public InputMessage() { }
+        public InputMessage(INPUT[] payload)
+        {
+            this.payload = payload;
+        }
+
+        /// <summary>
+        /// The possible input types for an InputMessage
+        /// </summary>
+        public enum InputType : int { Mouse, Keyboard, Hardware };
+
+        [StructLayout(LayoutKind.Sequential), Serializable]
+        public struct MOUSEINPUT
+        {
+            public int dx;
+            public int dy;
+            public int mouseData;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential), Serializable]
+        public struct KEYBDINPUT
+        {
+            public ushort wVk;
+            public ushort wScan;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential), Serializable]
+        public struct HARDWAREINPUT
+        {
+            public uint uMsg;
+            public ushort wParamL;
+            public ushort wParamH;
+        }
+
+        [StructLayout(LayoutKind.Explicit), Serializable]
+        public struct INPUT
+        {
+            [FieldOffset(0)]
+            public InputType type;
+            [FieldOffset(4)]
+            public MOUSEINPUT mi;
+            [FieldOffset(4)]
+            public KEYBDINPUT ki;
+            [FieldOffset(4)]
+            public HARDWAREINPUT hi;
+        }
+    }
+
+    public enum KeyboardMessages { KEYEVENTF_KEYUP = 0x0002, KEYEVENTF_KEYDOWN = 0x0000 };
+
+    public enum MouseMessages
+    {
+        MOUSEEVENTF_ABSOLUTE = 0x8000,
+        MOUSEEVENTF_MOVE = 0x0001,
+        MOUSEEVENTF_LEFTDOWN = 0x0002,
+        MOUSEEVENTF_LEFTUP = 0x0004,
+        MOUSEEVENTF_RIGHTDOWN = 0x0008,
+        MOUSEEVENTF_RIGHTUP = 0x0010,
+        MOUSEEVENTF_MIDDLEDOWN = 0x0020,
+        MOUSEEVENTF_MIDDLEUP = 0x0040,
+        MOUSEEVENTF_WHEEL = 0x0800,
+        MOUSEEVENTF_HWHEEL = 0x01000
+    }
+
+
     /// <summary>
     /// The connection control messages to exchange between local client and remote server.
     /// </summary>
@@ -50,7 +127,7 @@ namespace KnightElfLibrary
         public readonly object RunningLock = new object();
         public readonly object StateLock = new object();
         public readonly object ClipboardLock = new object();
-        public readonly object ConnectionLock = new object();
+        // public readonly object ConnectionLock = new object();
 
         // Crypto stuff
         public ECDiffieHellmanCng ECDHClient;

@@ -78,6 +78,7 @@
     <Compile Include="ConnectionSettingsDialog.xaml.cs">
       <DependentUpon>ConnectionSettingsDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="HookNative.cs" />
     <Compile Include="StateMachine.cs" />
     <Compile Include="ViewModel.cs" />
     <Page Include="ConnectionSettingsDialog.xaml">
