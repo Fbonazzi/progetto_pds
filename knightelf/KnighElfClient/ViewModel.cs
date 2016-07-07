@@ -55,8 +55,9 @@ namespace KnightElfClient
                     isReadyServer:          () => { throw new NotImplementedException(); /*return SelectedServer.isReady();*/},
                     launchAddDlgAction:     () => LaunchAddDlg(),
                     launchEditDlgAction:    () => LaunchAddDlg(SelectedServer),
+                    removeServerAction:     () => RemoveServer(),
                     disconnectAction:       () => Disconnect(),
-                    removeServerAction:     () => Connect()
+                    connectAction:          () => Connect()
                 );
 
             // Create Commands
@@ -74,6 +75,8 @@ namespace KnightElfClient
             Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.3"), Port = 70000, Password = "prova1" });
             Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.4"), Port = 80000, Password = "prova1" });
         }
+
+        
 
 
         #region State Machine
@@ -121,6 +124,14 @@ namespace KnightElfClient
                 Console.WriteLine("Server edit saved.");
             }
             else SM.Fire(SMTriggers.Cancel);
+        }
+
+        private void RemoveServer()
+        {
+            Servers.Remove(SelectedServer);
+            Console.WriteLine("Server successfully removed.");
+
+            SM.Fire(SMTriggers.Removed);
         }
 
         private void Connect()

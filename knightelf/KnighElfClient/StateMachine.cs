@@ -11,11 +11,13 @@ namespace KnightElfClient
         AddingServer,
         ServerSelected,
         EditingServer,
+        RemovingServer,
         WorkingRemote
     }
     public enum SMTriggers
     {
-        Add, Edit, Remove,
+        Add, Edit,
+        Remove, Removed,
         Save, Cancel,
         Select, Deselect,
         Connect, Disconnect,
@@ -30,27 +32,33 @@ namespace KnightElfClient
                                 Func<bool> isReadyServer,
                                 Action launchAddDlgAction,
                                 Action launchEditDlgAction,
+                                Action removeServerAction,
                                 Action disconnectAction,
-                                Action removeServerAction) : base(SMStates.Start)
+                                Action connectAction) : base(SMStates.Start)
         {
+
             Configure(SMStates.Start)
                 .Permit(SMTriggers.Add,SMStates.AddingServer)
-                .PermitIf(SMTriggers.Select,SMStates.ServerSelected, existsServer)
-                .OnEntryFrom(SMTriggers.Remove,removeServerAction); //non sono sicura che funzioni..
+                .PermitIf(SMTriggers.Select,SMStates.ServerSelected, existsServer);
 
             Configure(SMStates.ServerSelected)
                 .SubstateOf(SMStates.Start)
                 .Permit(SMTriggers.Deselect, SMStates.Start)
-                .PermitIf(SMTriggers.Remove,SMStates.Start, existsServer)
+                .PermitIf(SMTriggers.Remove,SMStates.RemovingServer, existsServer)
                 .PermitIf(SMTriggers.Edit, SMStates.EditingServer, isEditableServer)
                 .PermitIf(SMTriggers.Connect, SMStates.EditingServer, isReadyServer)
                 .PermitIf(SMTriggers.Disconnect, SMStates.EditingServer, isConnectedServer)
                 .PermitIf(SMTriggers.Run, SMStates.WorkingRemote, isConnectedServer);
 
             Configure(SMStates.AddingServer)
-                .OnEntry(launchAddDlgAction)
+                .OnEntry(removeServerAction)
                 .Permit(SMTriggers.Save, SMStates.ServerSelected)
                 .Permit(SMTriggers.Cancel, SMStates.Start);
+
+            Configure(SMStates.RemovingServer)
+                .OnEntry(removeServerAction)
+                .Ignore(SMTriggers.Deselect)
+                .Permit(SMTriggers.Removed, SMStates.Start);
 
             Configure(SMStates.EditingServer)
                 .OnEntry(launchEditDlgAction)
