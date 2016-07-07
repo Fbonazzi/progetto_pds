@@ -41,14 +41,12 @@ namespace KnightElfClient
                 .Permit(SMTriggers.Add,SMStates.AddingServer)
                 .PermitIf(SMTriggers.Select,SMStates.ServerSelected, existsServer);
 
+            // Editing servers transitions
             Configure(SMStates.ServerSelected)
                 .SubstateOf(SMStates.Start)
                 .Permit(SMTriggers.Deselect, SMStates.Start)
-                .PermitIf(SMTriggers.Remove,SMStates.RemovingServer, existsServer)
-                .PermitIf(SMTriggers.Edit, SMStates.EditingServer, isEditableServer)
-                .PermitIf(SMTriggers.Connect, SMStates.EditingServer, isReadyServer)
-                .PermitIf(SMTriggers.Disconnect, SMStates.EditingServer, isConnectedServer)
-                .PermitIf(SMTriggers.Run, SMStates.WorkingRemote, isConnectedServer);
+                .PermitIf(SMTriggers.Remove, SMStates.RemovingServer, existsServer)
+                .PermitIf(SMTriggers.Edit, SMStates.EditingServer, isEditableServer);
 
             Configure(SMStates.AddingServer)
                 .OnEntry(removeServerAction)
@@ -64,6 +62,14 @@ namespace KnightElfClient
                 .OnEntry(launchEditDlgAction)
                 .Permit(SMTriggers.Save, SMStates.ServerSelected)
                 .Permit(SMTriggers.Cancel, SMStates.ServerSelected);
+
+            // Connection transitions
+            Configure(SMStates.ServerSelected)
+                .PermitReentryIf(SMTriggers.Connect, isReadyServer)
+                .OnEntryFrom(SMTriggers.Connect,connectAction)
+                .PermitReentryIf(SMTriggers.Disconnect, isConnectedServer)
+                .OnEntryFrom(SMTriggers.Disconnect, disconnectAction)
+                .PermitIf(SMTriggers.Run, SMStates.WorkingRemote, isConnectedServer);
 
             Configure(SMStates.WorkingRemote)
                 .Permit(SMTriggers.Pause, SMStates.ServerSelected);
