@@ -49,12 +49,11 @@ namespace KnightElfClient
             // TODO
         }
 
-        // TODO: probably set to public
         /// <summary>
         /// Connect to a server and start sending events
         /// </summary>
         /// <param name="s">The remote server to connect to</param>
-        private void ConnectToServer(RemoteServer s)
+        public void ConnectToServer(RemoteServer s)
         {
             // Act based the state of the current server
             lock (s.StateLock)
@@ -405,7 +404,7 @@ namespace KnightElfClient
         /// The server must be in a suspended state.
         /// </summary>
         /// <param name="s">The remote server to disconnect from</param>
-        private void DisconnectFromServer(RemoteServer s)
+        public void DisconnectFromServer(RemoteServer s)
         {
             // Check that the thread is suspended
             lock (s.StateLock)
@@ -447,6 +446,7 @@ namespace KnightElfClient
                 catch (SocketException)
                 {
                     // Could not create connection
+                    Console.WriteLine("Could not create remote clipboard.");
                     CurrentServer.CurrentState = State.Disconnected;
                     return;
                 }
@@ -465,10 +465,10 @@ namespace KnightElfClient
             }
             catch (Exception e)
             {
-                //if (e is ExternalException)
-                //{
-                    // TODO: log
-                //}
+                if (e is ExternalException)
+                {
+                    Console.WriteLine("Clipboard busy, aborting...");
+                }
                 return;
             }
             #endregion
@@ -490,7 +490,7 @@ namespace KnightElfClient
                             #region CLIPBOARD_SUSPEND
                             case State.Suspended:
                                 // The user requested the connection be suspended
-                                // TODO: log
+                                Console.WriteLine("Suspending clipboard...");
 
                                 // Ask if we want to transfer the server clipboard to the client
                                 try
@@ -501,7 +501,7 @@ namespace KnightElfClient
                                 {
                                     if (e is ExternalException)
                                     {
-                                        // TODO: log
+                                        Console.WriteLine("Clipboard busy, aborting...");
                                     }
                                     return;
                                 }
@@ -513,7 +513,7 @@ namespace KnightElfClient
                             #region CLIPBOARD_CLOSE
                             case State.Closed:
                                 // The user requested the connection be closed
-                                // TODO: log
+                                Console.WriteLine("Closing clipboard...");
 
                                 // Ask if we want to transfer the server clipboard to the client
                                 try
@@ -524,7 +524,7 @@ namespace KnightElfClient
                                 {
                                     if (e is ExternalException)
                                     {
-                                        // TODO: log
+                                        Console.WriteLine("Clipboard busy, aborting...");
                                     }
                                     return;
                                 }
@@ -536,7 +536,7 @@ namespace KnightElfClient
                             #region CLIPBOARD_RESUME
                             case State.Running:
                                 // The user requested the connection be resumed
-                                // TODO: log
+                                Console.WriteLine("Resuming clipboard...");
 
                                 // Ask if we want to transfer the client clipboard to the server
                                 try
@@ -547,7 +547,7 @@ namespace KnightElfClient
                                 {
                                     if (e is ExternalException)
                                     {
-                                        // TODO: log
+                                        Console.WriteLine("Clipboard busy, aborting...");
                                     }
                                     return;
                                 }
@@ -557,6 +557,7 @@ namespace KnightElfClient
                                 break;
                             #endregion
                             default:
+                                Console.WriteLine("Wtf is this state I don't even");
                                 return;
 
                         }
@@ -850,12 +851,7 @@ namespace KnightElfClient
                                 // Sblocco il Connecter
                                 Monitor.Pulse(ConnectionLock);
                             }
-
-                            // TODO: remove
-                            // Rimuovo lo slave dalla listview e dalla mappa
-                            // SlaveList.Items.RemoveByKey(SlaveAttuale.Chiave);
-                            // SlaveConnessi.Remove(SlaveAttuale.Chiave);
-
+                            // Don't pass the key over
                             return HookCodes.HC_SKIP;
                         }
                     }
@@ -878,11 +874,6 @@ namespace KnightElfClient
                         // Sblocco il Connecter
                         Monitor.Pulse(ConnectionLock);
                     }
-
-                    // TODO: remove
-                    // Cambio l'icona allo slave attuale
-                    // SlaveList.Items[SlaveList.Items.IndexOfKey(SlaveAttuale.Chiave)].ImageIndex = 2;
-
                     return HookCodes.HC_SKIP;
                     #endregion
                 }

@@ -590,6 +590,7 @@ namespace KnightElfLibrary
                     // TODO: close sockets?
                     ListenerSocket.Close();
                 }
+                throw e;
             }
         }
 
@@ -1606,8 +1607,7 @@ namespace KnightElfLibrary
                                                     File.Delete(Archive);
 
                                                     //////////////////////////////////////////////////////////////////////
-                                                    // TODO: implement
-                                                    // Creo progress bar
+                                                    // TODO: implement progress bar
                                                     //lock (LoadLock)
                                                     //{
                                                     //    Loader = new Thread(new ThreadStart(ScaricaClipboard));

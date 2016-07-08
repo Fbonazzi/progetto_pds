@@ -99,7 +99,7 @@ namespace KnightElfServer
             catch (SocketException e)
             {
                 CurrentClient.CurrentState = State.Closed;
-                // TODO: log
+                Console.WriteLine("Aborting...");
 
                 // Dispose of resources and return
                 CurrentClient.DataSocket.Close();
@@ -117,7 +117,7 @@ namespace KnightElfServer
             catch (SocketException e)
             {
                 CurrentClient.CurrentState = State.Closed;
-                // TODO: log
+                Console.WriteLine("Network error, authentication failed!");
 
                 // Dispose of resources and return
                 CurrentClient.DataSocket.Close();
@@ -127,7 +127,7 @@ namespace KnightElfServer
             if (Result == false)
             {
                 // Authentication failed
-                // TODO: log
+                Console.WriteLine("Authentication failed!");
 
                 // Dispose of resources and return
                 CurrentClient.DataSocket.Close();
@@ -137,7 +137,7 @@ namespace KnightElfServer
             #endregion
 
             // Authenticated
-            // TODO: log
+            Console.WriteLine("Authenticated.");
             CurrentClient.CurrentState = State.Running;
 
             #region START_CLIPBOARD
@@ -153,7 +153,7 @@ namespace KnightElfServer
                 if (CurrentClient.CurrentState == State.Disconnected)
                 {
                     // Could not open clipboard connection
-                    // TODO: log
+                    Console.WriteLine("Could not open clipboard connection, aborting...");
                     // Terminate
                     CurrentClient.ControlSocket.Close();
                     CurrentClient.ListenerSocket.Close();
@@ -175,7 +175,7 @@ namespace KnightElfServer
                 if (CurrentClient.CurrentState == State.Disconnected)
                 {
                     // Could not open the DataHandler connection
-                    // TODO: log
+                    Console.WriteLine("Could not open data connection, aborting...");
                     // Terminate the ClipboardHandler
                     CurrentClient.ClipboardHandler.Abort();
                     // Terminate
@@ -201,7 +201,7 @@ namespace KnightElfServer
                 }
                 catch (SocketException e)
                 {
-                    // TODO: log
+                    Console.WriteLine("Network error.");
                     // Disconnect
                     lock (CurrentClient.StateLock)
                     {
@@ -223,7 +223,7 @@ namespace KnightElfServer
                 {
                     case Messages.Close:
                         #region CLOSE
-                        // TODO: log
+                        Console.WriteLine("Closing connection...");
                         lock (CurrentClient.StateLock)
                         {
                             CurrentClient.CurrentState = State.Closed;
@@ -244,7 +244,7 @@ namespace KnightElfServer
                     #endregion
                     case Messages.Suspend:
                         #region SUSPEND
-                        // TODO: log
+                        Console.WriteLine("Suspending connection...");
                         lock (CurrentClient.StateLock)
                         {
                             CurrentClient.CurrentState = State.Suspended;
@@ -259,7 +259,7 @@ namespace KnightElfServer
                     #endregion
                     case Messages.Resume:
                         #region RESUME
-                        // TODO: log
+                        Console.WriteLine("Resuming connection...");
                         lock (CurrentClient.StateLock)
                         {
                             CurrentClient.CurrentState = State.Running;
@@ -271,6 +271,7 @@ namespace KnightElfServer
                         break;
                     #endregion
                     case Messages.Disconnect:
+                        Console.WriteLine("Received Disconnect message, ignoring...");
                         break;
                 }
 
@@ -331,10 +332,10 @@ namespace KnightElfServer
             }
             catch (Exception e)
             {
-                //if (e is ExternalException)
-                //{
-                // TODO: log
-                //}
+                if (e is ExternalException)
+                {
+                    Console.WriteLine("Clipboard busy, aborting...");
+                }
 
 
                 // TODO: adapt
@@ -367,17 +368,17 @@ namespace KnightElfServer
                         case State.Suspended:
                             #region SUSPEND
                             // We want to suspend
-                            // TODO: log
+                            Console.WriteLine("Suspending clipboard...");
                             try
                             {
                                 CurrentClient.Clipboard.SendClipboard();
                             }
                             catch (Exception e)
                             {
-                                //if (e is ExternalException)
-                                //{
-                                // TODO: log
-                                //}
+                                if (e is ExternalException)
+                                {
+                                    Console.WriteLine("Clipboard busy, aborting...");
+                                }
 
                                 // TODO: adapt
                                 // Libero i socket
@@ -392,17 +393,17 @@ namespace KnightElfServer
                         case State.Closed:
                             #region CLOSE
                             // We want to close the connection
-                            // TODO: log
+                            Console.WriteLine("Closing clipboard...");
                             try
                             {
                                 CurrentClient.Clipboard.SendClipboard();
                             }
                             catch (Exception e)
                             {
-                                //if (e is ExternalException)
-                                //{
-                                // TODO: log
-                                //}
+                                if (e is ExternalException)
+                                {
+                                    Console.WriteLine("Clipboard busy, aborting...");
+                                }
 
                                 // TODO: adapt
                                 // Libero i socket
@@ -421,17 +422,17 @@ namespace KnightElfServer
                         case State.Running:
                             #region RESUME
                             // We are resuming
-                            // TODO: log
+                            Console.WriteLine("Resuming clipboard...");
                             try
                             {
                                 CurrentClient.Clipboard.ReceiveClipboard();
                             }
                             catch (Exception e)
                             {
-                                //if (e is ExternalException)
-                                //{
-                                // TODO: log
-                                //}
+                                if (e is ExternalException)
+                                {
+                                    Console.WriteLine("Clipboard busy, aborting...");
+                                }
 
                                 // TODO: adapt
                                 // Libero i socket
