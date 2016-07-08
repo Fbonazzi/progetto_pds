@@ -104,8 +104,8 @@ namespace KnightElfClient
         /// </summary>
         private void Connect()
         {
-            // TODO: log
             #region CONNECT
+            Console.WriteLine("Connecting to " + CurrentServer.IP + ":" + CurrentServer.Port + "...");
             try
             {
                 CurrentServer.Connect();
@@ -115,13 +115,13 @@ namespace KnightElfClient
             {
                 CurrentServer.CurrentState = State.Closed;
 
-                // TODO: log
-
+                Console.WriteLine("Connection failed.");
                 // Dispose of resources and return
                 CurrentServer.DataSocket.Close();
                 CurrentServer.ControlSocket.Close();
                 return;
             }
+            Console.WriteLine("Connected.");
             #endregion
 
             #region AUTHENTICATE
@@ -133,8 +133,7 @@ namespace KnightElfClient
             catch (SocketException e)
             {
                 CurrentServer.CurrentState = State.Closed;
-
-                // TODO: log
+                Console.WriteLine("Connection failed.");
 
                 // Dispose of resources and return
                 CurrentServer.DataSocket.Close();
@@ -144,21 +143,20 @@ namespace KnightElfClient
             if (Result == false)
             {
                 // Authentication failed
-
-                // TODO: log
+                Console.WriteLine("Authentication failed.");
 
                 // Dispose of resources and return
                 CurrentServer.DataSocket.Close();
                 CurrentServer.ControlSocket.Close();
                 return;
             }
+            Console.WriteLine("Authenticated.");
             #endregion
 
             // Authenticated
-            // TODO: log
             CurrentServer.CurrentState = State.Running;
 
-            // Hide mouse, etc
+            // TODO: Hide mouse, etc
 
             #region START_CLIPBOARD
             // Start the ClipboardHandler thread
@@ -174,7 +172,7 @@ namespace KnightElfClient
                 if (CurrentServer.CurrentState == State.Disconnected)
                 {
                     // ClipboardHandler failed, abort
-                    // TODO: log
+                    Console.WriteLine("Could not start clipboard.");
 
                     // Dispose of resources and return
                     CurrentServer.DataSocket.Close();
@@ -202,7 +200,7 @@ namespace KnightElfClient
                 if (CurrentServer.CurrentState == State.Disconnected)
                 {
                     // DataHandler failed, abort
-                    // TODO: log
+                    Console.WriteLine("Could not start DataHandler.");
 
                     // Dispose of resources and return
                     CurrentServer.DataSocket.Close();
@@ -242,8 +240,7 @@ namespace KnightElfClient
                         {
                             // The user is intentionally closing the connection
                             CurrentServer.CurrentState = State.Closed;
-
-                            // TODO: log
+                            Console.WriteLine("Closing connection...");
 
                             // Empty the input queue and signal the DataHandler to terminate
                             InputQueue.ClearAndClose();
@@ -252,13 +249,13 @@ namespace KnightElfClient
                             try
                             {
                                 CurrentServer.Close();
-                                // TODO: log
+                                Console.WriteLine("Connection closed.");
                             }
                             catch
                             {
                                 CurrentServer.CurrentState = State.Disconnected;
                                 // TODO: signal crash?
-                                // TODO: log
+                                Console.WriteLine("Network error, connection closed.");
                             }
 
                         }
@@ -267,11 +264,11 @@ namespace KnightElfClient
                             // The connection crashed
                             CurrentServer.CurrentState = State.Disconnected;
                             // TODO: signal crash?
-                            // TODO: log
+                            Console.WriteLine("Network error, connection closed.");
                         }
                         // If we intentionally disconnected or crashed
 
-                        // Show mouse again etc.
+                        // TODO: Show mouse again etc.
 
                         // Notify ClipboardHandler of termination
                         lock (CurrentServer.ClipboardLock)
@@ -292,19 +289,19 @@ namespace KnightElfClient
                         // Notify the server we're suspending
                         try
                         {
+                            Console.WriteLine("Suspending connection...");
                             CurrentServer.Suspend();
-
-                            // TODO: log
-
+ 
                             // TODO: show mouse etc
                         }
                         catch (SocketException)
                         {
-                            // TODO: log
+                            Console.WriteLine("Network error, connection closed.");
                             CurrentServer.CurrentState = State.Disconnected;
 
                             // TODO: Signal crash?
                         }
+                        Console.WriteLine("Suspended.");
 
                         // Notify ClipboardHandler of suspension, must e.g. copy across
                         lock (CurrentServer.ClipboardLock)
@@ -317,6 +314,7 @@ namespace KnightElfClient
                             // TODO: this can happen??
                             if (CurrentServer.CurrentState == State.Disconnected)
                             {
+                                Console.WriteLine("Clipboard failed, aborting...");
                                 // Kill the DataHandler and return
                                 CurrentServer.DataHandler.Abort();
                                 return;
@@ -363,14 +361,14 @@ namespace KnightElfClient
                         // Notify the server we are resuming
                         try
                         {
+                            Console.WriteLine("Resuming...");
                             CurrentServer.Resume();
-                            // TODO: log
 
-                            // Hide mouse etc.
+                            // TODO: Hide mouse etc.
                         }
                         catch
                         {
-                            // TODO: log
+                            Console.WriteLine("Network error, could not resume.");
 
                             // TODO: shouldn't I lock the StateLock?
                             CurrentServer.CurrentState = State.Disconnected;
@@ -387,6 +385,7 @@ namespace KnightElfClient
                                 // TODO: Why would this happen??
                                 if (CurrentServer.CurrentState == State.Disconnected)
                                 {
+                                    Console.WriteLine("Clipboard crashed.");
                                     return;
                                 }
                             }

@@ -22,15 +22,16 @@ namespace KnightElfClient
     public partial class MainWindow : Window
     {
         private ViewModel _viewModel;
+        private Client _client;
 
         public MainWindow()
         {
             InitializeComponent();
 
             // Connect console output with logger TextBox
-            TextBoxWriter logOutput = new TextBoxWriter(tbLogger);
-            Console.SetOut(logOutput);
+            Console.SetOut(new TextBoxWriter(tbLogger));
 
+            _client = new Client();
             _viewModel = new ViewModel();
             DataContext = _viewModel;
 

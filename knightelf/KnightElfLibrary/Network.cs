@@ -565,7 +565,7 @@ namespace KnightElfLibrary
 
             // Start listening without blocking
             ListenerSocket.Listen(0);
-            // TODO: log
+            Console.WriteLine("Waiting for client...");
             try
             {
                 // Wait for a Client to connect
@@ -579,13 +579,14 @@ namespace KnightElfLibrary
                     // User interrupt
                     if (!InChiusura)
                     {
-                        // TODO: log
+                        Console.WriteLine("Waiting aborted.");
                         // TODO: close sockets?
                     }
                 }
                 else
                 {
                     // Network error
+                    Console.WriteLine("Network error!");
                     // TODO: close sockets?
                     ListenerSocket.Close();
                 }
@@ -1125,7 +1126,7 @@ namespace KnightElfLibrary
                                     }
                                     #endregion
 
-                                    // TODO: log
+                                    Console.WriteLine("Received file " + FileName + ".");
                                     // Add FileDrop to list
                                     Files.Add(FileNameInDir);
                                     Tmp.Close();
@@ -1223,7 +1224,7 @@ namespace KnightElfLibrary
                                     }
                                     #endregion
 
-                                    // TODO: log
+                                    Console.WriteLine("Received directory " + FileName + ".");
                                     Tmp.Close();
                                     // Unzip dir
                                     Directory.CreateDirectory(DirName);
@@ -1313,7 +1314,6 @@ namespace KnightElfLibrary
                             {
                                 case TransferType.Audio:
                                     #region RECEIVE_CLIPBOARD_AUDIO
-                                    // TODO: log
                                     Clipboard.SetAudio(Tmp);
                                     #endregion
                                     break;
@@ -1391,7 +1391,7 @@ namespace KnightElfLibrary
             {
                 #region CLIPBOARD_EMPTY
                 // The clipboard was empty
-                // TODO: log
+                Console.WriteLine("Remote clipboard is empty.");
                 #endregion
             }
 
@@ -1416,7 +1416,6 @@ namespace KnightElfLibrary
             {
                 #region SEND_CLIPBOARD_FULL
                 // The clipboard contains some supported item
-                // TODO: log?
 
                 // Notify other end
                 SendBuf = this.WrapMessage(Messages.ClipboardFull);
@@ -1430,6 +1429,8 @@ namespace KnightElfLibrary
                 if (msg == Messages.ClipboardReceive)
                 {
                     #region SEND_CLIPBOARD_REQUESTED
+                    Console.WriteLine("Sending clipboard...");
+
                     // Create a filestream to hold the data
                     FileStream Tmp = new FileStream(ClipboardFileName, FileMode.Create, FileAccess.ReadWrite);
                     // Fill the filestream depending on type
@@ -1654,6 +1655,7 @@ namespace KnightElfLibrary
                         // TODO: should I delete it?
                         // File.Delete(ClipboardFile)
                     }
+                    Console.WriteLine("Clipboard sent.");
                     #endregion
                 }
                 #endregion
@@ -1766,7 +1768,6 @@ namespace KnightElfLibrary
             // Clear the stream
             // TODO: useless
             ClipboardStream.Flush();
-            // TODO: log?
         }
 
         private Messages UnwrapMessage(byte[] Buffer, int Size)
