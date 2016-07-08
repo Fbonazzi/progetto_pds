@@ -1031,6 +1031,7 @@ namespace KnightElfLibrary
                                 RecvBuf = UnwrapPacket(RecvBuf, ReceivedBytes);
                                 if (RecvBuf == null)
                                 {
+                                    // TODO: send NACK to inform other end?
                                     Console.WriteLine("Failed to receive file type and name, skipping file " + i + "...");
                                     continue;
                                 }
