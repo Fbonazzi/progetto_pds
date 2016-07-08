@@ -951,10 +951,10 @@ namespace KnightElfLibrary
             {
                 #region CLIPBOARD_FULL
                 // The clipboard is full, ask if we want to receive it
-                // TODO: Ask
-                bool result = true;
+                MessageBoxResult result = MessageBox.Show("The remote clipboard is full. Do you want to transfer it?",
+                    "KnightElf", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
-                if (result == true)
+                if (result == MessageBoxResult.Yes)
                 {
                     #region RECEIVE_CLIPBOARD_YES
                     #region RECEIVE_CLIPBOARD_NOTIFY_CLIPBOARDRECEIVE
