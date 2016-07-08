@@ -28,7 +28,8 @@ namespace KnightElfClient
             InitializeComponent();
 
             // Connect console output with logger TextBox
-            Console.SetOut(new TextBoxWriter(tbLogger));
+            TextBoxWriter logOutput = new TextBoxWriter(tbLogger);
+            Console.SetOut(logOutput);
 
             _viewModel = new ViewModel();
             DataContext = _viewModel;
