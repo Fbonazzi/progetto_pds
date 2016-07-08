@@ -18,13 +18,14 @@ namespace KnightElfClient
         public ViewModel()
         {
             ServerList = new ObservableCollection<ConnectionParams>();
+            serverDict = new Dictionary<ConnectionParams, RemoteServer>();
 
             // Create State Machine
             SM = new StateMachine(
                     existsServer: () => { return ServerList.Count > 0; },
-                    isEditableServer: () => { return true; /*return SelectedServer.isEditable();*/ },
-                    isConnectedServer: () => { throw new NotImplementedException(); /*return SelectedServer.isConnected();*/ },
-                    isReadyServer: () => { throw new NotImplementedException(); /*return SelectedServer.isReady();*/},
+                    isEditableServer: () => { return true; /* TODO: return SelectedServer.isEditable();*/ },
+                    isConnectedServer: () => { throw new NotImplementedException(); /* TODO: return SelectedServer.isConnected();*/ },
+                    isReadyServer: () => { return true; /* TODO: return SelectedServer.isReady();*/},
                     launchAddDlgAction: () => LaunchAddDlg(),
                     launchEditDlgAction: () => LaunchAddDlg(SelectedServer),
                     removeServerAction: () => RemoveServer(),
