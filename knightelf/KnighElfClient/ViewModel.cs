@@ -17,11 +17,11 @@ namespace KnightElfClient
         //Constructor
         public ViewModel()
         {
-            Servers = new ObservableCollection<ConnectionParams>();
+            ServerList = new ObservableCollection<ConnectionParams>();
 
             // Create State Machine
             SM = new StateMachine(
-                    existsServer: () => { return Servers.Count > 0; },
+                    existsServer: () => { return ServerList.Count > 0; },
                     isEditableServer: () => { return true; /*return SelectedServer.isEditable();*/ },
                     isConnectedServer: () => { throw new NotImplementedException(); /*return SelectedServer.isConnected();*/ },
                     isReadyServer: () => { throw new NotImplementedException(); /*return SelectedServer.isReady();*/},
@@ -42,14 +42,15 @@ namespace KnightElfClient
             PauseCommand = SM.CreateCommand(SMTriggers.Pause);
 
             //TODO: remove fake list
-            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.1"), Port = 50000, Password = "prova1" });
-            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.2"), Port = 60000, Password = "prova1" });
-            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.3"), Port = 70000, Password = "prova1" });
-            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.4"), Port = 80000, Password = "prova1" });
+            ServerList.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.1"), Port = 50000, Password = "prova1" });
+            ServerList.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.2"), Port = 60000, Password = "prova1" });
+            ServerList.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.3"), Port = 70000, Password = "prova1" });
+            ServerList.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.4"), Port = 80000, Password = "prova1" });
         }
 
         #region Properties
-        public ObservableCollection<ConnectionParams> Servers { get; set; }
+        public ObservableCollection<ConnectionParams> ServerList { get; set; }
+        private Dictionary<ConnectionParams, RemoteServer> serverDict;
         public ConnectionParams SelectedServer
         {
             get
@@ -74,6 +75,7 @@ namespace KnightElfClient
             }
         }
         public StateMachine SM { get; private set; }
+        public Client ClientInstance { get; internal set; }
         #endregion //Properties
 
         #region Commands
@@ -92,12 +94,18 @@ namespace KnightElfClient
 
         private void LaunchAddDlg()
         {
+            //TODO: add name property to servers in order to display them in the interface
             ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog();
             if (cSettingsDlg.ShowDialog() == true)
             {
                 //get settings
                 SM.Fire(SMTriggers.Save);
-                Servers.Add(cSettingsDlg.ConnectionParams);
+                //TODO: check if selectedServer is already synch and use that
+                ServerList.Add(cSettingsDlg.ConnectionParams);
+                serverDict[cSettingsDlg.ConnectionParams] = new RemoteServer(cSettingsDlg.ConnectionParams.IPaddr,
+                    cSettingsDlg.ConnectionParams.Port,
+                    cSettingsDlg.ConnectionParams.Password);
+
                 Console.WriteLine("New Server Connection added.");
             }
             else SM.Fire(SMTriggers.Cancel);
@@ -109,11 +117,13 @@ namespace KnightElfClient
             if (cSettingsDlg.ShowDialog() == true)
             {
                 SM.Fire(SMTriggers.Save);
+                serverDict.Remove(selectedServer);
 
                 //change each field to update the original data in the list
                 SelectedServer.IPaddr = cSettingsDlg.ConnectionParams.IPaddr;
                 SelectedServer.Port = cSettingsDlg.ConnectionParams.Port;
                 SelectedServer.Password = cSettingsDlg.ConnectionParams.Password;
+                serverDict[selectedServer] = new RemoteServer(selectedServer.IPaddr, selectedServer.Port, selectedServer.Password);
 
                 Console.WriteLine("Server edit saved.");
             }
@@ -122,7 +132,9 @@ namespace KnightElfClient
 
         private void RemoveServer()
         {
-            Servers.Remove(SelectedServer);
+            Disconnect(); //if it wasn't connected nothing happens
+            serverDict.Remove(SelectedServer);
+            ServerList.Remove(SelectedServer);
             Console.WriteLine("Server successfully removed.");
 
             SM.Fire(SMTriggers.Removed);
@@ -130,41 +142,17 @@ namespace KnightElfClient
 
         private void Connect()
         {
-            throw new NotImplementedException();
+            RemoteServer curRemoteServer = serverDict[SelectedServer];
+            ClientInstance.ConnectToServer(curRemoteServer);
+            // TODO: change status asynch
         }
 
         private void Disconnect()
         {
-            throw new NotImplementedException();
+            RemoteServer curRemoteServer = serverDict[SelectedServer];
+            ClientInstance.DisconnectFromServer(curRemoteServer);
+            // TODO: change state variable asynchronously
         }
-
-
-        //private async Task LoadEmployees()
-        //{
-        //    try
-        //    {
-        //        Employees.Clear();
-
-        //        //fake a long running process
-        //        await Task.Delay(2000);
-
-        //        List<Employee> employees = GetEmployees();
-
-        //        employees.ForEach(e => Employees.Add(e));
-
-        //        StateMachine.Fire(Triggers.SearchSucceeded);
-
-        //        if (Employees.Count > 0)
-        //        {
-        //            SelectedEmployee = Employees.First();
-        //        }
-        //    }
-        //    catch
-        //    {
-        //        StateMachine.Fire(Triggers.SearchFailed);
-        //    }
-        //}
-
         #endregion
     }
 }
