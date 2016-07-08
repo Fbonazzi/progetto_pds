@@ -103,7 +103,7 @@ namespace KnightElfServer
 
                 // Dispose of resources and return
                 CurrentClient.DataSocket.Close();
-                CurrentClient.ControlSocket.Close();
+                //CurrentClient.ControlSocket.Close();
                 return;
             }
             #endregion

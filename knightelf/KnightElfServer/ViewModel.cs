@@ -69,7 +69,6 @@ namespace KnightElfServer
             {
                 //get settings
                 ConnParams = cSettingsDlg.ConnectionParams;
-                remoteClient = new RemoteClient(ConnParams.IPaddr, ConnParams.Port, ConnParams.Password);
 
                 //update UI
                 Console.WriteLine("Connection settings saved.");
@@ -80,6 +79,7 @@ namespace KnightElfServer
 
         private void StartConnection()
         {
+            remoteClient = new RemoteClient(ConnParams.IPaddr, ConnParams.Port, ConnParams.Password);
             // Wait Client Connection
             ServerInstance.ListenForClient(remoteClient);
             Console.WriteLine("Waiting for client connection...");

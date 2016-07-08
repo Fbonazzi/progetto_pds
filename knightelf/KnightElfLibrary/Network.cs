@@ -160,8 +160,8 @@ namespace KnightElfLibrary
             this.ECDHClient = new ECDiffieHellmanCng();
             this.ECDHClient.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hmac;
             // Derive a key from the password and the IP:Port representation
-            PasswordDeriveBytes PasswordDerive = new PasswordDeriveBytes(Password, Encoding.Default.GetBytes(IP.ToString() + ":" + Port.ToString()));
-            this.ECDHClient.HmacKey = PasswordDerive.CryptDeriveKey("HMAC", "SHA-256", 256, null);
+            Rfc2898DeriveBytes PasswordDerive = new Rfc2898DeriveBytes(Password, Encoding.Default.GetBytes(IP.ToString() + ":" + Port.ToString()), 10);
+            this.ECDHClient.HmacKey = PasswordDerive.GetBytes(256);
             this.Hasher = new SHA256Cng();
         }
 
@@ -532,8 +532,8 @@ namespace KnightElfLibrary
             this.ECDHServer = new ECDiffieHellmanCng();
             this.ECDHServer.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hmac;
             // Derive a key from the password and the IP:Port representation
-            PasswordDeriveBytes PasswordDerive = new PasswordDeriveBytes(Password, Encoding.Default.GetBytes(IP.ToString() + ":" + Port.ToString()));
-            this.ECDHServer.HmacKey = PasswordDerive.CryptDeriveKey("HMAC", "SHA-256", 256, null);
+            Rfc2898DeriveBytes PasswordDerive = new Rfc2898DeriveBytes(Password, Encoding.Default.GetBytes(IP.ToString() + ":" + Port.ToString()), 10);
+            this.ECDHServer.HmacKey = PasswordDerive.GetBytes(256);
             this.Hasher = new SHA256Cng();
         }
 
