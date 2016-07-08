@@ -8,7 +8,6 @@ namespace KnightElfServer
 {
     internal class ViewModel : BindableObject
     {
-
         private ConnectionParams _connectionParams;
         public ConnectionParams ConnParams {
             get { return _connectionParams; }
@@ -21,6 +20,8 @@ namespace KnightElfServer
                 OnPropertyChanged("ConnParams");
             }
         }
+        public Server ServerInstance { get; internal set; }
+        private RemoteClient remoteClient;
 
         public ViewModel()
         {
@@ -68,6 +69,8 @@ namespace KnightElfServer
             {
                 //get settings
                 ConnParams = cSettingsDlg.ConnectionParams;
+                remoteClient = new RemoteClient(ConnParams.IPaddr, ConnParams.Port, ConnParams.Password);
+
                 //update UI
                 Console.WriteLine("Connection settings saved.");
                 SM.Fire(SMTriggers.SaveConnection);
@@ -75,37 +78,22 @@ namespace KnightElfServer
             else SM.Fire(SMTriggers.CancelConnection);
         }
 
-        private async Task StartConnection()
+        private void StartConnection()
         {
-            //// Sgancio il thread per gestire la connessione in entrata
-            //Connecter = new Thread(new ThreadStart(StartListen));
-            //Connecter.SetApartmentState(ApartmentState.STA);
-            //Connecter.Start();
-
-            //// Sgancio il thread che inietterà gli eventi ricevuti nella coda di sistema (se non c'è già)
-            //if (Injecter == null)
-            //{
-            //    Injecter = new Thread(new ThreadStart(Inject));
-            //    Injecter.SetApartmentState(ApartmentState.STA);
-            //    Injecter.Start();
-            //}
-
             // Wait Client Connection
+            ServerInstance.ListenForClient(remoteClient);
             Console.WriteLine("Waiting for client connection...");
-            
-            //fake a long running process
-            await Task.Delay(2000);
-            //throw new NotImplementedException();
         }
 
         private void IntWaitClient()
         {
+            ServerInstance.StopListening();
             Console.WriteLine("Waiting interrupted.");
-            //throw new NotImplementedException();
         }
 
         private void Disconnect()
         {
+            // TODO: remove or comment this function
             Console.WriteLine("Closing connection...");
             //throw new NotImplementedException();
             Console.WriteLine("Connection closed.");

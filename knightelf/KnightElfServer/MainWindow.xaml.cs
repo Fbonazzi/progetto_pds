@@ -26,7 +26,7 @@ namespace KnightElfServer
     public partial class MainWindow : Window
     {
         private TextBoxWriter tbwLogger;
-
+        private ViewModel viewModel;
         
         public MainWindow()
         {
@@ -37,7 +37,9 @@ namespace KnightElfServer
             Console.SetOut(tbwLogger);
 
             // bind the Date to the UI
-            DataContext = new ViewModel();
+            viewModel = new ViewModel();
+            viewModel.ServerInstance = new Server(); 
+            DataContext = viewModel;
         }
     }
 }
