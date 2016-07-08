@@ -1663,6 +1663,7 @@ namespace KnightElfLibrary
         public void Close()
         {
             // TODO: implement
+            // Close all sockets and threads? how?
         }
 
         /// <summary>

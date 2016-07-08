@@ -551,7 +551,7 @@ namespace KnightElfServer
             // TODO: adapt
             CurrentClient.InChiusura = true;
             // Chiamo la chiusura forzata
-            ChiusuraForzataMaster();
+            // ChiusuraForzataMaster();
 
             if (Injector != null)
                 Injector.Abort();
