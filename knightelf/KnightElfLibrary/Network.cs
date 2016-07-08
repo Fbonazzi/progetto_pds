@@ -1040,6 +1040,7 @@ namespace KnightElfLibrary
                                 // Save the file name
                                 string FileName = Encoding.Default.GetString(RecvBuf, 9, RecvBuf.Length - 9);
 
+                                Console.WriteLine("Receiving " + FileName + "...");
                                 if (Type == TransferType.FileDropFile)
                                 {
                                     #region RECEIVE_FILEDROP_FILE
@@ -1237,6 +1238,7 @@ namespace KnightElfLibrary
                                     Files.Add(DirName);
                                     #endregion
                                 }
+                                Console.WriteLine("Received " + FileName + ".");
                                 #endregion
                             }
 
@@ -1561,7 +1563,9 @@ namespace KnightElfLibrary
                                                     // If the other end acknowledged the File
                                                     // Create the FileStream
                                                     Tmp = new FileStream(Element, FileMode.Open, FileAccess.Read);
+                                                    Console.WriteLine("Transferring " + Element + "...");
                                                     SendOverStream(Tmp, Type);
+                                                    Console.WriteLine("Transferred " + Element + ".");
                                                     #endregion
                                                 }
                                             }
@@ -1606,31 +1610,14 @@ namespace KnightElfLibrary
                                                     string Archive = Path.Combine(TempDirName, "Archive.zip");
                                                     File.Delete(Archive);
 
-                                                    //////////////////////////////////////////////////////////////////////
-                                                    // TODO: implement progress bar
-                                                    //lock (LoadLock)
-                                                    //{
-                                                    //    Loader = new Thread(new ThreadStart(ScaricaClipboard));
-                                                    //    Loader.SetApartmentState(ApartmentState.STA);
-                                                    //    Loader.Start();
-
-                                                    //    Monitor.Wait(LoadLock);
-                                                    //}
-
-                                                    //// Etichetta e barra di caricamento
-                                                    //BarraCaricamento.Invoke((MethodInvoker)delegate () { BarraCaricamento.Style = ProgressBarStyle.Marquee; });
-                                                    //Etichetta.Invoke((MethodInvoker)delegate () { Etichetta.Text = "Preparo i file da inviare..."; });
-                                                    //Caricamento.Invoke((MethodInvoker)delegate () { Caricamento.Update(); });
-
+                                                    Console.WriteLine("Preparing " + Element + " for transfer...");
                                                     ZipFile.CreateFromDirectory(Element, Archive);
-
-                                                    // Chiudo finestra
-                                                    // Caricamento.Invoke((MethodInvoker)delegate () { Caricamento.Close(); });
-                                                    //////////////////////////////////////////////////////////////////////
+                                                    Console.WriteLine("Transferring " + Element + "...");
 
                                                     // Create the FileStream
                                                     Tmp = new FileStream(Archive, FileMode.Open, FileAccess.Read);
                                                     SendOverStream(Tmp, Type);
+                                                    Console.WriteLine("Transferred " + Element + ".");
                                                     #endregion
                                                 }
                                             }
