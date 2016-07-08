@@ -49,7 +49,7 @@ namespace KnightElfClient
                 .PermitIf(SMTriggers.Edit, SMStates.EditingServer, isEditableServer);
 
             Configure(SMStates.AddingServer)
-                .OnEntry(removeServerAction)
+                .OnEntry(launchAddDlgAction)
                 .Permit(SMTriggers.Save, SMStates.ServerSelected)
                 .Permit(SMTriggers.Cancel, SMStates.Start);
 
