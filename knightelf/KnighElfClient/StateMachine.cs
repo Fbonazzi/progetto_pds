@@ -37,11 +37,11 @@ namespace KnightElfClient
                                 Action connectAction) : base(SMStates.Start)
         {
 
+            #region Configure editing servers transitions 
             Configure(SMStates.Start)
                 .Permit(SMTriggers.Add,SMStates.AddingServer)
                 .PermitIf(SMTriggers.Select,SMStates.ServerSelected, existsServer);
 
-            // Editing servers transitions
             Configure(SMStates.ServerSelected)
                 .SubstateOf(SMStates.Start)
                 .Permit(SMTriggers.Deselect, SMStates.Start)
@@ -62,8 +62,9 @@ namespace KnightElfClient
                 .OnEntry(launchEditDlgAction)
                 .Permit(SMTriggers.Save, SMStates.ServerSelected)
                 .Permit(SMTriggers.Cancel, SMStates.ServerSelected);
+            #endregion
 
-            // Connection transitions
+            #region Configure connection transitions
             Configure(SMStates.ServerSelected)
                 .PermitReentryIf(SMTriggers.Connect, isReadyServer)
                 .OnEntryFrom(SMTriggers.Connect,connectAction)
@@ -73,17 +74,16 @@ namespace KnightElfClient
 
             Configure(SMStates.WorkingRemote)
                 .Permit(SMTriggers.Pause, SMStates.ServerSelected);
+            #endregion
 
-            OnTransitioned(
-                  (t) =>
-                  {
-                      OnPropertyChanged("State");
-                      CommandManager.InvalidateRequerySuggested();
-                      //used to debug commands and UI components
-                      Debug.WriteLine("State Machine transitioned from {0} -> {1} [{2}]",
-                                        t.Source, t.Destination, t.Trigger);
-                  }
-            );
+            OnTransitioned((t) =>
+            {
+                OnPropertyChanged("State");
+                CommandManager.InvalidateRequerySuggested();
+                //used to debug commands and UI components
+                Debug.WriteLine("State Machine transitioned from {0} -> {1} [{2}]",
+                                t.Source, t.Destination, t.Trigger);
+            });
 
         }
 

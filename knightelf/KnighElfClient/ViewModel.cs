@@ -12,8 +12,41 @@ namespace KnightElfClient
 {
     class ViewModel : BindableObject
     {
-
         private ConnectionParams _selectedServer;
+
+        //Constructor
+        public ViewModel()
+        {
+            Servers = new ObservableCollection<ConnectionParams>();
+
+            // Create State Machine
+            SM = new StateMachine(
+                    existsServer: () => { return Servers.Count > 0; },
+                    isEditableServer: () => { return true; /*return SelectedServer.isEditable();*/ },
+                    isConnectedServer: () => { throw new NotImplementedException(); /*return SelectedServer.isConnected();*/ },
+                    isReadyServer: () => { throw new NotImplementedException(); /*return SelectedServer.isReady();*/},
+                    launchAddDlgAction: () => LaunchAddDlg(),
+                    launchEditDlgAction: () => LaunchAddDlg(SelectedServer),
+                    removeServerAction: () => RemoveServer(),
+                    disconnectAction: () => Disconnect(),
+                    connectAction: () => Connect()
+                );
+
+            // Create Commands
+            AddCommand = SM.CreateCommand(SMTriggers.Add);
+            EditCommand = SM.CreateCommand(SMTriggers.Edit);
+            RemoveCommand = SM.CreateCommand(SMTriggers.Remove);
+            ConnectCommand = SM.CreateCommand(SMTriggers.Connect);
+            DisconnectCommand = SM.CreateCommand(SMTriggers.Disconnect);
+            RunCommand = SM.CreateCommand(SMTriggers.Run);
+            PauseCommand = SM.CreateCommand(SMTriggers.Pause);
+
+            //TODO: remove fake list
+            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.1"), Port = 50000, Password = "prova1" });
+            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.2"), Port = 60000, Password = "prova1" });
+            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.3"), Port = 70000, Password = "prova1" });
+            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.4"), Port = 80000, Password = "prova1" });
+        }
 
         #region Properties
         public ObservableCollection<ConnectionParams> Servers { get; set; }
@@ -40,50 +73,11 @@ namespace KnightElfClient
                 }
             }
         }
-        #endregion
-
-        //Constructor
-        public ViewModel()
-        {
-            Servers = new ObservableCollection<ConnectionParams>();
-
-            // Create State Machine
-            SM = new StateMachine(
-                    existsServer:           () => { return Servers.Count > 0; },
-                    isEditableServer:       () => { return true; /*return SelectedServer.isEditable();*/ },
-                    isConnectedServer:      () => { throw new NotImplementedException(); /*return SelectedServer.isConnected();*/ },
-                    isReadyServer:          () => { throw new NotImplementedException(); /*return SelectedServer.isReady();*/},
-                    launchAddDlgAction:     () => LaunchAddDlg(),
-                    launchEditDlgAction:    () => LaunchAddDlg(SelectedServer),
-                    removeServerAction:     () => RemoveServer(),
-                    disconnectAction:       () => Disconnect(),
-                    connectAction:          () => Connect()
-                );
-
-            // Create Commands
-            AddCommand = SM.CreateCommand(SMTriggers.Add);
-            EditCommand = SM.CreateCommand(SMTriggers.Edit);
-            RemoveCommand = SM.CreateCommand(SMTriggers.Remove);
-            ConnectCommand = SM.CreateCommand(SMTriggers.Connect);
-            DisconnectCommand = SM.CreateCommand(SMTriggers.Disconnect);
-            RunCommand = SM.CreateCommand(SMTriggers.Run);
-            PauseCommand = SM.CreateCommand(SMTriggers.Pause);
-
-            //TODO: remove fake list
-            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.1"), Port = 50000, Password = "prova1" });
-            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.2"), Port = 60000, Password = "prova1" });
-            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.3"), Port = 70000, Password = "prova1" });
-            Servers.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.4"), Port = 80000, Password = "prova1" });
-        }
-
-        
-
-
-        #region State Machine
-
         public StateMachine SM { get; private set; }
+        #endregion //Properties
 
-        // Commands
+        #region Commands
+
         public ICommand AddCommand { get; private set; }
         public ICommand EditCommand { get; private set; }
         public ICommand RemoveCommand { get; private set; }
@@ -92,7 +86,7 @@ namespace KnightElfClient
         public ICommand RunCommand { get; private set; }
         public ICommand PauseCommand { get; private set; }
 
-        #endregion
+        #endregion //Commands
 
         #region Actions
 
