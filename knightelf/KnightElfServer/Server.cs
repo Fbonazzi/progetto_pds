@@ -60,7 +60,7 @@ namespace KnightElfServer
         /// Start waiting for a client to connect to the specified RemoteClient
         /// </summary>
         /// <param name="c"></param>
-        private void ListenForClient(RemoteClient c)
+        public void ListenForClient(RemoteClient c)
         {
             CurrentClient = c;
             // Start to listen
@@ -79,7 +79,7 @@ namespace KnightElfServer
         /// <summary>
         /// Stop waiting for a client to connect
         /// </summary>
-        private void StopListening()
+        public void StopListening()
         {
             // Brutally close the socket
             CurrentClient.ListenerSocket.Close();
