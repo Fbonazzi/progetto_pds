@@ -995,6 +995,7 @@ namespace KnightElfLibrary
 
                             StringCollection Files = new StringCollection();
 
+                            Console.WriteLine("Receiving " + NumFiles + " files.");
                             bool Completed = false;
                             for (int i = 0; i < NumFiles; i++)
                             {
@@ -1028,10 +1029,13 @@ namespace KnightElfLibrary
                                     { break; }
                                 }
                                 RecvBuf = UnwrapPacket(RecvBuf, ReceivedBytes);
-                                #endregion
-
                                 if (RecvBuf == null)
-                                { return; }
+                                {
+                                    // TODO: send NACK to inform other end?
+                                    Console.WriteLine("Failed to receive file type and name, skipping file " + i + "...");
+                                    continue;
+                                }
+                                #endregion
 
                                 // Save the type
                                 Type = (TransferType)RecvBuf[8];
@@ -1062,10 +1066,12 @@ namespace KnightElfLibrary
                                         j += ClipboardStream.Read(RecvBuf, j, RecvBuf.Length - j);
                                     }
                                     message = UnwrapPacket(RecvBuf, RecvBuf.Length);
-                                    #endregion
-
                                     if (message == null)
-                                    { return; }
+                                    {
+                                        Console.WriteLine("Could not get transfer type and size, skipping file " + i + "...");
+                                        continue;
+                                    }
+                                    #endregion
                                     Type = (TransferType)message[16];
                                     long size = BitConverter.ToInt64(message, 0);
 
@@ -1102,7 +1108,7 @@ namespace KnightElfLibrary
                                     #region RECEIVE_CLIPBOARD_FILEDROP_READ_FILE_IN
                                     // Read the file blob, unwrap each packet and write it into the stream
                                     byte[] ReadBuf = new byte[PacketSize];
-                                    byte[] UnwrappedBuf;
+                                    byte[] UnwrappedBuf = null;
                                     int CurrentPacketSize = 0;
                                     for (int j = 0; j < PacketNo; j++)
                                     {
@@ -1121,10 +1127,16 @@ namespace KnightElfLibrary
                                         // Malformed packet: abort
                                         if (UnwrappedBuf == null)
                                         {
-                                            // TODO: change to exception
-                                            return;
+                                            break;
                                         }
                                         Tmp.Write(UnwrappedBuf, 0, UnwrappedBuf.Length);
+                                    }
+                                    if (UnwrappedBuf == null)
+                                    {
+                                        // Malformed packet: abort
+                                        Console.WriteLine("Received malformed packet, skipping file " + i + "...");
+                                        Tmp.Close();
+                                        continue;
                                     }
                                     #endregion
 
@@ -1156,13 +1168,13 @@ namespace KnightElfLibrary
                                         j += ClipboardStream.Read(RecvBuf, j, RecvBuf.Length - j);
                                     }
                                     message = UnwrapPacket(RecvBuf, RecvBuf.Length);
-                                    #endregion
-
                                     if (message == null)
                                     {
-                                        // TODO: change to try/catch and receive next file
-                                        return;
+                                        Console.WriteLine("Could not get file type and size, skipping file " + i + "...");
+                                        continue;
                                     }
+                                    #endregion
+
                                     Type = (TransferType)message[16];
                                     long size = BitConverter.ToInt64(message, 0);
 
@@ -1200,7 +1212,7 @@ namespace KnightElfLibrary
                                     #region RECEIVE_CLIPBOARD_FILEDROP_READ_FILE_IN
                                     // Read the file blob, unwrap each packet and write it into the stream
                                     byte[] ReadBuf = new byte[PacketSize];
-                                    byte[] UnwrappedBuf;
+                                    byte[] UnwrappedBuf = null;
                                     int CurrentPacketSize = 0;
                                     for (int j = 0; j < PacketNo; j++)
                                     {
@@ -1219,10 +1231,15 @@ namespace KnightElfLibrary
                                         // Malformed packet: abort
                                         if (UnwrappedBuf == null)
                                         {
-                                            // TODO: change to try/catch, receive next file
-                                            return;
+                                            break;
                                         }
                                         Tmp.Write(UnwrappedBuf, 0, UnwrappedBuf.Length);
+                                    }
+                                    if (UnwrappedBuf == null)
+                                    {
+                                        Console.WriteLine("Received malformed packet, skipping file " + i + "...");
+                                        Tmp.Close();
+                                        continue;
                                     }
                                     #endregion
 
@@ -1230,6 +1247,7 @@ namespace KnightElfLibrary
                                     Tmp.Close();
                                     // Unzip dir
                                     Directory.CreateDirectory(DirName);
+                                    // TODO: ma l'archivio non è Tmp? e non archive? controllare
                                     ZipFile.ExtractToDirectory(Archive, DirName);
                                     // Delete archive
                                     File.Delete(Archive);
