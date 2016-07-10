@@ -193,13 +193,13 @@ namespace KnightElfLibrary
         }
 
         /// <summary>
-        /// Authenticate the remote server.
+        /// Authenticate the remote server using PAKE.
         /// 
         /// Perform an Elliptic Curve Diffie-Hellman key exchange to obtain key material.
         /// Generate a session key from the obtained key material and provided password using an HMAC keyed hash function.
         /// Perform key confirmation to guarantee the remote server shares the secret password.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns true if the authentication is successful, false otherwise.</returns>
         public bool Authenticate()
         {
             byte[] ClientPubKey = this.ECDHClient.PublicKey.ToByteArray();
@@ -254,8 +254,11 @@ namespace KnightElfLibrary
 
             #region AUTHENTICATE_CREATE_CLIENT_MSG
             // Prepare the message
-            long Ticks = DateTime.Now.Ticks;
-            byte[] ClientDone = Encoding.Default.GetBytes("ClientDone:" + Ticks.ToString());
+            byte[] ClientDoneBytes = Encoding.Default.GetBytes("ClientDone:");
+            byte[] timestamp = BitConverter.GetBytes(DateTime.Now.Ticks);
+            byte[] ClientDone = new byte[ClientDoneBytes.Length + timestamp.Length];
+            timestamp.CopyTo(ClientDone, 0);
+            ClientDoneBytes.CopyTo(ClientDone, timestamp.Length);
             // Create the Tag
             byte[] tag = Hmac.ComputeHash(ClientDone);
             // Prepare the tagged message
@@ -285,34 +288,47 @@ namespace KnightElfLibrary
             }
             #endregion
 
-            #region AUTHENTICATE_VERIF_SERVER_MSG
-            // Verify the ServerDoneMsg
-            string ServerDone = Encoding.Default.GetString(ServerDoneMsg, tag.Length, ReceivedBytes - tag.Length);
-            // Verify the content of the message
-            string[] Content = ServerDone.Split(':');
-            // Verify the message text
-            if (!Content[0].SequenceEqual("ServerDone"))
+            #region AUTHENTICATE_VERIF_SERVER_TAG
+            // Split the received message into tag and rest
+            byte[] ServerTagBytes = new byte[tag.Length];
+            Array.Copy(ServerDoneMsg, 0, ServerTagBytes, 0, ServerTagBytes.Length);
+            byte[] ServerRestBytes = new byte[ServerDoneMsg.Length - tag.Length];
+            Array.Copy(ServerRestBytes, 0, ServerDoneMsg, 0, ServerRestBytes.Length);
+
+            // Verify the tag
+            byte[] VerifServer = Hmac.ComputeHash(ServerRestBytes);
+            if (!ServerTagBytes.SequenceEqual(VerifServer))
             {
-                // Not a ServerDone message
+                // Authentication failed
                 return false;
             }
+            #endregion
+
+            #region AUTHENTICATE_VERIF_SERVER_MSG
+            // Split the rest of the message into timestamp and ServerDone
+            byte[] ServerTimestampBytes = new byte[8];
+            Array.Copy(ServerDoneMsg, tag.Length, ServerTimestampBytes, 0, ServerTimestampBytes.Length);
+            byte[] ServerDoneBytes = new byte[ServerDoneMsg.Length - tag.Length - 8];
+            Array.Copy(ServerDoneMsg, tag.Length + 8, ServerDoneBytes, 0, ServerDoneBytes.Length);
+
+            #region AUTHENTICATE_VERIF_SERVER_MSG_TIMESTAMP
             // Verify that the message timestamp is close enough
-            long TimestampTicks = Convert.ToInt64(Content[1]);
-            // If the timestamp precedes the client timestamp, or follows it by more than 1 second (10M ticks)
-            if (TimestampTicks < Ticks || TimestampTicks - Ticks > 10000000)
+            long TimestampTicks = BitConverter.ToInt64(ServerTimestampBytes, 0);
+            long Ticks = DateTime.Now.Ticks;
+            // If the timestamp is more than 5 seconds away in either direction (50M ticks)
+            if ((TimestampTicks >= Ticks && TimestampTicks - Ticks > 50000000) ||
+                (TimestampTicks < Ticks && Ticks - TimestampTicks > 50000000))
             {
                 // Timestamp too far
                 return false;
             }
             #endregion
 
-            #region AUTHENTICATE_VERIF_SERVER_TAG
-            // Extract the server tag
-            byte[] ServerTag = new byte[tag.Length];
-            Array.Copy(ServerDoneMsg, ServerTag, ServerTag.Length);
-            // Verify the ServerDoneMsg signature
-            byte[] VerifServer = Hmac.ComputeHash(Encoding.Default.GetBytes(ServerDone));
-            if (ServerTag.SequenceEqual(VerifServer))
+            #region AUTHENTICATE_VERIF_SERVER_MSG_TEXT
+            // Verify the ServerDoneBytes message
+            string ServerDone = Encoding.Default.GetString(ServerDoneBytes);
+            // Verify the content of the message
+            if (ServerDone.SequenceEqual("ServerDone:"))
             {
                 // Authentication successful
                 this.SessionKey = SessionKey;
@@ -323,10 +339,13 @@ namespace KnightElfLibrary
             }
             else
             {
-                // Authentication failed
+                // Not a ServerDone message
                 return false;
             }
             #endregion
+
+            #endregion
+
             #endregion
         }
 
@@ -596,13 +615,21 @@ namespace KnightElfLibrary
             }
         }
 
+        /// <summary>
+        /// Authenticate the remote client using PAKE.
+        /// 
+        /// Perform an Elliptic Curve Diffie-Hellman key exchange to obtain kay material.
+        /// Generate a session key from the obtained key material and user-provided password using an HMAC keyed hash function.
+        /// Perform key confirmation to guarantee the remote client shares the same password.
+        /// </summary>
+        /// <returns>Returns true if the authentication is successful, false otherwise.</returns>
         public bool Authenticate()
         {
             byte[] ServerPubKey = this.ECDHServer.PublicKey.ToByteArray();
             byte[] ClientPubKey = new byte[ServerPubKey.Length];
             int ReceivedBytes;
 
-            #region AUTHENTICATE_KEY_MATERIAL
+            #region AUTHENTICATE_EXCHANGE_KEY_MATERIAL
             // Exchange public keys
             try
             {
@@ -650,8 +677,11 @@ namespace KnightElfLibrary
 
             #region AUTHENTICATE_CREATE_SERVER_MSG
             // Prepare the message
-            long Ticks = DateTime.Now.Ticks;
-            byte[] ServerDone = Encoding.Default.GetBytes("ServerDone:" + Ticks.ToString());
+            byte[] ServerDoneBytes = Encoding.Default.GetBytes("ServerDone:");
+            byte[] timestamp = BitConverter.GetBytes(DateTime.Now.Ticks);
+            byte[] ServerDone = new byte[ServerDoneBytes.Length + timestamp.Length];
+            timestamp.CopyTo(ServerDone, 0);
+            ServerDoneBytes.CopyTo(ServerDone, timestamp.Length);
             // Create the tag
             byte[] tag = Hmac.ComputeHash(ServerDone);
             // Prepare the tagged message
@@ -681,35 +711,47 @@ namespace KnightElfLibrary
             }
             #endregion
 
+            #region AUTHENTICATE_VERIF_CLIENT_TAG
+            // Split the received message into tag and rest
+            byte[] ClientTagBytes = new byte[tag.Length];
+            Array.Copy(ClientDoneMsg, 0, ClientTagBytes, 0, ClientTagBytes.Length);
+            byte[] ClientRestBytes = new byte[ClientDoneMsg.Length - tag.Length];
+            Array.Copy(ClientRestBytes, 0, ClientDoneMsg, 0, ClientRestBytes.Length);
 
-            #region AUTHENTICATE_VERIF_CLIENT_MSG
-            // Verify the ClientDoneMsg
-            string ClientDone = Encoding.Default.GetString(ClientDoneMsg, tag.Length, ReceivedBytes - tag.Length);
-            // Verify the content of the message
-            string[] Content = ClientDone.Split(':');
-            // Verify the message text
-            if (!Content[0].SequenceEqual("ClientDone"))
+            // Verify the tag
+            byte[] VerifClient = Hmac.ComputeHash(ClientRestBytes);
+            if (!ClientTagBytes.SequenceEqual(VerifClient))
             {
-                // Not a ClientDone message
+                // Authentication failed
                 return false;
             }
+            #endregion
+
+            #region AUTHENTICATE_VERIF_CLIENT_MSG
+            // Split the rest of the message into timestamp and ClientDone
+            byte[] ClientTimestampBytes = new byte[8];
+            Array.Copy(ClientDoneMsg, tag.Length, ClientTimestampBytes, 0, ClientTimestampBytes.Length);
+            byte[] ClientDoneBytes = new byte[ClientDoneMsg.Length - tag.Length - 8];
+            Array.Copy(ClientDoneMsg, tag.Length + 8, ClientDoneBytes, 0, ClientDoneBytes.Length);
+
+            #region AUTHENTICATE_VERIF_CLIENT_MSG_TIMESTAMP
             // Verify that the message timestamp is close enough
-            long TimestampTicks = Convert.ToInt64(Content[1]);
-            // If the timestamp precedes the client timestamp, or follows it by more than 1 second (10M ticks)
-            if (TimestampTicks < Ticks || TimestampTicks - Ticks > 10000000)
+            long TimestampTicks = BitConverter.ToInt64(ClientTimestampBytes, 0);
+            long Ticks = DateTime.Now.Ticks;
+            // If the timestamp is more than 5 seconds away in either direction (50M ticks)
+            if ((TimestampTicks >= Ticks && TimestampTicks - Ticks > 50000000) ||
+                (TimestampTicks < Ticks && Ticks - TimestampTicks > 50000000))
             {
                 // Timestamp too far
                 return false;
             }
             #endregion
 
-            #region AUTHENTICATE_VERIF_CLIENT_TAG
-            // Extract the client tag
-            byte[] ClientTag = new byte[tag.Length];
-            Array.Copy(ClientDoneMsg, ClientTag, ClientTag.Length);
-            // Verify the ClientDoneMsg signature
-            byte[] VerifClient = Hmac.ComputeHash(Encoding.Default.GetBytes(ClientDone));
-            if (ClientTag.SequenceEqual(VerifClient))
+            #region AUTHENTICATE_VERIF_CLIENT_MSG_TEXT
+            // Verify the ClientDoneBytes message
+            string ClientDone = Encoding.Default.GetString(ClientDoneBytes);
+            // Verify the content of the message
+            if (ClientDone.SequenceEqual("ClientDone:"))
             {
                 // Authentication successful
                 this.SessionKey = SessionKey;
@@ -720,10 +762,13 @@ namespace KnightElfLibrary
             }
             else
             {
-                // Authentication failed
+                // Not a ClientDone message
                 return false;
             }
             #endregion
+
+            #endregion
+
             #endregion
         }
 
@@ -759,7 +804,7 @@ namespace KnightElfLibrary
             byte[] UnwrappedMsg = UnwrapPacket(RecvBuf, ReceivedBytes);
             if (UnwrappedMsg == null || UnwrappedMsg.Length > 1)
                 return Messages.Disconnect;
-            switch(UnwrappedMsg[0])
+            switch (UnwrappedMsg[0])
             {
                 case (byte)Messages.Close:
                     return Messages.Close;
