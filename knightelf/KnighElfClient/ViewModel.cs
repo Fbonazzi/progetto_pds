@@ -24,7 +24,7 @@ namespace KnightElfClient
             SM = new StateMachine(
                     existsServer: () => { return ServerList.Count > 0; },
                     isEditableServer: () => { return true; /* TODO: return SelectedServer.isEditable();*/ },
-                    isConnectedServer: () => { throw new NotImplementedException(); /* TODO: return SelectedServer.isConnected();*/ },
+                    isConnectedServer: () => { return true; /* TODO: return SelectedServer.isConnected();*/ },
                     isReadyServer: () => { return true; /* TODO: return SelectedServer.isReady();*/},
                     launchAddDlgAction: () => LaunchAddDlg(),
                     launchEditDlgAction: () => LaunchAddDlg(SelectedServer),
@@ -43,10 +43,18 @@ namespace KnightElfClient
             PauseCommand = SM.CreateCommand(SMTriggers.Pause);
 
             //TODO: remove fake list
-            ServerList.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.1"), Port = 50000, Password = "prova1" });
-            ServerList.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.2"), Port = 60000, Password = "prova1" });
-            ServerList.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.3"), Port = 70000, Password = "prova1" });
-            ServerList.Add(new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.4"), Port = 80000, Password = "prova1" });
+            ConnectionParams tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.1"), Port = 10000, Password = "prova1" };
+            ServerList.Add(tmp);
+            serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
+            tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.2"), Port = 20000, Password = "prova2" };
+            ServerList.Add(tmp);
+            serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
+            tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.3"), Port = 30000, Password = "prova3" };
+            ServerList.Add(tmp);
+            serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
+            tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.4"), Port = 40000, Password = "prova4" };
+            ServerList.Add(tmp);
+            serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
         }
 
         #region Properties
