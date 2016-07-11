@@ -65,12 +65,14 @@ namespace KnightElfServer
             CurrentClient = c;
             // Start to listen
             CurrentClient.ConnectionHandler = new Thread(new ThreadStart(Listen));
+            CurrentClient.ConnectionHandler.Name = "ConnectionHandler";
             CurrentClient.ConnectionHandler.SetApartmentState(ApartmentState.STA);
             CurrentClient.ConnectionHandler.Start();
             // Start the event injector
             if (Injector == null)
             {
                 Injector = new Thread(new ThreadStart(Inject));
+                Injector.Name = "Injecter";
                 Injector.SetApartmentState(ApartmentState.STA);
                 Injector.Start();
             }
@@ -145,6 +147,7 @@ namespace KnightElfServer
             {
                 // Sgancio il thread che gestirà la clipboard
                 CurrentClient.ClipboardHandler = new Thread(new ThreadStart(HandleClipboard));
+                CurrentClient.ClipboardHandler.Name = "ClipboardHandler";
                 CurrentClient.ClipboardHandler.SetApartmentState(ApartmentState.STA);
                 CurrentClient.ClipboardHandler.Start();
 
@@ -167,6 +170,7 @@ namespace KnightElfServer
             {
                 // Sgancio il thread che riceverà gli eventi
                 CurrentClient.DataHandler = new Thread(new ThreadStart(HandleData));
+                CurrentClient.DataHandler.Name = "DataHandler";
                 CurrentClient.DataHandler.SetApartmentState(ApartmentState.STA);
                 CurrentClient.DataHandler.Start();
 
@@ -461,7 +465,7 @@ namespace KnightElfServer
                 MemoryStream MemoryS;
                 InputMessage ReceivedMessage;
                 // TODO: how did we get this size
-                int EventSize = 959;
+                int EventSize = 1078;
                 byte[] ReceivingBuffer;
                 int ReceivedBytes;
 
