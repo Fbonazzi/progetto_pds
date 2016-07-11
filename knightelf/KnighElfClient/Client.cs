@@ -293,7 +293,7 @@ namespace KnightElfClient
                         {
                             Console.WriteLine("Suspending connection...");
                             CurrentServer.Suspend();
- 
+
                             // TODO: show mouse etc
                         }
                         catch (SocketException)
@@ -815,7 +815,7 @@ namespace KnightElfClient
             {
                 #region PROCESS_KEYPRESS
                 // Get the WPF key code
-                Key vkCode = KeyInterop.KeyFromVirtualKey(Marshal.ReadInt32(wParam));
+                Key vkCode = KeyInterop.KeyFromVirtualKey((int)wParam);
                 // Check the 31st bit (0 if key is being pressed, 1 if released)
                 int flag = (int)lParam >> 31;
 
