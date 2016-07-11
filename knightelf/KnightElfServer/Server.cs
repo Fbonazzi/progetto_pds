@@ -147,29 +147,6 @@ namespace KnightElfServer
             CurrentClient.CurrentState = State.Running;
             CurrentClient.PublicState = CurrentClient.CurrentState;
 
-            #region START_CLIPBOARD
-            lock (CurrentClient.StateLock)
-            {
-                // Sgancio il thread che gestirà la clipboard
-                CurrentClient.ClipboardHandler = new Thread(new ThreadStart(HandleClipboard));
-                CurrentClient.ClipboardHandler.Name = "ClipboardHandler";
-                CurrentClient.ClipboardHandler.SetApartmentState(ApartmentState.STA);
-                CurrentClient.ClipboardHandler.Start();
-
-                Monitor.Wait(CurrentClient.StateLock);
-
-                if (CurrentClient.CurrentState == State.Disconnected)
-                {
-                    // Could not open clipboard connection
-                    Console.WriteLine("Could not open clipboard connection, aborting...");
-                    // Terminate
-                    CurrentClient.ControlSocket.Close();
-                    CurrentClient.ListenerSocket.Close();
-                    return;
-                }
-            }
-            #endregion
-
             #region START_DATA
             lock (CurrentClient.StateLock)
             {
@@ -185,8 +162,31 @@ namespace KnightElfServer
                 {
                     // Could not open the DataHandler connection
                     Console.WriteLine("Could not open data connection, aborting...");
-                    // Terminate the ClipboardHandler
-                    CurrentClient.ClipboardHandler.Abort();
+                    // Terminate
+                    CurrentClient.ControlSocket.Close();
+                    CurrentClient.ListenerSocket.Close();
+                    return;
+                }
+            }
+            #endregion
+
+            #region START_CLIPBOARD
+            lock (CurrentClient.StateLock)
+            {
+                // Sgancio il thread che gestirà la clipboard
+                CurrentClient.ClipboardHandler = new Thread(new ThreadStart(HandleClipboard));
+                CurrentClient.ClipboardHandler.Name = "ClipboardHandler";
+                CurrentClient.ClipboardHandler.SetApartmentState(ApartmentState.STA);
+                CurrentClient.ClipboardHandler.Start();
+
+                Monitor.Wait(CurrentClient.StateLock);
+
+                if (CurrentClient.CurrentState == State.Disconnected)
+                {
+                    // Could not open clipboard connection
+                    Console.WriteLine("Could not open clipboard connection, aborting...");
+                    // Terminate the DataHandler
+                    CurrentClient.DataHandler.Abort();
                     // Terminate
                     CurrentClient.ControlSocket.Close();
                     CurrentClient.ListenerSocket.Close();

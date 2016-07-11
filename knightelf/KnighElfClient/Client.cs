@@ -162,34 +162,7 @@ namespace KnightElfClient
             CurrentServer.PublicState = CurrentServer.CurrentState;
 
             // TODO: Hide mouse, etc
-
-            #region START_CLIPBOARD
-            // Start the ClipboardHandler thread
-            lock (CurrentServer.StateLock)
-            {
-                CurrentServer.ClipboardHandler = new Thread(new ThreadStart(HandleClipboard));
-                CurrentServer.ClipboardHandler.Name = "ClipboardHandler";
-                // TODO: Why are we doing this?
-                CurrentServer.ClipboardHandler.SetApartmentState(ApartmentState.STA);
-                CurrentServer.ClipboardHandler.Start();
-
-                Monitor.Wait(CurrentServer.StateLock);
-
-                if (CurrentServer.CurrentState == State.Disconnected)
-                {
-                    // ClipboardHandler failed, abort
-                    Console.WriteLine("Could not start clipboard.");
-
-                    // Dispose of resources and return
-                    CurrentServer.DataSocket.Close();
-                    CurrentServer.ControlSocket.Close();
-
-                    // TODO: notify that we crashed?
-                    return;
-                }
-            }
-
-            #endregion
+            Mouse.OverrideCursor = Cursors.None;
 
             #region START_DATA
             // Start the DataHandler thread
@@ -213,14 +186,41 @@ namespace KnightElfClient
                     CurrentServer.DataSocket.Close();
                     CurrentServer.ControlSocket.Close();
 
-                    // Kill the ClipboardHandler
-                    // Should we do this better with a function to clean up all threads on crash?
-                    CurrentServer.ClipboardHandler.Abort();
+                    // TODO: notify that we crashed?
+                    return;
+                }
+            }
+            #endregion
+
+            #region START_CLIPBOARD
+            // Start the ClipboardHandler thread
+            lock (CurrentServer.StateLock)
+            {
+                CurrentServer.ClipboardHandler = new Thread(new ThreadStart(HandleClipboard));
+                CurrentServer.ClipboardHandler.Name = "ClipboardHandler";
+                // TODO: Why are we doing this?
+                CurrentServer.ClipboardHandler.SetApartmentState(ApartmentState.STA);
+                CurrentServer.ClipboardHandler.Start();
+
+                Monitor.Wait(CurrentServer.StateLock);
+
+                if (CurrentServer.CurrentState == State.Disconnected)
+                {
+                    // ClipboardHandler failed, abort
+                    Console.WriteLine("Could not start clipboard.");
+
+                    // Kill the DataHandler
+                    CurrentServer.DataHandler.Abort();
+
+                    // Dispose of resources and return
+                    CurrentServer.DataSocket.Close();
+                    CurrentServer.ControlSocket.Close();
 
                     // TODO: notify that we crashed?
                     return;
                 }
             }
+
             #endregion
 
             #region DISPATCH
@@ -279,6 +279,7 @@ namespace KnightElfClient
                         // If we intentionally disconnected or crashed
 
                         // TODO: Show mouse again etc.
+                        Mouse.OverrideCursor = Cursors.Arrow;
 
                         // Notify ClipboardHandler of termination
                         lock (CurrentServer.ClipboardLock)
@@ -304,6 +305,7 @@ namespace KnightElfClient
                             CurrentServer.Suspend();
 
                             // TODO: show mouse etc
+                            Mouse.OverrideCursor = Cursors.Arrow;
                         }
                         catch (SocketException)
                         {
@@ -379,6 +381,7 @@ namespace KnightElfClient
                             CurrentServer.Resume();
 
                             // TODO: Hide mouse etc.
+                            Mouse.OverrideCursor = Cursors.None;
                         }
                         catch
                         {
