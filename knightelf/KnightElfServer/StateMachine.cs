@@ -7,11 +7,16 @@ namespace KnightElfServer
 {
     public enum SMStates
     {
-        Start, SettingConnection, Ready, EditingConnection, WaitClientConnect, Connected, Paused
+        Start, Ready,
+        SettingConnection, EditingConnection,
+        WaitClientConnect, Connected, Paused
     }
     public enum SMTriggers
     {
-        SetConnection, SaveConnection, CancelConnection, EditConnection, EndEditConnection, Connect, ClientConnected, IntWaitClient, Disconnect, Pause
+        SetConnection, SaveConnection, CancelConnection,
+        EditConnection, EndEditConnection,
+        Connect, ClientConnected, IntWaitClient, Disconnect,
+        Run, Pause
     }
 
     class StateMachine : Stateless.StateMachine<SMStates, SMTriggers>, INotifyPropertyChanged
@@ -30,29 +35,21 @@ namespace KnightElfServer
                 .Permit(SMTriggers.SaveConnection, SMStates.Ready)
                 .Permit(SMTriggers.CancelConnection, SMStates.Start);
 
-            //Configure(SMStates.EditingConnection)
-            //    .OnEntry(setConnectionAction)
-            //    .Permit(SMTriggers.SaveConnection, SMStates.Ready)
-            //    .Permit(SMTriggers.CancelConnection, SMStates.Ready);
-
             Configure(SMStates.EditingConnection)
                 .SubstateOf(SMStates.SettingConnection)
                 .Permit(SMTriggers.CancelConnection, SMStates.Ready);
 
             Configure(SMStates.Ready)
+                .OnEntryFrom(SMTriggers.IntWaitClient, intWaitAction)
                 .Permit(SMTriggers.SetConnection, SMStates.EditingConnection)
                 .Permit(SMTriggers.Connect, SMStates.WaitClientConnect);
 
             Configure(SMStates.WaitClientConnect)
                 .OnEntry(connectAction)
                 .Permit(SMTriggers.ClientConnected, SMStates.Connected)
-                .Permit(SMTriggers.Disconnect, SMStates.Ready)
-                .OnExit(intWaitAction);
+                .Permit(SMTriggers.IntWaitClient, SMStates.Ready);
 
             Configure(SMStates.Connected)
-                .SubstateOf(SMStates.WaitClientConnect)
-                // in this way going from WaitClient to Connect shouldn't fire intWaitAction
-                // since the state is the same
                 .Permit(SMTriggers.Disconnect, SMStates.Ready)
                 .OnExit(disconnectAction);
 
