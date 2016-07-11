@@ -716,7 +716,7 @@ namespace KnightElfLibrary
             byte[] ClientTagBytes = new byte[tag.Length];
             Array.Copy(ClientDoneMsg, 0, ClientTagBytes, 0, ClientTagBytes.Length);
             byte[] ClientRestBytes = new byte[ClientDoneMsg.Length - tag.Length];
-            Array.Copy(ClientRestBytes, 0, ClientDoneMsg, 0, ClientRestBytes.Length);
+            Array.Copy(ClientDoneMsg, ClientTagBytes.Length, ClientRestBytes, 0, ClientRestBytes.Length);
 
             // Verify the tag
             byte[] VerifClient = Hmac.ComputeHash(ClientRestBytes);
