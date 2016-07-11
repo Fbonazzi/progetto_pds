@@ -47,7 +47,9 @@
             </ToolBarPanel>
 
             <StatusBar DockPanel.Dock="Bottom" Grid.Row="3" Grid.ColumnSpan="2" Height="20" FontSize="10" FlowDirection="RightToLeft">
-                <StatusBarItem Content="{StaticResource StatusOffline}"/>
+                <StatusBarItem>
+                    <Binding Path="SM.State" Converter="{StaticResource StateToIconConverter}" Mode="OneWay"/>
+                </StatusBarItem>
                 <Separator Background="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
                 <Label x:Name="labelPort"
                        Content="{Binding ConnParams.Port}"
