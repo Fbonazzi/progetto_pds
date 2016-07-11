@@ -46,6 +46,9 @@ namespace KnightElfClient
             ConnectionParams tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("169.254.117.114"), Port = 50000, Password = "00000" };
             ServerList.Add(tmp);
             serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
+            tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("169.254.22.246"), Port = 50000, Password = "00000" };
+            ServerList.Add(tmp);
+            serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
             tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.2"), Port = 20000, Password = "prova2" };
             ServerList.Add(tmp);
             serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
