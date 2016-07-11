@@ -7,11 +7,11 @@ namespace KnightElfServer
 {
     public enum SMStates
     {
-        Start, SettingConnection, Ready, EditingConnection, WaitClientConnect, Connected
+        Start, SettingConnection, Ready, EditingConnection, WaitClientConnect, Connected, Paused
     }
     public enum SMTriggers
     {
-        SetConnection, SaveConnection, CancelConnection, EditConnection, EndEditConnection, Connect, ClientConnected, IntWaitClient, Disconnect
+        SetConnection, SaveConnection, CancelConnection, EditConnection, EndEditConnection, Connect, ClientConnected, IntWaitClient, Disconnect, Pause
     }
 
     class StateMachine : Stateless.StateMachine<SMStates, SMTriggers>, INotifyPropertyChanged
@@ -54,8 +54,12 @@ namespace KnightElfServer
                 // in this way going from WaitClient to Connect shouldn't fire intWaitAction
                 // since the state is the same
                 .Permit(SMTriggers.Disconnect, SMStates.Ready)
-                .OnExit(disconnectAction);     
-                       
+                .OnExit(disconnectAction);
+
+            Configure(SMStates.Paused)
+                .SubstateOf(SMStates.Connected)
+                .Permit(SMTriggers.Connect, SMStates.Connected)
+                .Permit(SMTriggers.Disconnect, SMStates.Ready);
 
             OnTransitioned (
                   (t) =>
@@ -77,6 +81,8 @@ namespace KnightElfServer
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+
 
         #endregion
     }
