@@ -43,7 +43,7 @@ namespace KnightElfClient
             PauseCommand = SM.CreateCommand(SMTriggers.Pause);
 
             //TODO: remove fake list
-            ConnectionParams tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.1"), Port = 10000, Password = "prova1" };
+            ConnectionParams tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("169.254.117.114"), Port = 50000, Password = "00000" };
             ServerList.Add(tmp);
             serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
             tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.2"), Port = 20000, Password = "prova2" };
