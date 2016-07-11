@@ -502,7 +502,7 @@ namespace KnightElfLibrary
         }
     }
 
-    public class RemoteClient
+    public class RemoteClient : INotifyPropertyChanged
     {
         // Sockets
         public Socket ControlSocket;
@@ -539,6 +539,9 @@ namespace KnightElfLibrary
 
         // TODO: remove/rename
         public bool InChiusura = false;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        public State PublicState { get { return this.PublicState; } set { PublicState = value; OnPropertyChanged("PublicState"); } }
 
         /// <summary>
         /// Create a new RemoteClient with the specified parameters.
@@ -913,6 +916,10 @@ namespace KnightElfLibrary
             return b;
         }
 
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 
     public class RemoteClipboard

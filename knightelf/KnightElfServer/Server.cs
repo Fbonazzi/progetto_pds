@@ -97,10 +97,12 @@ namespace KnightElfServer
             {
                 CurrentClient.Listen();
                 CurrentClient.CurrentState = State.Connected;
+                CurrentClient.PublicState = CurrentClient.CurrentState;
             }
             catch (SocketException e)
             {
                 CurrentClient.CurrentState = State.Closed;
+                CurrentClient.PublicState = CurrentClient.CurrentState;
                 Console.WriteLine("Aborting...");
 
                 // Dispose of resources and return
@@ -119,6 +121,7 @@ namespace KnightElfServer
             catch (SocketException e)
             {
                 CurrentClient.CurrentState = State.Closed;
+                CurrentClient.PublicState = CurrentClient.CurrentState;
                 Console.WriteLine("Network error, authentication failed!");
 
                 // Dispose of resources and return
@@ -141,6 +144,7 @@ namespace KnightElfServer
             // Authenticated
             Console.WriteLine("Authenticated.");
             CurrentClient.CurrentState = State.Running;
+            CurrentClient.PublicState = CurrentClient.CurrentState;
 
             #region START_CLIPBOARD
             lock (CurrentClient.StateLock)
@@ -210,6 +214,7 @@ namespace KnightElfServer
                     lock (CurrentClient.StateLock)
                     {
                         CurrentClient.CurrentState = State.Disconnected;
+                        CurrentClient.PublicState = CurrentClient.CurrentState;
                     }
                     lock (CurrentClient.ClipboardLock)
                     {
@@ -231,6 +236,7 @@ namespace KnightElfServer
                         lock (CurrentClient.StateLock)
                         {
                             CurrentClient.CurrentState = State.Closed;
+                            CurrentClient.PublicState = CurrentClient.CurrentState;
                         }
                         lock (CurrentClient.ClipboardLock)
                         {
@@ -252,6 +258,7 @@ namespace KnightElfServer
                         lock (CurrentClient.StateLock)
                         {
                             CurrentClient.CurrentState = State.Suspended;
+                            CurrentClient.PublicState = CurrentClient.CurrentState;
                         }
                         lock (CurrentClient.ClipboardLock)
                         {
@@ -267,6 +274,7 @@ namespace KnightElfServer
                         lock (CurrentClient.StateLock)
                         {
                             CurrentClient.CurrentState = State.Running;
+                            CurrentClient.PublicState = CurrentClient.CurrentState;
                         }
                         lock (CurrentClient.ClipboardLock)
                         {
@@ -319,6 +327,7 @@ namespace KnightElfServer
                 {
                     // Could not create connection
                     CurrentClient.CurrentState = State.Disconnected;
+                    CurrentClient.PublicState = CurrentClient.CurrentState;
                     return;
                 }
                 finally
@@ -486,6 +495,7 @@ namespace KnightElfServer
                     {
                         // Failed to connect
                         CurrentClient.CurrentState = State.Disconnected;
+                        CurrentClient.PublicState = CurrentClient.CurrentState;
                         CurrentClient.DataListenerSocket.Close();
                         return;
                     }
