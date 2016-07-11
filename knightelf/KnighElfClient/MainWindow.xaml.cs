@@ -27,7 +27,8 @@ namespace KnightElfClient
         public MainWindow()
         {
             InitializeComponent();
-            MaxHeight = SystemParameters.MaximizedPrimaryScreenHeight;
+            // MaxHeight = SystemParameters.MaximizedPrimaryScreenHeight;
+
             // Connect console output with logger TextBox
             Console.SetOut(new TextBoxWriter(tbLogger));
 
