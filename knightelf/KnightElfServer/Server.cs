@@ -139,10 +139,11 @@ namespace KnightElfServer
                 CurrentClient.ControlSocket.Close();
                 return;
             }
-            #endregion
-
             // Authenticated
             Console.WriteLine("Authenticated.");
+            Console.WriteLine("Receiving input from remote client!");
+            #endregion
+
             CurrentClient.CurrentState = State.Running;
             CurrentClient.PublicState = CurrentClient.CurrentState;
 

@@ -154,6 +154,7 @@ namespace KnightElfClient
                 return;
             }
             Console.WriteLine("Authenticated.");
+            Console.WriteLine("Controlling remote server!");
             #endregion
 
             // Authenticated
