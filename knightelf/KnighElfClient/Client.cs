@@ -36,7 +36,7 @@ namespace KnightElfClient
 
         public Client()
         {
-            this.ConnectionState = State.Disconnected;
+            this.ConnectionState = State.New;
 
             // Create the temporary directory
             TempDirName = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -77,8 +77,7 @@ namespace KnightElfClient
                             Monitor.Pulse(CurrentServer.RunningLock);
                         }
                         break;
-                    case State.Closed:
-                    case State.Disconnected:
+                    case State.New:
                         // Set the current server
                         this.CurrentServer = s;
                         // Enable mouse and keyboard hooks
@@ -177,7 +176,7 @@ namespace KnightElfClient
                 // Wait for the DataHandler to start and notify us
                 Monitor.Wait(CurrentServer.StateLock);
 
-                if (CurrentServer.CurrentState == State.Disconnected)
+                if (CurrentServer.CurrentState == State.Crashed)
                 {
                     // DataHandler failed, abort
                     Console.WriteLine("Could not start DataHandler.");
@@ -204,7 +203,7 @@ namespace KnightElfClient
 
                 Monitor.Wait(CurrentServer.StateLock);
 
-                if (CurrentServer.CurrentState == State.Disconnected)
+                if (CurrentServer.CurrentState == State.Crashed)
                 {
                     // ClipboardHandler failed, abort
                     Console.WriteLine("Could not start clipboard.");
@@ -242,7 +241,7 @@ namespace KnightElfClient
                 {
                     #region CLOSED_OR_DISCONNECTED
                     case State.Closed:
-                    case State.Disconnected:
+                    case State.Crashed:
                         if (RequestedState == State.Closed)
                         {
                             // The user is intentionally closing the connection
@@ -261,7 +260,7 @@ namespace KnightElfClient
                             }
                             catch
                             {
-                                CurrentServer.CurrentState = State.Disconnected;
+                                CurrentServer.CurrentState = State.Crashed;
                                 CurrentServer.PublicState = CurrentServer.CurrentState;
                                 // TODO: signal crash?
                                 Console.WriteLine("Network error, connection closed.");
@@ -271,7 +270,7 @@ namespace KnightElfClient
                         else
                         {
                             // The connection crashed
-                            CurrentServer.CurrentState = State.Disconnected;
+                            CurrentServer.CurrentState = State.Crashed;
                             CurrentServer.PublicState = CurrentServer.CurrentState;
                             // TODO: signal crash?
                             Console.WriteLine("Network error, connection closed.");
@@ -310,7 +309,7 @@ namespace KnightElfClient
                         catch (SocketException)
                         {
                             Console.WriteLine("Network error, connection closed.");
-                            CurrentServer.CurrentState = State.Disconnected;
+                            CurrentServer.CurrentState = State.Crashed;
                             CurrentServer.PublicState = CurrentServer.CurrentState;
 
                             // TODO: Signal crash?
@@ -326,7 +325,7 @@ namespace KnightElfClient
                         lock (CurrentServer.StateLock)
                         {
                             // TODO: this can happen??
-                            if (CurrentServer.CurrentState == State.Disconnected)
+                            if (CurrentServer.CurrentState == State.Crashed)
                             {
                                 Console.WriteLine("Clipboard failed, aborting...");
                                 // Kill the DataHandler and return
@@ -388,7 +387,7 @@ namespace KnightElfClient
                             Console.WriteLine("Network error, could not resume.");
 
                             // TODO: shouldn't I lock the StateLock?
-                            CurrentServer.CurrentState = State.Disconnected;
+                            CurrentServer.CurrentState = State.Crashed;
                             CurrentServer.PublicState = CurrentServer.CurrentState;
 
                             // TODO: Notify we crashed?
@@ -401,7 +400,7 @@ namespace KnightElfClient
                             lock (CurrentServer.StateLock)
                             {
                                 // TODO: Why would this happen??
-                                if (CurrentServer.CurrentState == State.Disconnected)
+                                if (CurrentServer.CurrentState == State.Crashed)
                                 {
                                     Console.WriteLine("Clipboard crashed.");
                                     return;
@@ -466,7 +465,7 @@ namespace KnightElfClient
                 {
                     // Could not create connection
                     Console.WriteLine("Could not create remote clipboard.");
-                    CurrentServer.CurrentState = State.Disconnected;
+                    CurrentServer.CurrentState = State.Crashed;
                     CurrentServer.PublicState = CurrentServer.CurrentState;
                     return;
                 }
@@ -607,7 +606,7 @@ namespace KnightElfClient
                 catch (SocketException)
                 {
                     // Failed to connect
-                    CurrentServer.CurrentState = State.Disconnected;
+                    CurrentServer.CurrentState = State.Crashed;
                     CurrentServer.PublicState = CurrentServer.CurrentState;
                     return;
                 }
@@ -661,7 +660,7 @@ namespace KnightElfClient
                             // Connection failed
                             lock (ConnectionLock)
                             {
-                                ConnectionState = State.Disconnected;
+                                ConnectionState = State.Crashed;
                                 // Notify other threads
                                 Monitor.Pulse(ConnectionLock);
                             }

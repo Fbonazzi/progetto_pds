@@ -158,7 +158,7 @@ namespace KnightElfServer
 
                 Monitor.Wait(CurrentClient.StateLock);
 
-                if (CurrentClient.CurrentState == State.Disconnected)
+                if (CurrentClient.CurrentState == State.Crashed)
                 {
                     // Could not open the DataHandler connection
                     Console.WriteLine("Could not open data connection, aborting...");
@@ -181,7 +181,7 @@ namespace KnightElfServer
 
                 Monitor.Wait(CurrentClient.StateLock);
 
-                if (CurrentClient.CurrentState == State.Disconnected)
+                if (CurrentClient.CurrentState == State.Crashed)
                 {
                     // Could not open clipboard connection
                     Console.WriteLine("Could not open clipboard connection, aborting...");
@@ -214,7 +214,7 @@ namespace KnightElfServer
                     // Disconnect
                     lock (CurrentClient.StateLock)
                     {
-                        CurrentClient.CurrentState = State.Disconnected;
+                        CurrentClient.CurrentState = State.Crashed;
                         CurrentClient.PublicState = CurrentClient.CurrentState;
                     }
                     lock (CurrentClient.ClipboardLock)
@@ -327,7 +327,7 @@ namespace KnightElfServer
                 catch (SocketException)
                 {
                     // Could not create connection
-                    CurrentClient.CurrentState = State.Disconnected;
+                    CurrentClient.CurrentState = State.Crashed;
                     CurrentClient.PublicState = CurrentClient.CurrentState;
                     return;
                 }
@@ -495,7 +495,7 @@ namespace KnightElfServer
                     catch (SocketException)
                     {
                         // Failed to connect
-                        CurrentClient.CurrentState = State.Disconnected;
+                        CurrentClient.CurrentState = State.Crashed;
                         CurrentClient.PublicState = CurrentClient.CurrentState;
                         CurrentClient.DataListenerSocket.Close();
                         return;

@@ -100,7 +100,7 @@ namespace KnightElfLibrary
     /// <summary>
     /// The protocol states for both the local client and the remote server.
     /// </summary>
-    public enum State { Disconnected, Connected, Authenticated, Running, Suspended, Closed };
+    public enum State { New, Crashed, Connected, Authenticated, Running, Suspended, Closed };
 
     /// <summary>
     /// The client-side representation of the remote server.
@@ -160,7 +160,7 @@ namespace KnightElfLibrary
 
             this.ControlSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.DataSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            this.CurrentState = State.Disconnected;
+            this.CurrentState = State.New;
             // Configure ECDH
             this.ECDHClient = new ECDiffieHellmanCng();
             this.ECDHClient.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hmac;
@@ -560,7 +560,7 @@ namespace KnightElfLibrary
             this.ControlSocket = null;
             this.DataSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.ListenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            this.CurrentState = State.Disconnected;
+            this.CurrentState = State.New;
             // Configure ECDH
             this.ECDHServer = new ECDiffieHellmanCng();
             this.ECDHServer.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hmac;
