@@ -110,10 +110,12 @@ namespace KnightElfClient
             {
                 CurrentServer.Connect();
                 CurrentServer.CurrentState = State.Connected;
+                CurrentServer.PublicState = CurrentServer.CurrentState;
             }
             catch (SocketException e)
             {
                 CurrentServer.CurrentState = State.Closed;
+                CurrentServer.PublicState = CurrentServer.CurrentState;
 
                 Console.WriteLine("Connection failed.");
                 // Dispose of resources and return
@@ -133,6 +135,7 @@ namespace KnightElfClient
             catch (SocketException e)
             {
                 CurrentServer.CurrentState = State.Closed;
+                CurrentServer.PublicState = CurrentServer.CurrentState;
                 Console.WriteLine("Connection failed.");
 
                 // Dispose of resources and return
@@ -155,6 +158,7 @@ namespace KnightElfClient
 
             // Authenticated
             CurrentServer.CurrentState = State.Running;
+            CurrentServer.PublicState = CurrentServer.CurrentState;
 
             // TODO: Hide mouse, etc
 
@@ -242,6 +246,7 @@ namespace KnightElfClient
                         {
                             // The user is intentionally closing the connection
                             CurrentServer.CurrentState = State.Closed;
+                            CurrentServer.PublicState = CurrentServer.CurrentState;
                             Console.WriteLine("Closing connection...");
 
                             // Empty the input queue and signal the DataHandler to terminate
@@ -256,6 +261,7 @@ namespace KnightElfClient
                             catch
                             {
                                 CurrentServer.CurrentState = State.Disconnected;
+                                CurrentServer.PublicState = CurrentServer.CurrentState;
                                 // TODO: signal crash?
                                 Console.WriteLine("Network error, connection closed.");
                             }
@@ -265,6 +271,7 @@ namespace KnightElfClient
                         {
                             // The connection crashed
                             CurrentServer.CurrentState = State.Disconnected;
+                            CurrentServer.PublicState = CurrentServer.CurrentState;
                             // TODO: signal crash?
                             Console.WriteLine("Network error, connection closed.");
                         }
@@ -285,6 +292,7 @@ namespace KnightElfClient
                         // The user is suspending the connection
                         // TODO: lock state lock?
                         CurrentServer.CurrentState = State.Suspended;
+                        CurrentServer.PublicState = CurrentServer.CurrentState;
                         // Empty the queue and notify DataHandler to suspend
                         InputQueue.ClearAndSuspend();
 
@@ -300,6 +308,7 @@ namespace KnightElfClient
                         {
                             Console.WriteLine("Network error, connection closed.");
                             CurrentServer.CurrentState = State.Disconnected;
+                            CurrentServer.PublicState = CurrentServer.CurrentState;
 
                             // TODO: Signal crash?
                         }
@@ -341,6 +350,7 @@ namespace KnightElfClient
                                 lock (CurrentServer.StateLock)
                                 {
                                     CurrentServer.CurrentState = State.Running;
+                                    CurrentServer.PublicState = CurrentServer.CurrentState;
                                     Monitor.Pulse(CurrentServer.StateLock);
                                 }
                                 goto case State.Closed;
@@ -351,6 +361,7 @@ namespace KnightElfClient
                             lock (CurrentServer.StateLock)
                             {
                                 CurrentServer.CurrentState = State.Running;
+                                CurrentServer.PublicState = CurrentServer.CurrentState;
                                 Monitor.Pulse(CurrentServer.StateLock);
                             }
                         }
@@ -374,6 +385,7 @@ namespace KnightElfClient
 
                             // TODO: shouldn't I lock the StateLock?
                             CurrentServer.CurrentState = State.Disconnected;
+                            CurrentServer.PublicState = CurrentServer.CurrentState;
 
                             // TODO: Notify we crashed?
                         }
@@ -451,6 +463,7 @@ namespace KnightElfClient
                     // Could not create connection
                     Console.WriteLine("Could not create remote clipboard.");
                     CurrentServer.CurrentState = State.Disconnected;
+                    CurrentServer.PublicState = CurrentServer.CurrentState;
                     return;
                 }
                 finally
@@ -591,6 +604,7 @@ namespace KnightElfClient
                 {
                     // Failed to connect
                     CurrentServer.CurrentState = State.Disconnected;
+                    CurrentServer.PublicState = CurrentServer.CurrentState;
                     return;
                 }
                 finally

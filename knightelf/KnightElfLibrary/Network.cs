@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -106,7 +107,7 @@ namespace KnightElfLibrary
     /// 
     /// Handles all communication to and from the remote server, exposing functionality through its methods.
     /// </summary>
-    public class RemoteServer
+    public class RemoteServer : INotifyPropertyChanged
     {
         // Sockets
         public Socket ControlSocket;
@@ -139,6 +140,10 @@ namespace KnightElfLibrary
 
         // Network
         private int PacketSize = 4096;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        public State PublicState { get { return this.PublicState; } set { PublicState = value; OnPropertyChanged("PublicState"); } }
+
 
         /// <summary>
         /// Create a new RemoteServer with the specified parameters.
@@ -489,6 +494,11 @@ namespace KnightElfLibrary
             RNGCryptoServiceProvider Gen = new RNGCryptoServiceProvider();
             Gen.GetBytes(b);
             return b;
+        }
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 
