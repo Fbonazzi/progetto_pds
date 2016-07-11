@@ -1,5 +1,6 @@
 ﻿using KnightElfLibrary;
 using System;
+using System.ComponentModel;
 using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -45,7 +46,6 @@ namespace KnightElfServer
             ConnectCommand = SM.CreateCommand(SMTriggers.Connect);
             //IntWaitCommand = SM.CreateCommand(SMTriggers.IntWaitClient);
             DisconnectCommand = SM.CreateCommand(SMTriggers.Disconnect);
-
         }
 
         #region State Machine
@@ -80,6 +80,7 @@ namespace KnightElfServer
         private void StartConnection()
         {
             remoteClient = new RemoteClient(ConnParams.IPaddr, ConnParams.Port, ConnParams.Password);
+            remoteClient.PropertyChanged += this.OnServerStateChanged;
             // Wait Client Connection
             ServerInstance.ListenForClient(remoteClient);
             Console.WriteLine("Waiting for client connection...");
@@ -99,5 +100,35 @@ namespace KnightElfServer
             Console.WriteLine("Connection closed.");
         }
         #endregion
+
+        private void OnServerStateChanged(object sender, PropertyChangedEventArgs e) {
+            if(e.PropertyName == "State")
+            {
+                switch (remoteClient.PublicState)
+                {
+                    case State.New:
+                        break;
+                    case State.Crashed:
+                        SM.Fire(SMTriggers.Disconnect);
+                        break;
+                    case State.Connected:
+                        SM.Fire(SMTriggers.Connect);
+                        break;
+                    case State.Authenticated:
+                        break;
+                    case State.Running:
+                        SM.Fire(SMTriggers.Run);
+                        break;
+                    case State.Suspended:
+                        SM.Fire(SMTriggers.Pause);
+                        break;
+                    case State.Closed:
+                        SM.Fire(SMTriggers.Disconnect);
+                        break;
+                    default:
+                        throw new InvalidEnumArgumentException("Unknown client state: " + remoteClient.PublicState);
+                }
+            } //we are interested only in state property here
+        }
     }
 }
