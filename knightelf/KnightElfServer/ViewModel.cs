@@ -110,7 +110,8 @@ namespace KnightElfServer
         private void OnServerStateChanged(object sender, PropertyChangedEventArgs e) {
             if(e.PropertyName == "State")
             {
-                switch (remoteClient.PublicState)
+                RemoteClient rc = sender as RemoteClient;
+                switch (rc.PublicState)
                 {
                     case State.New:
                         break;
@@ -132,7 +133,7 @@ namespace KnightElfServer
                         SM.Fire(SMTriggers.Disconnect);
                         break;
                     default:
-                        throw new InvalidEnumArgumentException("Transitioned to unknown client state: " + remoteClient.PublicState);
+                        throw new InvalidEnumArgumentException("Transitioned to unknown client state: " + rc.PublicState);
                 }
             } //we are interested only in state property here
         }
