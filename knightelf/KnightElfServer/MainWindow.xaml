@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KnightElfServer"
         xmlns:KnightElfLibrary="clr-namespace:KnightElfLibrary;assembly=KnightElfLibrary"
+        xmlns:KnightElfWPFLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
         x:Class="KnightElfServer.MainWindow"
         mc:Ignorable="d"
         Title="KnightElf ServerApp" Height="350" Width="525">
@@ -13,7 +14,9 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Dictionary.xaml"/>
-                <ResourceDictionary Source="Styles.xaml"/>
+                <ResourceDictionary Source="/KnightElfWpfControlLibrary;component/StylesDictionary.xaml"/>
+                <ResourceDictionary Source="/KnightElfWpfControlLibrary;component/IconsDictionary.xaml"/>
+                <ResourceDictionary Source="/KnightElfWpfControlLibrary;component/BindingsDictionary.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>

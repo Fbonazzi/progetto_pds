@@ -101,6 +101,12 @@ namespace KnightElfServer
         }
         #endregion
 
+        /// <summary>
+        /// Called when <see cref="remoteClient.PublicState"/> changes in order to keep the State Machine synchronized with client-server state.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        /// <exception cref="InvalidEnumArgumentException">Transitioned to unknown client state.</exception>
         private void OnServerStateChanged(object sender, PropertyChangedEventArgs e) {
             if(e.PropertyName == "State")
             {
@@ -126,7 +132,7 @@ namespace KnightElfServer
                         SM.Fire(SMTriggers.Disconnect);
                         break;
                     default:
-                        throw new InvalidEnumArgumentException("Unknown client state: " + remoteClient.PublicState);
+                        throw new InvalidEnumArgumentException("Transitioned to unknown client state: " + remoteClient.PublicState);
                 }
             } //we are interested only in state property here
         }

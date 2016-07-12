@@ -87,10 +87,6 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Styles.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -124,6 +120,10 @@
     <ProjectReference Include="..\KnightElfLibrary\KnightElfLibrary.csproj">
       <Project>{20d58df3-3b0b-40ce-83ea-8845a2a0ce53}</Project>
       <Name>KnightElfLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\KnightElfWpfControlLibrary\KnightElfWpfControlLibrary.csproj">
+      <Project>{081ae945-ce21-4424-a79d-5470ff46d038}</Project>
+      <Name>KnightElfWpfControlLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -6,7 +6,10 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Dictionary.xaml" />
+                <ResourceDictionary Source="Dictionary.xaml"/>
+                <ResourceDictionary Source="/KnightElfWpfControlLibrary;component/StylesDictionary.xaml"/>
+                <ResourceDictionary Source="/KnightElfWpfControlLibrary;component/IconsDictionary.xaml"/>
+                <ResourceDictionary Source="/KnightElfWpfControlLibrary;component/BindingsDictionary.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

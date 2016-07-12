@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KnightElfClient"
         xmlns:KnightElfLibrary="clr-namespace:KnightElfLibrary;assembly=KnightElfLibrary"
+        xmlns:KnightElfWPFLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
         x:Class="KnightElfClient.ConnectionSettingsDialog"
         mc:Ignorable="d"
         Title="Connection Settings" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
@@ -12,7 +13,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Dictionary.xaml"/>
+                <ResourceDictionary Source="/KnightElfWpfControlLibrary;component/BindingsDictionary.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
@@ -39,7 +40,7 @@
                     <Binding Path="IPaddr" Converter="{StaticResource StringIPConverter}" Mode="TwoWay">
                         <!--UpdateSourceTrigger="PropertyChanged"-->
                         <Binding.ValidationRules>
-                            <local:StringToIPValidationRule ValidationStep="RawProposedValue"/>
+                            <KnightElfLibrary:StringToIPValidationRule ValidationStep="RawProposedValue"/>
                         </Binding.ValidationRules>
                     </Binding>
                 </TextBox.Text>
@@ -54,7 +55,7 @@
                     <Binding Path="Port" Mode="TwoWay" >
                         <!--UpdateSourceTrigger="PropertyChanged"-->
                         <Binding.ValidationRules>
-                            <local:PortValidationRule ValidationStep="RawProposedValue"/>
+                            <KnightElfLibrary:PortValidationRule ValidationStep="RawProposedValue"/>
                         </Binding.ValidationRules>
                     </Binding>
                 </TextBox.Text>

@@ -45,21 +45,4 @@ namespace KnightElfServer
             throw new NotSupportedException();
         }
     }
-
-
-        class SMDisconnectConverter : IMultiValueConverter
-    {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        {
-            ViewModel vm = parameter as ViewModel;
-            if ((SMStates)values[0] == SMStates.Connected)
-                return values[1];
-            else return values[2];
-        }
-
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
 }
