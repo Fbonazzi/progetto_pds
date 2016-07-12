@@ -1,0 +1,8 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:KnightElfWpfControlLibrary">
+    <!-- Converters -->
+    <local:StringIPConverter x:Key="StringIPConverter"/>
+    <local:HasErrorToVisibilityConverter x:Key="HasErrorToVisibilityConverter"/>
+
+</ResourceDictionary>
