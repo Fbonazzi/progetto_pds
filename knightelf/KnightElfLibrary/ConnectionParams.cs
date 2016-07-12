@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Globalization;
+using System.Windows.Controls;
 
 namespace KnightElfLibrary
 {
@@ -94,5 +95,32 @@ namespace KnightElfLibrary
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         #endregion
+
     }
+
+    #region Validation Rules
+    public class StringToIPValidationRule : ValidationRule
+    {
+        public override ValidationResult Validate(object value, System.Globalization.CultureInfo cultureInfo)
+        {
+            IPAddress ip;
+            if (value != null && IPAddress.TryParse(value.ToString(), out ip))
+                return new ValidationResult(true, null);
+            else return new ValidationResult(false, "Please enter a valid IP address.");
+        }
+    }
+
+    public class PortValidationRule : ValidationRule
+    {
+        public override ValidationResult Validate(object value, System.Globalization.CultureInfo cultureInfo)
+        {
+            UInt16 port;
+            if (UInt16.TryParse(value.ToString(), out port))
+            {
+                return new ValidationResult(true, null);
+            }
+            return new ValidationResult(false, "Please enter a valid IP address.");
+        }
+    }
+    #endregion
 }
