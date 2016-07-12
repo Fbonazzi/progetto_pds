@@ -119,7 +119,7 @@ namespace KnightElfLibrary
             {
                 return new ValidationResult(true, null);
             }
-            return new ValidationResult(false, "Please enter a valid IP address.");
+            return new ValidationResult(false, "Please enter a valid port number.");
         }
     }
     #endregion

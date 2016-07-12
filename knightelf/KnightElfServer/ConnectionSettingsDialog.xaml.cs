@@ -32,6 +32,7 @@ namespace KnightElfServer
 
         private void btnDialogSave_Click(object sender, RoutedEventArgs e)
         {
+            //TODO: change dialog logic in order to work by data binding as in Client application.
             int port;
             if (lbIPAddr.SelectedItem != null &&
                 int.TryParse(tbPort.Text, out port) &&
@@ -46,13 +47,6 @@ namespace KnightElfServer
             else DialogResult = false;            
         }
 
-        private void tbPort_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            if (!char.IsDigit(e.Text, e.Text.Length - 1))
-            {
-                e.Handled = true;
-            }
-        }
 
         public ConnectionParams ConnectionParams{ get { return _connectionParams; } }
 

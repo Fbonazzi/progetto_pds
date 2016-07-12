@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KnightElfClient"
         xmlns:KnightElfLibrary="clr-namespace:KnightElfLibrary;assembly=KnightElfLibrary"
-        xmlns:KnightElfWPFLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
+        xmlns:KnightElfWpfLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
         x:Class="KnightElfClient.ConnectionSettingsDialog"
         mc:Ignorable="d"
         Title="Connection Settings" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
@@ -17,10 +17,10 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
-
     <Window.DataContext>
         <KnightElfLibrary:ConnectionParams/>
     </Window.DataContext>
+    
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
