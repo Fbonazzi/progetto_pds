@@ -284,6 +284,11 @@ namespace KnightElfClient
                         {
                             Monitor.Pulse(CurrentServer.ClipboardLock);
                         }
+                        // Wait for other threads
+                        CurrentServer.ClipboardHandler.Join();
+                        CurrentServer.DataHandler.Join();
+                        // TODO: Close sockets?
+
                         // We're done here
                         return;
                     #endregion
@@ -329,6 +334,10 @@ namespace KnightElfClient
                                 Console.WriteLine("Clipboard failed, aborting...");
                                 // Kill the DataHandler and return
                                 CurrentServer.DataHandler.Abort();
+                                // Wait for threads etc
+                                CurrentServer.ClipboardHandler.Join();
+                                CurrentServer.DataHandler.Join();
+                                // TODO: close sockets?
                                 return;
                             }
                         }
