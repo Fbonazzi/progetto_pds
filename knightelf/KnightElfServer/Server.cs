@@ -134,6 +134,9 @@ namespace KnightElfServer
                 // Authentication failed
                 Console.WriteLine("Authentication failed!");
 
+                CurrentClient.CurrentState = State.Closed;
+                CurrentClient.PublicState = CurrentClient.CurrentState;
+
                 // Dispose of resources and return
                 CurrentClient.DataSocket.Close();
                 CurrentClient.ControlSocket.Close();
