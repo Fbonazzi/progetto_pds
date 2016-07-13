@@ -129,6 +129,8 @@ namespace KnightElfClient
             try
             {
                 Result = CurrentServer.Authenticate();
+                CurrentServer.CurrentState = State.Authenticated;
+                CurrentServer.PublicState = CurrentServer.CurrentState;
             }
             catch (SocketException e)
             {
@@ -262,17 +264,14 @@ namespace KnightElfClient
                             {
                                 CurrentServer.CurrentState = State.Crashed;
                                 CurrentServer.PublicState = CurrentServer.CurrentState;
-                                // TODO: signal crash?
                                 Console.WriteLine("Network error, connection closed.");
                             }
-
                         }
                         else
                         {
                             // The connection crashed
                             CurrentServer.CurrentState = State.Crashed;
                             CurrentServer.PublicState = CurrentServer.CurrentState;
-                            // TODO: signal crash?
                             Console.WriteLine("Network error, connection closed.");
                         }
                         // If we intentionally disconnected or crashed
@@ -506,8 +505,9 @@ namespace KnightElfClient
                     {
                         switch (CurrentServer.CurrentState)
                         {
-                            #region CLIPBOARD_SUSPEND
+
                             case State.Suspended:
+                                #region CLIPBOARD_SUSPEND
                                 // The user requested the connection be suspended
                                 Console.WriteLine("Suspending clipboard...");
 
@@ -527,10 +527,10 @@ namespace KnightElfClient
 
                                 // Notify ConnectionHandler we are done
                                 Monitor.Pulse(CurrentServer.ClipboardLock);
+                                #endregion
                                 break;
-                            #endregion
-                            #region CLIPBOARD_CLOSE
                             case State.Closed:
+                                #region CLIPBOARD_CLOSE
                                 // The user requested the connection be closed
                                 Console.WriteLine("Closing clipboard...");
 
@@ -547,13 +547,14 @@ namespace KnightElfClient
                                     }
                                     return;
                                 }
+                                Console.WriteLine("Clipboard closed.");
 
                                 // Notify ConnectionHandler we are done
                                 Monitor.Pulse(CurrentServer.ClipboardLock);
+                                #endregion
                                 return;
-                            #endregion
-                            #region CLIPBOARD_RESUME
                             case State.Running:
+                                #region CLIPBOARD_RESUME
                                 // The user requested the connection be resumed
                                 Console.WriteLine("Resuming clipboard...");
 
@@ -573,8 +574,8 @@ namespace KnightElfClient
 
                                 // Notify ConnectionHandler we are done
                                 Monitor.Pulse(CurrentServer.ClipboardLock);
+                                #endregion
                                 break;
-                            #endregion
                             default:
                                 Console.WriteLine("Wtf is this state I don't even");
                                 return;
