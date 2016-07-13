@@ -85,11 +85,13 @@
                                         <Grid.RowDefinitions>
                                             <RowDefinition/>
                                             <RowDefinition/>
+                                            <RowDefinition/>
                                         </Grid.RowDefinitions>
                                         
                                         <Label Content="{Binding ConnectionParams.IPaddr}" />
                                         <Label Grid.Row="1" Content="{Binding ConnectionParams.Port}" />
-
+                                        <Label Grid.Row="2" Content="{Binding State}" /> <!-- TODO: remove.. is for debug purpose -->
+                                        
                                         <!-- TODO: not working at the moment. Commands do not execute at all. -->
                                         <Grid.InputBindings>
                                             <MouseBinding Gesture="LeftDoubleClick"
