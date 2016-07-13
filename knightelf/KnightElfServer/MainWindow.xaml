@@ -38,7 +38,7 @@
                         Style="{StaticResource IconBtnStyle}"/>
                 <Button x:Name="btnDisconnect" Command="{Binding IntWaitCommand}"
                         Content="{StaticResource DisconnectIcon}"
-                        Style="{StaticResource IconBtnStyle}">
+                        Style="{StaticResource IconBtnStyle}" VerticalContentAlignment="Center">
                     <!--Button.Command>
                         <MultiBinding Converter="{StaticResource SMDisconnectConverter}">
                             <Binding Path="SM.State"/>
@@ -49,13 +49,14 @@
                 </Button>
             </ToolBarPanel>
 
-            <StatusBar DockPanel.Dock="Bottom" Grid.Row="3" Grid.ColumnSpan="2" Height="20" FontSize="10" FlowDirection="RightToLeft">
+            <StatusBar DockPanel.Dock="Bottom" Grid.Row="3" Grid.ColumnSpan="2" Height="20" FontSize="10" FlowDirection="RightToLeft" Padding="0">
                 <StatusBarItem>
-                    <ContentPresenter>
+                    <Binding Path="SM.State" Converter="{StaticResource StateToIconConverter}" Mode="OneWay"/>
+                    <!--<ContentPresenter>
                         <ContentPresenter.ContentTemplate>
-                            <Binding Path="SM.State" Converter="{StaticResource StateToIconConverter}" Mode="OneWay"/>
+                            <Binding Path="SM.State" Converter="{StaticResource StateToIconTConverter}" Mode="OneWay"/>
                         </ContentPresenter.ContentTemplate>
-                    </ContentPresenter>
+                    </ContentPresenter>-->
                 </StatusBarItem>
                 <Separator Background="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
                 <Label x:Name="labelPort"

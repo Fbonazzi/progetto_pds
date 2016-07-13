@@ -12,7 +12,7 @@ using System.Windows.Data;
 namespace KnightElfServer
 {
     [ValueConversion(typeof(SMStates), typeof(DataTemplate))]
-    public class StateToIconConverter : IValueConverter
+    public class StateToIconTConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
@@ -32,6 +32,41 @@ namespace KnightElfServer
                     return Application.Current.FindResource("StatusOffline") as DataTemplate;
                 case SMStates.Paused:
                     return Application.Current.FindResource("StatusPaused") as DataTemplate;
+                default:
+                    return DependencyProperty.UnsetValue;
+            }
+
+            // or
+            //return Application.Current.FindResource(Enum.GetName(typeof(SMStates), value) + "Icon");
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    [ValueConversion(typeof(SMStates), typeof(Viewbox))]
+    public class StateToIconConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            switch ((SMStates)value)
+            {
+                case SMStates.Running:
+                    return Application.Current.FindResource("StatusIConnected") as Viewbox;
+                case SMStates.EditingConnection:
+                    return Application.Current.FindResource("StatusIEditing") as Viewbox;
+                case SMStates.Ready:
+                    return Application.Current.FindResource("StatusIOffline") as Viewbox;
+                case SMStates.SettingConnection:
+                    return Application.Current.FindResource("StatusIEditing") as Viewbox;
+                case SMStates.Start:
+                    return Application.Current.FindResource("StatusIOffline") as Viewbox;
+                case SMStates.WaitClientConnect:
+                    return Application.Current.FindResource("StatusIOffline") as Viewbox;
+                case SMStates.Paused:
+                    return Application.Current.FindResource("StatusIPaused") as Viewbox;
                 default:
                     return DependencyProperty.UnsetValue;
             }

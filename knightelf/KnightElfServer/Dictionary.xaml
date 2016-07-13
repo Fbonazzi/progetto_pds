@@ -4,4 +4,5 @@
 
     <!-- Converters -->
     <local:StateToIconConverter x:Key="StateToIconConverter"/>
+    <local:StateToIconTConverter x:Key="StateToIconTConverter"/>
 </ResourceDictionary>

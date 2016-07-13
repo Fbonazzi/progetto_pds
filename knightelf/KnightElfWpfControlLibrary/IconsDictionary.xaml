@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:KnightElfWPFLibrary">
-    <!-- Status Icons -->
+    
+    <!-- Status Icons Templates -->
     <DataTemplate x:Key="StatusOffline">
         <Viewbox
              Width="16" Height="16" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
@@ -123,7 +124,80 @@
             </Rectangle>
         </Viewbox>
     </DataTemplate>
-        
+
+    <!-- Status Icons -->
+    <Viewbox x:Key="StatusIOffline" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="Auto" Height="16">
+        <Rectangle Width="16" Height="16">
+            <Rectangle.Fill>
+                <DrawingBrush>
+                    <DrawingBrush.Drawing>
+                        <DrawingGroup>
+                            <DrawingGroup.Children>
+                                <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+                                <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M15,8C15,11.866 11.865,15 8,15 4.134,15 1,11.866 1,8 1,4.134 4.134,1 8,1 11.865,1 15,4.134 15,8" />
+                                <GeometryDrawing Brush="#FFE51400" Geometry="F1M8,2C4.686,2 2,4.686 2,8 2,11.314 4.686,14 8,14 11.314,14 14,11.314 14,8 14,4.686 11.314,2 8,2" />
+                            </DrawingGroup.Children>
+                        </DrawingGroup>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+    </Viewbox>
+    <Viewbox x:Key="StatusIConnected"
+             Width="Auto" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+        <Rectangle Width="16" Height="16">
+            <Rectangle.Fill>
+                <DrawingBrush>
+                    <DrawingBrush.Drawing>
+                        <DrawingGroup>
+                            <DrawingGroup.Children>
+                                <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+                                <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M15,8C15,11.866 11.865,15 8,15 4.134,15 1,11.866 1,8 1,4.134 4.134,1 8,1 11.865,1 15,4.134 15,8" />
+                                <GeometryDrawing Geometry="F1M8,2C4.686,2 2,4.686 2,8 2,11.314 4.686,14 8,14 11.314,14 14,11.314 14,8 14,4.686 11.314,2 8,2" Brush="Green" />
+                            </DrawingGroup.Children>
+                        </DrawingGroup>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+    </Viewbox>
+    <Viewbox x:Key="StatusIPaused"
+             Width="Auto" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+        <Rectangle Width="16" Height="16">
+            <Rectangle.Fill>
+                <DrawingBrush>
+                    <DrawingBrush.Drawing>
+                        <DrawingGroup>
+                            <DrawingGroup.Children>
+                                <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+                                <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M15,8C15,11.866 11.865,15 8,15 4.134,15 1,11.866 1,8 1,4.134 4.134,1 8,1 11.865,1 15,4.134 15,8" />
+                                <GeometryDrawing Brush="Yellow" Geometry="F1M8,2C4.686,2 2,4.686 2,8 2,11.314 4.686,14 8,14 11.314,14 14,11.314 14,8 14,4.686 11.314,2 8,2" />
+                            </DrawingGroup.Children>
+                        </DrawingGroup>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+    </Viewbox>
+    <Viewbox x:Key="StatusIEditing"
+             Width="Auto" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+        <Rectangle Width="16" Height="16">
+            <Rectangle.Fill>
+                <DrawingBrush>
+                    <DrawingBrush.Drawing>
+                        <DrawingGroup>
+                            <DrawingGroup.Children>
+                                <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+                                <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M11.4768,-0.000199999999999534L-0.000199999999999534,11.5938 -0.000199999999999534,15.9998 4.3268,15.9998 15.9998,4.2798 15.9998,4.2368 11.7848,-0.000199999999999534z" />
+                                <GeometryDrawing Brush="#FF00539C" Geometry="F1M1,12.0898L1,14.9998 3.91,14.9998z M8.91,3.9998L1.91,10.9998 4.91,13.9998 11.91,6.9998z M14.598,4.2498L12.91,5.9998 9.91,2.9998 11.598,1.2498z" />
+                            </DrawingGroup.Children>
+                        </DrawingGroup>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+    </Viewbox>
+
     <!-- Buttons' Icons -->
     <Viewbox x:Key="SettingsIcon"
              Width="16" Height="16" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
