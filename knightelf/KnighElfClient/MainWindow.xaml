@@ -78,12 +78,14 @@
                                         <RowDefinition/>
                                         <RowDefinition/>
                                     </Grid.RowDefinitions>
-                                    
+                                    <StatusBarItem>
+                                        <Binding Path="State" Converter="{StaticResource StateToIconConverter}" Mode="OneWay"/>
+                                    </StatusBarItem>
                                     <Label Content="{Binding IPaddr}" />
                                     <Label Grid.Row="1" Content="{Binding Port}" />
 
                                     <!-- TODO: not working at the moment. Commands do not execute at all. -->
-                                        <Grid.InputBindings>
+                                    <Grid.InputBindings>
                                         <MouseBinding Gesture="LeftDoubleClick"
                                                       Command="{Binding ConnectCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
                                     </Grid.InputBindings>
