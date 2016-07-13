@@ -66,14 +66,15 @@ namespace KnightElfClient
 
             #region Configure connection transitions
             Configure(SMStates.ServerSelected)
-                .PermitReentryIf(SMTriggers.Connect, isReadyServer)
+                .PermitReentry(SMTriggers.Connect)
                 .OnEntryFrom(SMTriggers.Connect,connectAction)
                 .PermitReentryIf(SMTriggers.Disconnect, isConnectedServer)
                 .OnEntryFrom(SMTriggers.Disconnect, disconnectAction)
-                .PermitIf(SMTriggers.Run, SMStates.WorkingRemote, isConnectedServer);
+                .Permit(SMTriggers.Run, SMStates.WorkingRemote);
 
             Configure(SMStates.WorkingRemote)
                 .Permit(SMTriggers.Pause, SMStates.ServerSelected);
+                
             #endregion
 
             OnTransitioned((t) =>

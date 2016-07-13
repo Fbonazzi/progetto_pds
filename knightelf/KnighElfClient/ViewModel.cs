@@ -7,63 +7,17 @@ using System.Threading.Tasks;
 using KnightElfLibrary;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using System.ComponentModel;
 
 namespace KnightElfClient
 {
     class ViewModel : BindableObject
     {
-        private ConnectionParams _selectedServer;
-
-        //Constructor
-        public ViewModel()
-        {
-            ServerList = new ObservableCollection<ConnectionParams>();
-            serverDict = new Dictionary<ConnectionParams, RemoteServer>();
-
-            // Create State Machine
-            SM = new StateMachine(
-                    existsServer: () => { return ServerList.Count > 0; },
-                    isEditableServer: () => { return true; /* TODO: return SelectedServer.isEditable();*/ },
-                    isConnectedServer: () => { return true; /* TODO: return SelectedServer.isConnected();*/ },
-                    isReadyServer: () => { return true; /* TODO: return SelectedServer.isReady();*/},
-                    launchAddDlgAction: () => LaunchAddDlg(),
-                    launchEditDlgAction: () => LaunchAddDlg(SelectedServer),
-                    removeServerAction: () => RemoveServer(),
-                    disconnectAction: () => Disconnect(),
-                    connectAction: () => Connect()
-                );
-
-            // Create Commands
-            AddCommand = SM.CreateCommand(SMTriggers.Add);
-            EditCommand = SM.CreateCommand(SMTriggers.Edit);
-            RemoveCommand = SM.CreateCommand(SMTriggers.Remove);
-            ConnectCommand = SM.CreateCommand(SMTriggers.Connect);
-            DisconnectCommand = SM.CreateCommand(SMTriggers.Disconnect);
-            RunCommand = SM.CreateCommand(SMTriggers.Run);
-            PauseCommand = SM.CreateCommand(SMTriggers.Pause);
-
-            //TODO: remove fake list
-            ConnectionParams tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("169.254.117.114"), Port = 50000, Password = "00000" };
-            ServerList.Add(tmp);
-            serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
-            tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("169.254.22.246"), Port = 50000, Password = "00000" };
-            ServerList.Add(tmp);
-            serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
-            tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.2"), Port = 20000, Password = "prova2" };
-            ServerList.Add(tmp);
-            serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
-            tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.3"), Port = 30000, Password = "prova3" };
-            ServerList.Add(tmp);
-            serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
-            tmp = new ConnectionParams() { IPaddr = IPAddress.Parse("127.0.0.4"), Port = 40000, Password = "prova4" };
-            ServerList.Add(tmp);
-            serverDict[tmp] = new RemoteServer(tmp.IPaddr, tmp.Port, tmp.Password);
-        }
+        private Server _selectedServer;
 
         #region Properties
-        public ObservableCollection<ConnectionParams> ServerList { get; set; }
-        private Dictionary<ConnectionParams, RemoteServer> serverDict;
-        public ConnectionParams SelectedServer
+        public ObservableCollection<Server> ServerList { get; set; }
+        public Server SelectedServer
         {
             get
             {
@@ -90,6 +44,47 @@ namespace KnightElfClient
         public Client ClientInstance { get; internal set; }
         #endregion //Properties
 
+        //Constructor
+        public ViewModel()
+        {
+            ServerList = new ObservableCollection<Server>();
+
+            // Create State Machine
+            SM = new StateMachine(
+                    existsServer: () => { return ServerList.Count > 0; },
+                    isEditableServer: () => { return SelectedServer.isEditable; },
+                    isConnectedServer: () => { return SelectedServer.isConnected; },
+                    isReadyServer: () => { return SelectedServer.isReadyToConnect; },
+                    launchAddDlgAction: () => LaunchAddDlg(),
+                    launchEditDlgAction: () => LaunchEditDlg(),
+                    removeServerAction: () => RemoveServer(),
+                    disconnectAction: () => Disconnect(),
+                    connectAction: () => Connect()
+                );
+
+            // Create Commands
+            AddCommand = SM.CreateCommand(SMTriggers.Add);
+            EditCommand = SM.CreateCommand(SMTriggers.Edit);
+            RemoveCommand = SM.CreateCommand(SMTriggers.Remove);
+            ConnectCommand = SM.CreateCommand(SMTriggers.Connect);
+            DisconnectCommand = SM.CreateCommand(SMTriggers.Disconnect);
+            RunCommand = SM.CreateCommand(SMTriggers.Run);
+            PauseCommand = SM.CreateCommand(SMTriggers.Pause);
+
+            //TODO: remove fake list
+            ServerList.Add(new Server(new ConnectionParams() {
+                IPaddr = IPAddress.Parse("169.254.117.114"),
+                Port = 50000,
+                Password = "00000" }));
+
+            ServerList.Add(new Server(new ConnectionParams()
+            {
+                IPaddr = IPAddress.Parse("169.254.22.246"),
+                Port = 50000,
+                Password = "00000"
+            }));
+        }
+
         #region Commands
 
         public ICommand AddCommand { get; private set; }
@@ -113,29 +108,24 @@ namespace KnightElfClient
                 //get settings
                 SM.Fire(SMTriggers.Save);
                 //TODO: check if selectedServer is already synch and use that
-                ServerList.Add(cSettingsDlg.ConnectionParams);
-                serverDict[cSettingsDlg.ConnectionParams] = new RemoteServer(cSettingsDlg.ConnectionParams.IPaddr,
-                    cSettingsDlg.ConnectionParams.Port,
-                    cSettingsDlg.ConnectionParams.Password);
+                // or select current server by
+                SelectedServer = new Server(cSettingsDlg.ConnectionParams); //does it work?
+                ServerList.Add(new Server(cSettingsDlg.ConnectionParams));
 
                 Console.WriteLine("New Server Connection added.");
             }
             else SM.Fire(SMTriggers.Cancel);
         }
 
-        private void LaunchAddDlg(ConnectionParams selectedServer)
+        private void LaunchEditDlg()
         {
-            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog(selectedServer);
+            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog(SelectedServer.ConnectionParams);
             if (cSettingsDlg.ShowDialog() == true)
             {
                 SM.Fire(SMTriggers.Save);
-                serverDict.Remove(selectedServer);
 
-                //change each field to update the original data in the list
-                SelectedServer.IPaddr = cSettingsDlg.ConnectionParams.IPaddr;
-                SelectedServer.Port = cSettingsDlg.ConnectionParams.Port;
-                SelectedServer.Password = cSettingsDlg.ConnectionParams.Password;
-                serverDict[selectedServer] = new RemoteServer(selectedServer.IPaddr, selectedServer.Port, selectedServer.Password);
+                //TODO: check if selectedServer is already synch and use that
+                SelectedServer = new Server(cSettingsDlg.ConnectionParams);
 
                 Console.WriteLine("Server edit saved.");
             }
@@ -145,7 +135,6 @@ namespace KnightElfClient
         private void RemoveServer()
         {
             Disconnect(); //if it wasn't connected nothing happens
-            serverDict.Remove(SelectedServer);
             ServerList.Remove(SelectedServer);
             Console.WriteLine("Server successfully removed.");
 
@@ -154,17 +143,55 @@ namespace KnightElfClient
 
         private void Connect()
         {
-            RemoteServer curRemoteServer = serverDict[SelectedServer];
-            ClientInstance.ConnectToServer(curRemoteServer);
-            // TODO: change status asynch
+            if (SelectedServer.State == State.Crashed || SelectedServer.State == State.Closed)
+            {
+                SelectedServer = new Server(SelectedServer.ConnectionParams);
+            }
+            ClientInstance.ConnectToServer(SelectedServer.RemoteServer);
         }
 
         private void Disconnect()
         {
-            RemoteServer curRemoteServer = serverDict[SelectedServer];
-            ClientInstance.DisconnectFromServer(curRemoteServer);
-            // TODO: change state variable asynchronously
+            ClientInstance.DisconnectFromServer(SelectedServer.RemoteServer);
         }
         #endregion
+
+
+        /// <summary>
+        /// Called when remote server state changes in order to keep the State Machine synchronized with client-server state.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        /// <exception cref="InvalidEnumArgumentException">Transitioned to unknown client state.</exception>
+        private void OnServerStateChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (sender == SelectedServer && e.PropertyName == "State")
+            {
+                switch (SelectedServer.State)
+                {
+                    //TODO: check states transitions
+                    case State.New:
+                        break;
+                    case State.Crashed:
+                        SM.Fire(SMTriggers.Pause);
+                        break;
+                    case State.Connected:
+                        break;
+                    case State.Authenticated:
+                        break;
+                    case State.Running:
+                        SM.Fire(SMTriggers.Run);
+                        break;
+                    case State.Suspended:
+                        SM.Fire(SMTriggers.Pause);
+                        break;
+                    case State.Closed:
+                        SM.Fire(SMTriggers.Pause);
+                        break;
+                    default:
+                        throw new InvalidEnumArgumentException("Transitioned to unknown client state: " + SelectedServer.State);
+                }
+            } //we are interested only in state property here
+        }
     }
 }
