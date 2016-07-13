@@ -1044,12 +1044,13 @@ namespace KnightElfLibrary
                     #endregion
 
                     #region RECEIVE_CLIPBOARD_TYPE_SIZE
-                    RecvBuf = new byte[17 + 40];
+                    RecvBuf = new byte[64]; // Just 17
                     for (int i = 0; i < RecvBuf.Length;)
                     {
                         i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
                     }
-                    byte[] message = UnwrapPacket(RecvBuf, RecvBuf.Length, true, out RecvNonce);
+                    // Just the first 17B are the actual message
+                    byte[] message = UnwrapPacket(RecvBuf, 17 + 40, true, out RecvNonce);
                     #endregion
                     if (message != null)
                     {
@@ -1074,7 +1075,6 @@ namespace KnightElfLibrary
                             StringCollection Files = new StringCollection();
 
                             Console.WriteLine("Receiving " + NumFiles + " files.");
-                            bool Completed = false;
                             for (int i = 0; i < NumFiles; i++)
                             {
                                 #region RECEIVE_EACH_FILE
@@ -1083,39 +1083,35 @@ namespace KnightElfLibrary
                                 #region RECEIVE_CLIPBOARD_FILEDROP_TYPE_NAME_NOTIFICATION
                                 // Receive the FileDrop notification of type (FileDropFile/FileDropDir) and name
                                 RecvBuf = new byte[PacketSize];
-                                Completed = false;
                                 for (int j = 0; j < RecvBuf.Length;)
                                 {
                                     // Receive packet
                                     j += ClipboardStream.Read(RecvBuf, j, PacketSize - j);
-                                    // Save global number of received bytes
-                                    ReceivedBytes = j;
-                                    // There must be at least 51 bytes in the buffer (40 + 8 + 1 + 2)
-                                    if (j >= 51)
+                                }
+                                // Save global number of received bytes
+                                ReceivedBytes = 0;
+                                // There must be at least 51 bytes in the buffer (40 + 8 + 1 + 2)
+                                //Look for two zero bytes in the newly received ones
+                                for (int k = 49; k < PacketSize - 1; k += 2)
+                                {
+                                    if (RecvBuf[k] == 0 && RecvBuf[k + 1] == 0)
                                     {
-                                        // If we received at least the fixed part, look for two zero bytes in the newly received ones
-                                        for (int k = 49; k < j - 1; k += 2)
-                                        {
-                                            if (RecvBuf[k] == 0 && RecvBuf[k + 1] == 0)
-                                            {
-                                                Completed = true;
-                                                break;
-                                            }
-                                        }
+                                        ReceivedBytes = k + 2;
+                                        break;
                                     }
-                                    if (Completed)
-                                    { break; }
                                 }
                                 RecvBuf = UnwrapPacket(RecvBuf, ReceivedBytes, true, out RecvNonce);
                                 if (RecvBuf == null)
                                 {
                                     Console.WriteLine("Failed to receive file type and name, skipping file " + i + "...");
                                     #region RECEIVE_CLIPBOARD_FILEDROP_SEND_NACK
-                                    // Ack the FileDropFile
-                                    SendBuf = new byte[9];
+                                    // Nack the FileDropFile
+                                    SendBuf = new byte[64]; // Just 9 valid
+                                    byte[] TempBuf;
                                     nonce.CopyTo(SendBuf, 0);
                                     SendBuf[8] = (byte)Messages.Invalid;
-                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                                    TempBuf = WrapPacket(SendBuf, 9, true, null);
+                                    TempBuf.CopyTo(SendBuf, 0);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                                     ClipboardStream.Flush();
                                     #endregion
@@ -1136,10 +1132,12 @@ namespace KnightElfLibrary
                                     #region RECEIVE_FILEDROP_FILE
                                     #region RECEIVE_CLIPBOARD_FILEDROP_SEND_ACK_FILE
                                     // Ack the FileDropFile
-                                    SendBuf = new byte[9];
+                                    SendBuf = new byte[64]; // Just 9
+                                    byte[] TempBuf;
                                     nonce.CopyTo(SendBuf, 0);
                                     SendBuf[8] = (byte)Messages.FileReceive;
-                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                                    TempBuf = WrapPacket(SendBuf, 9, true, null);
+                                    TempBuf.CopyTo(SendBuf, 0);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                                     ClipboardStream.Flush();
                                     #endregion
@@ -1147,15 +1145,23 @@ namespace KnightElfLibrary
                                     // From here down we are talking to SendOverStream
 
                                     #region RECEIVE_CLIPBOARD_TYPE_SIZE
-                                    RecvBuf = new byte[17 + 40];
+                                    RecvBuf = new byte[64]; // Just 17
                                     for (int j = 0; j < RecvBuf.Length;)
                                     {
                                         j += ClipboardStream.Read(RecvBuf, j, RecvBuf.Length - j);
                                     }
-                                    message = UnwrapPacket(RecvBuf, RecvBuf.Length, true, out RecvNonce);
+                                    message = UnwrapPacket(RecvBuf, 17 + 40, true, out RecvNonce);
                                     if (message == null)
                                     {
                                         Console.WriteLine("Could not get transfer type and size, skipping file " + i + "...");
+                                        #region RECEIVE_FILE_SOCKET_SEND_NACK
+                                        // Nack the FileReceive
+                                        SendBuf = new byte[9]; // Just 9 valid
+                                        nonce.CopyTo(SendBuf, 0);
+                                        SendBuf[8] = (byte)Messages.Invalid;
+                                        SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                                        ClipboardSocket.Send(SendBuf, SendBuf.Length, 0);
+                                        #endregion
                                         continue;
                                     }
                                     #endregion
@@ -1184,8 +1190,9 @@ namespace KnightElfLibrary
                                     if (LastPacketSize != 0)
                                         PacketNo++;
                                     int OuterFileSize = ((PacketNo - 1) * PacketSize + LastPacketSize + 40);
+                                    int ReceivedFileSize = PacketNo * PacketSize;
                                     // Receive a FileDropFile
-                                    RecvBuf = new byte[OuterFileSize];
+                                    RecvBuf = new byte[ReceivedFileSize];
                                     for (int j = 0; j < RecvBuf.Length;)
                                     {
                                         j += ClipboardStream.Read(RecvBuf, j, RecvBuf.Length - j);
@@ -1239,10 +1246,12 @@ namespace KnightElfLibrary
 
                                     #region RECEIVE_CLIPBOARD_FILEDROP_SEND_ACK_DIR
                                     // Ack the FileDropDir
-                                    SendBuf = new byte[9];
+                                    SendBuf = new byte[64]; // Just 9, but send 64
+                                    byte[] TempBuf;
                                     nonce.CopyTo(SendBuf, 0);
                                     SendBuf[8] = (byte)Messages.DirReceive;
-                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                                    TempBuf = WrapPacket(SendBuf, 9, true, null);
+                                    TempBuf.CopyTo(SendBuf, 0);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                                     ClipboardStream.Flush();
                                     #endregion
@@ -1250,15 +1259,23 @@ namespace KnightElfLibrary
                                     // From here on we are talking with SendOverStream
 
                                     #region RECEIVE_CLIPBOARD_TYPE_SIZE
-                                    RecvBuf = new byte[17 + 40];
+                                    RecvBuf = new byte[64]; // Just 17 + 40 = 57
                                     for (int j = 0; j < RecvBuf.Length;)
                                     {
                                         j += ClipboardStream.Read(RecvBuf, j, RecvBuf.Length - j);
                                     }
-                                    message = UnwrapPacket(RecvBuf, RecvBuf.Length, true, out RecvNonce);
+                                    message = UnwrapPacket(RecvBuf, 17 + 40, true, out RecvNonce);
                                     if (message == null)
                                     {
                                         Console.WriteLine("Could not get file type and size, skipping file " + i + "...");
+                                        #region RECEIVE_FILE_SOCKET_SEND_NACK
+                                        // Nack the FileReceive
+                                        SendBuf = new byte[9]; // Just 9 valid
+                                        nonce.CopyTo(SendBuf, 0);
+                                        SendBuf[8] = (byte)Messages.Invalid;
+                                        SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                                        ClipboardSocket.Send(SendBuf, SendBuf.Length, 0);
+                                        #endregion
                                         continue;
                                     }
                                     #endregion
@@ -1289,8 +1306,9 @@ namespace KnightElfLibrary
                                     if (LastPacketSize != 0)
                                         PacketNo++;
                                     int OuterFileSize = ((PacketNo - 1) * PacketSize + LastPacketSize + 40);
+                                    int ReceivedFileSize = PacketNo * PacketSize;
                                     // Receive a FileDropDir
-                                    RecvBuf = new byte[OuterFileSize];
+                                    RecvBuf = new byte[ReceivedFileSize];
                                     for (int j = 0; j < RecvBuf.Length;)
                                     {
                                         j += ClipboardStream.Read(RecvBuf, j, RecvBuf.Length - j);
@@ -1379,8 +1397,9 @@ namespace KnightElfLibrary
                             if (LastPacketSize != 0)
                                 PacketNo++;
                             int OuterFileSize = ((PacketNo - 1) * PacketSize + LastPacketSize + 40);
+                            int ReceivedFileSize = PacketNo * PacketSize;
                             // Receive the file
-                            RecvBuf = new byte[OuterFileSize];
+                            RecvBuf = new byte[ReceivedFileSize];
                             for (int i = 0; i < RecvBuf.Length;)
                             {
                                 i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
@@ -1603,13 +1622,15 @@ namespace KnightElfLibrary
                             #region SEND_CLIPBOARD_NOTIFY_FILEDROP
                             // Notify other end that this is a file drop
                             // Send FileDrop type and number of elements
-                            SendBuf = new byte[17];
+                            SendBuf = new byte[64]; // Just 17B used
+                            byte[] TempBuf;
                             byte[] size = BitConverter.GetBytes((long)Files.Count);
                             size.CopyTo(SendBuf, 0);
                             byte[] nonce = GetNonceBytes();
                             nonce.CopyTo(SendBuf, 8);
                             SendBuf[16] = (byte)Type;
-                            SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                            TempBuf = WrapPacket(SendBuf, 17, true, null);
+                            TempBuf.CopyTo(SendBuf, 0);
                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                             ClipboardStream.Flush();
                             #endregion
@@ -1642,24 +1663,25 @@ namespace KnightElfLibrary
                                             #region SEND_CLIPBOARD_NOTIFY_FILEDROP_FILE
                                             // Send FileDropFile type and File name
                                             byte[] filename = Encoding.Default.GetBytes(Element + "\0");
-                                            SendBuf = new byte[8 + 1 + filename.Length];
+                                            SendBuf = new byte[PacketSize]; // 8 + 1 + filename.Length];
                                             nonce = GetNonceBytes();
                                             nonce.CopyTo(SendBuf, 0);
                                             SendBuf[8] = (byte)Type;
-                                            Array.Copy(filename, 0, SendBuf, 8, filename.Length);
-                                            SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                                            Array.Copy(filename, 0, SendBuf, 9, filename.Length);
+                                            TempBuf = WrapPacket(SendBuf, 8 + 1 + filename.Length, true, null);
+                                            TempBuf.CopyTo(SendBuf, 0);
                                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                                             ClipboardStream.Flush();
                                             #endregion
 
                                             #region SEND_CLIPBOARD_WAIT_FILEDROP_FILERECEIVE
                                             // Wait for a FileReceive ack
-                                            RecvBuf = new byte[49];
+                                            RecvBuf = new byte[64]; // Just 49
                                             for (int i = 0; i < RecvBuf.Length;)
                                             {
                                                 i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
                                             }
-                                            ack = UnwrapPacket(RecvBuf, RecvBuf.Length, true, out Nonce);
+                                            ack = UnwrapPacket(RecvBuf, 49, true, out Nonce);
                                             #endregion
                                             if (ack != null)
                                             {
@@ -1688,24 +1710,25 @@ namespace KnightElfLibrary
                                             #region SEND_CLIPBOARD_NOTIFY_FILEDROP_DIR
                                             // Send FileDropDir type and Dir name
                                             byte[] filename = Encoding.Default.GetBytes(Element + "\0");
-                                            SendBuf = new byte[8 + 1 + filename.Length];
+                                            SendBuf = new byte[PacketSize];//8 + 1 + filename.Length];
                                             nonce = GetNonceBytes();
                                             nonce.CopyTo(SendBuf, 0);
                                             SendBuf[8] = (byte)Type;
-                                            Array.Copy(filename, 0, SendBuf, 8, filename.Length);
-                                            SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                                            Array.Copy(filename, 0, SendBuf, 9, filename.Length);
+                                            TempBuf = WrapPacket(SendBuf, 8 + 1 + filename.Length, true, null);
+                                            TempBuf.CopyTo(SendBuf, 0);
                                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                                             ClipboardStream.Flush();
                                             #endregion
 
                                             #region SEND_CLIPBOARD_WAIT_FILEDROP_DIRRECEIVE
                                             // Wait for a DirReceive ack
-                                            RecvBuf = new byte[49];
+                                            RecvBuf = new byte[64]; // Just 49
                                             for (int i = 0; i < RecvBuf.Length;)
                                             {
                                                 i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
                                             }
-                                            ack = UnwrapPacket(RecvBuf, RecvBuf.Length, true, out Nonce);
+                                            ack = UnwrapPacket(RecvBuf, 49, true, out Nonce);
                                             #endregion
                                             if (ack != null)
                                             {
@@ -1809,18 +1832,20 @@ namespace KnightElfLibrary
 
             #region SEND_STREAM_TYPE_SIZE
             // Send file type and size
-            byte[] SendBuf = new byte[17];
+            byte[] SendBuf = new byte[64]; // Just 17, but this way we send 64B
+            byte[] TempBuf;
             byte[] size = BitConverter.GetBytes(TheFile.Length);
             size.CopyTo(SendBuf, 0);
             byte[] nonce = GetNonceBytes();
             nonce.CopyTo(SendBuf, 8);
             SendBuf[16] = (byte)Type;
-            SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+            TempBuf = WrapPacket(SendBuf, 17, true, null);
+            TempBuf.CopyTo(SendBuf, 0);
             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
             ClipboardStream.Flush();
             #endregion
 
-            #region SEND_STREAM_WAIT_FILERECEIVE
+            #region SEND_STREAM_WAIT_FILERECEIVE_ON_SOCKET
             // Wait for a FileReceive ack
             byte[] RecvBuf = new byte[49];
             int ReceivedBytes;
@@ -1840,7 +1865,7 @@ namespace KnightElfLibrary
                     #region SEND_FILE
                     // Send
                     long LengthLeft = TheFile.Length;
-                    int CurrentPacketSize = 0;
+                    int CurrentPacketSize = 0, SendPacketSize = PacketSize - 40;
                     for (int i = 0; i < PacketNo; i++)
                     {
                         if (i == PacketNo - 1 && LastPacketSize != 0)
@@ -1854,10 +1879,11 @@ namespace KnightElfLibrary
                             CurrentPacketSize = PacketSize - 40;
                         }
                         // Write the packet content
-                        SendBuf = new byte[CurrentPacketSize];
+                        SendBuf = new byte[PacketSize];
                         TheFile.Read(SendBuf, 0, CurrentPacketSize);
                         // Sign the packet
-                        SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                        TempBuf = WrapPacket(SendBuf, CurrentPacketSize, true, null);
+                        TempBuf.CopyTo(SendBuf, 0);
                         // Send the packet
                         ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                         ClipboardStream.Flush();
