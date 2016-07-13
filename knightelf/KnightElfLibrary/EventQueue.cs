@@ -66,8 +66,8 @@ namespace KnightElfLibrary
                 InputMessage msg = new InputMessage();
                 msg.CurrentConnectionState = State.Closed;
                 queue.Enqueue(msg);
-                // TODO: notify getters?
-                // Monitor.Pulse(queue);
+                // Notify getters
+                Monitor.Pulse(queue);
             }
         }
 
@@ -81,8 +81,8 @@ namespace KnightElfLibrary
                 InputMessage msg = new InputMessage();
                 msg.CurrentConnectionState = State.Suspended;
                 queue.Enqueue(msg);
-                // TODO: notify getters?
-                // Monitor.Pulse(queue);
+                // Notify getters
+                Monitor.Pulse(queue);
             }
         }
     }
