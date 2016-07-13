@@ -1536,7 +1536,7 @@ namespace KnightElfLibrary
                 byte[] RecvNonce;
                 Messages msg = this.UnwrapMessage(RecvBuf, ReceivedBytes, false, out RecvNonce);
 
-                if (msg == Messages.ClipboardReceive && Nonce == RecvNonce)
+                if (msg == Messages.ClipboardReceive && Nonce.SequenceEqual(RecvNonce))
                 {
                     #region SEND_CLIPBOARD_REQUESTED
                     Console.WriteLine("Sending clipboard...");
