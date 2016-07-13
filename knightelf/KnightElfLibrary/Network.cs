@@ -141,8 +141,14 @@ namespace KnightElfLibrary
         // Network
         private int PacketSize = 4096;
 
+        // PublicState
         public event PropertyChangedEventHandler PropertyChanged;
-        public State PublicState { get { return this.PublicState; } set { PublicState = value; OnPropertyChanged("PublicState"); } }
+        public readonly object PublicStateLock = new object();
+        public State PublicState
+        {
+            get { lock (this.PublicStateLock) { return this.PublicState; } }
+            set { lock (PublicStateLock) { this.PublicState = value; OnPropertyChanged("PublicState"); } }
+        }
 
 
         /// <summary>
@@ -537,14 +543,16 @@ namespace KnightElfLibrary
         // Network
         private int PacketSize = 4096;
 
-        // TODO: remove/rename
-        public bool InChiusura = false;
+        public bool IntentionallyClosing = false;
 
         // Public state to communicate with GUI thread
         public event PropertyChangedEventHandler PropertyChanged;
         public readonly object PublicStateLock = new object();
-        public State PublicState { get { lock (this.PublicStateLock) { return this.PublicState; } }
-            set { lock (PublicStateLock) { PublicState = value; OnPropertyChanged("PublicState"); } } }
+        public State PublicState
+        {
+            get { lock (this.PublicStateLock) { return this.PublicState; } }
+            set { lock (PublicStateLock) { PublicState = value; OnPropertyChanged("PublicState"); } }
+        }
 
         /// <summary>
         /// Create a new RemoteClient with the specified parameters.
@@ -614,7 +622,7 @@ namespace KnightElfLibrary
                 if (e.SocketErrorCode == SocketError.Interrupted)
                 {
                     // User interrupt
-                    if (!InChiusura)
+                    if (!IntentionallyClosing)
                     {
                         Console.WriteLine("Waiting aborted.");
                         // TODO: close sockets?
@@ -1098,8 +1106,16 @@ namespace KnightElfLibrary
                                 RecvBuf = UnwrapPacket(RecvBuf, ReceivedBytes);
                                 if (RecvBuf == null)
                                 {
-                                    // TODO: send NACK to inform other end?
                                     Console.WriteLine("Failed to receive file type and name, skipping file " + i + "...");
+                                    #region RECEIVE_CLIPBOARD_FILEDROP_SEND_NACK
+                                    // Ack the FileDropFile
+                                    SendBuf = new byte[9];
+                                    nonce.CopyTo(SendBuf, 0);
+                                    SendBuf[8] = (byte)Messages.Invalid;
+                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                    ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                    ClipboardStream.Flush();
+                                    #endregion
                                     continue;
                                 }
                                 #endregion
@@ -1122,6 +1138,7 @@ namespace KnightElfLibrary
                                     SendBuf[8] = (byte)Messages.FileReceive;
                                     SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                    ClipboardStream.Flush();
                                     #endregion
 
                                     // From here down we are talking to SendOverStream
@@ -1224,6 +1241,7 @@ namespace KnightElfLibrary
                                     SendBuf[8] = (byte)Messages.DirReceive;
                                     SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                    ClipboardStream.Flush();
                                     #endregion
 
                                     // From here on we are talking with SendOverStream
@@ -1314,7 +1332,6 @@ namespace KnightElfLibrary
                                     Tmp.Close();
                                     // Unzip dir
                                     Directory.CreateDirectory(DirName);
-                                    // TODO: ma l'archivio non è Tmp? e non archive? controllare
                                     ZipFile.ExtractToDirectory(Archive, DirName);
                                     // Delete archive
                                     File.Delete(Archive);
@@ -1589,6 +1606,7 @@ namespace KnightElfLibrary
                             SendBuf[16] = (byte)Type;
                             SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                            ClipboardStream.Flush();
                             #endregion
 
                             #region SEND_CLIPBOARD_FILEDROP_WAIT_FILEDROPRECEIVE
@@ -1626,6 +1644,7 @@ namespace KnightElfLibrary
                                             Array.Copy(filename, 0, SendBuf, 8, filename.Length);
                                             SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                            ClipboardStream.Flush();
                                             #endregion
 
                                             #region SEND_CLIPBOARD_WAIT_FILEDROP_FILERECEIVE
@@ -1671,6 +1690,7 @@ namespace KnightElfLibrary
                                             Array.Copy(filename, 0, SendBuf, 8, filename.Length);
                                             SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                            ClipboardStream.Flush();
                                             #endregion
 
                                             #region SEND_CLIPBOARD_WAIT_FILEDROP_DIRRECEIVE
@@ -1792,6 +1812,7 @@ namespace KnightElfLibrary
             SendBuf[16] = (byte)Type;
             SendBuf = WrapPacket(SendBuf, SendBuf.Length);
             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+            ClipboardStream.Flush();
             #endregion
 
             #region SEND_STREAM_WAIT_FILERECEIVE
@@ -1833,12 +1854,12 @@ namespace KnightElfLibrary
                         SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                         // Send the packet
                         ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                        ClipboardStream.Flush();
                     }
                     #endregion
                 }
             }
             // Clear the stream
-            // TODO: useless
             ClipboardStream.Flush();
         }
 
