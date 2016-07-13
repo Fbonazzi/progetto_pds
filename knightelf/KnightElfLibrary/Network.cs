@@ -1114,6 +1114,7 @@ namespace KnightElfLibrary
                                     SendBuf[8] = (byte)Messages.Invalid;
                                     SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                    ClipboardStream.Flush();
                                     #endregion
                                     continue;
                                 }
@@ -1137,6 +1138,7 @@ namespace KnightElfLibrary
                                     SendBuf[8] = (byte)Messages.FileReceive;
                                     SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                    ClipboardStream.Flush();
                                     #endregion
 
                                     // From here down we are talking to SendOverStream
@@ -1239,6 +1241,7 @@ namespace KnightElfLibrary
                                     SendBuf[8] = (byte)Messages.DirReceive;
                                     SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                    ClipboardStream.Flush();
                                     #endregion
 
                                     // From here on we are talking with SendOverStream
@@ -1329,7 +1332,6 @@ namespace KnightElfLibrary
                                     Tmp.Close();
                                     // Unzip dir
                                     Directory.CreateDirectory(DirName);
-                                    // TODO: ma l'archivio non è Tmp? e non archive? controllare
                                     ZipFile.ExtractToDirectory(Archive, DirName);
                                     // Delete archive
                                     File.Delete(Archive);
@@ -1604,6 +1606,7 @@ namespace KnightElfLibrary
                             SendBuf[16] = (byte)Type;
                             SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                            ClipboardStream.Flush();
                             #endregion
 
                             #region SEND_CLIPBOARD_FILEDROP_WAIT_FILEDROPRECEIVE
@@ -1641,6 +1644,7 @@ namespace KnightElfLibrary
                                             Array.Copy(filename, 0, SendBuf, 8, filename.Length);
                                             SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                            ClipboardStream.Flush();
                                             #endregion
 
                                             #region SEND_CLIPBOARD_WAIT_FILEDROP_FILERECEIVE
@@ -1686,6 +1690,7 @@ namespace KnightElfLibrary
                                             Array.Copy(filename, 0, SendBuf, 8, filename.Length);
                                             SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                            ClipboardStream.Flush();
                                             #endregion
 
                                             #region SEND_CLIPBOARD_WAIT_FILEDROP_DIRRECEIVE
@@ -1807,6 +1812,7 @@ namespace KnightElfLibrary
             SendBuf[16] = (byte)Type;
             SendBuf = WrapPacket(SendBuf, SendBuf.Length);
             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+            ClipboardStream.Flush();
             #endregion
 
             #region SEND_STREAM_WAIT_FILERECEIVE
@@ -1848,12 +1854,12 @@ namespace KnightElfLibrary
                         SendBuf = WrapPacket(SendBuf, SendBuf.Length);
                         // Send the packet
                         ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                        ClipboardStream.Flush();
                     }
                     #endregion
                 }
             }
             // Clear the stream
-            // TODO: useless
             ClipboardStream.Flush();
         }
 
