@@ -382,6 +382,7 @@ namespace KnightElfClient
                         // Set the connection state to running
                         lock (ConnectionLock)
                         {
+                            // TODO: necessary?
                             ConnectionState = State.Running;
                         }
                         // Notify the server we are resuming
@@ -397,11 +398,15 @@ namespace KnightElfClient
                         {
                             Console.WriteLine("Network error, could not resume.");
 
-                            // TODO: shouldn't I lock the StateLock?
-                            CurrentServer.CurrentState = State.Crashed;
-                            CurrentServer.PublicState = CurrentServer.CurrentState;
-
-                            // TODO: Notify we crashed?
+                            lock (CurrentServer.StateLock)
+                            {
+                                // Set the state to Crashed, then wake up the clipboard handler, he will know what to do
+                                CurrentServer.CurrentState = State.Crashed;
+                                CurrentServer.PublicState = CurrentServer.CurrentState;
+                                // Alert the data handler
+                                CurrentServer.DataHandler.Abort();
+                                CurrentServer.DataHandler.Join();
+                            }
                         }
                         // Wake up the ClipboardHandler
                         lock (CurrentServer.ClipboardLock)
@@ -414,10 +419,12 @@ namespace KnightElfClient
                                 if (CurrentServer.CurrentState == State.Crashed)
                                 {
                                     Console.WriteLine("Clipboard crashed.");
+                                    CurrentServer.ClipboardHandler.Join();
                                     return;
                                 }
                             }
                         }
+                        Console.WriteLine("Resumed.");
                         break;
                     #endregion
                     default:
