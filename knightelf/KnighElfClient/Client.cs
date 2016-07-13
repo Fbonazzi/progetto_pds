@@ -17,7 +17,7 @@ namespace KnightElfClient
 {
     class Client
     {
-        private RemoteServer CurrentServer;
+        public RemoteServer CurrentServer { get/* TODO: add a lock to protect it while reading*/; private set; }
         private State ConnectionState;
         private readonly object ConnectionLock = new object();
         // Temporary directory
@@ -43,7 +43,7 @@ namespace KnightElfClient
             TempDirName = Path.Combine(TempDirName, "KnightElf");
             Directory.CreateDirectory(TempDirName);
 
-            // Initialise the input queue
+            // Initialize the input queue
             InputQueue = new EventQueue();
 
             // TODO
