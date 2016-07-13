@@ -147,7 +147,7 @@ namespace KnightElfLibrary
         public State PublicState
         {
             get { lock (this.PublicStateLock) { return this.PublicState; } }
-            set { lock (PublicStateLock) { PublicState = value; OnPropertyChanged("PublicState"); } }
+            set { lock (PublicStateLock) { this.PublicState = value; OnPropertyChanged("PublicState"); } }
         }
 
 
