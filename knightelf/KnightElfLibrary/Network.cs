@@ -955,7 +955,8 @@ namespace KnightElfLibrary
         private int ClipboardUpdated;
 
         // Network
-        private BidirectionalCryptoStream ClipboardStream;
+        //private BidirectionalCryptoStream ClipboardStream;
+        private NetworkStream ClipboardStream;
         private Socket ClipboardSocket;
         private TcpListener ClipboardListener;
         public Role CallerRole;
@@ -993,7 +994,8 @@ namespace KnightElfLibrary
                 // Create the socket
                 this.ClipboardSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 this.ClipboardSocket.Connect(IP, Port);
-                ClipboardStream = new BidirectionalCryptoStream(this.ClipboardSocket, ClipboardKey);
+                //ClipboardStream = new BidirectionalCryptoStream(this.ClipboardSocket, ClipboardKey);
+                ClipboardStream = new NetworkStream(this.ClipboardSocket);
             }
             else
             {
@@ -1007,7 +1009,8 @@ namespace KnightElfLibrary
             ClipboardListener.Start();
             // Wait for a socket connection from the client
             this.ClipboardSocket = ClipboardListener.AcceptSocket();
-            ClipboardStream = new BidirectionalCryptoStream(ClipboardSocket, this.ClipboardKey);
+            // ClipboardStream = new BidirectionalCryptoStream(ClipboardSocket, this.ClipboardKey);
+            ClipboardStream = new NetworkStream(this.ClipboardSocket);
         }
 
         public void ReceiveClipboard()
