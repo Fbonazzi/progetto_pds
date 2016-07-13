@@ -256,6 +256,11 @@ namespace KnightElfServer
                         CurrentClient.DataHandler.Abort();
                         // Wait for the clipboard handler
                         CurrentClient.ClipboardHandler.Join();
+                        CurrentClient.DataHandler.Join();
+                        // Signal we are closing
+                        CurrentClient.CurrentState = State.Closed;
+                        CurrentClient.PublicState = CurrentClient.CurrentState;
+                        Console.WriteLine("Connection closed.");
                         // Close sockets
                         CurrentClient.ControlSocket.Close();
                         CurrentClient.ListenerSocket.Close();
@@ -274,7 +279,6 @@ namespace KnightElfServer
                             Monitor.Pulse(CurrentClient.ClipboardLock);
                         }
                         ClearPartialKeys();
-                        // TODO: notify graphics?
                         break;
                     #endregion
                     case Messages.Resume:
