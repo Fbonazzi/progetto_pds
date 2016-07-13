@@ -39,7 +39,7 @@ namespace KnightElfClient
         private void OnServerStateChanged(object sender, PropertyChangedEventArgs e)
         {
             Debug.Assert(sender == this.RemoteServer);
-            if (e.PropertyName == "State")
+            if (e.PropertyName == "PublicState")
             {
                 OnPropertyChanged("State");
             } //we are interested only in state property here
