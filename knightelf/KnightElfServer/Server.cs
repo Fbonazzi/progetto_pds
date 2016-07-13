@@ -565,7 +565,7 @@ namespace KnightElfServer
         private void Close()
         {
             // TODO: adapt
-            CurrentClient.InChiusura = true;
+            CurrentClient.IntentionallyClosing = true;
             // Chiamo la chiusura forzata
             // ChiusuraForzataMaster();
 

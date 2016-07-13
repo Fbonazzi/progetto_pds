@@ -543,8 +543,7 @@ namespace KnightElfLibrary
         // Network
         private int PacketSize = 4096;
 
-        // TODO: remove/rename
-        public bool InChiusura = false;
+        public bool IntentionallyClosing = false;
 
         // Public state to communicate with GUI thread
         public event PropertyChangedEventHandler PropertyChanged;
@@ -623,7 +622,7 @@ namespace KnightElfLibrary
                 if (e.SocketErrorCode == SocketError.Interrupted)
                 {
                     // User interrupt
-                    if (!InChiusura)
+                    if (!IntentionallyClosing)
                     {
                         Console.WriteLine("Waiting aborted.");
                         // TODO: close sockets?
@@ -1107,8 +1106,15 @@ namespace KnightElfLibrary
                                 RecvBuf = UnwrapPacket(RecvBuf, ReceivedBytes);
                                 if (RecvBuf == null)
                                 {
-                                    // TODO: send NACK to inform other end?
                                     Console.WriteLine("Failed to receive file type and name, skipping file " + i + "...");
+                                    #region RECEIVE_CLIPBOARD_FILEDROP_SEND_NACK
+                                    // Ack the FileDropFile
+                                    SendBuf = new byte[9];
+                                    nonce.CopyTo(SendBuf, 0);
+                                    SendBuf[8] = (byte)Messages.Invalid;
+                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                    ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                    #endregion
                                     continue;
                                 }
                                 #endregion
