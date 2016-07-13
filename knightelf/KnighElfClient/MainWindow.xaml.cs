@@ -36,9 +36,6 @@ namespace KnightElfClient
             _viewModel = new ViewModel();
             _viewModel.ClientInstance = _client;
             DataContext = _viewModel;
-
-            //Bind Connection list with ListBox
-            lbServers.ItemsSource = _viewModel.ServerList;
         }
     }
 }
