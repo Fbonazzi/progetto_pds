@@ -9,13 +9,13 @@ namespace KnightElfServer
     {
         Start, Ready,
         SettingConnection, EditingConnection,
-        WaitClientConnect, Connected, Paused
+        WaitClientConnect, Running, Paused
     }
     public enum SMTriggers
     {
         SetConnection, SaveConnection, CancelConnection,
         EditConnection, EndEditConnection,
-        Connect, ClientConnected, IntWaitClient, Disconnect,
+        Connect, IntWaitClient, Disconnect,
         Run, Pause
     }
 
@@ -46,16 +46,16 @@ namespace KnightElfServer
 
             Configure(SMStates.WaitClientConnect)
                 .OnEntry(connectAction)
-                .Permit(SMTriggers.ClientConnected, SMStates.Connected)
+                .Permit(SMTriggers.Run, SMStates.Running)
                 .Permit(SMTriggers.IntWaitClient, SMStates.Ready);
 
-            Configure(SMStates.Connected)
+            Configure(SMStates.Running)
                 .Permit(SMTriggers.Disconnect, SMStates.Ready)
                 .OnExit(disconnectAction);
 
             Configure(SMStates.Paused)
-                .SubstateOf(SMStates.Connected)
-                .Permit(SMTriggers.Connect, SMStates.Connected)
+                .SubstateOf(SMStates.Running)
+                .Permit(SMTriggers.Connect, SMStates.Running)
                 .Permit(SMTriggers.Disconnect, SMStates.Ready);
 
             OnTransitioned (

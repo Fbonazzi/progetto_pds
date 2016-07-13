@@ -18,7 +18,7 @@ namespace KnightElfServer
         {
             switch ((SMStates)value)
             {
-                case SMStates.Connected:
+                case SMStates.Running:
                     return Application.Current.FindResource("StatusConnected") as DataTemplate;
                 case SMStates.EditingConnection:
                     return Application.Current.FindResource("StatusEditing") as DataTemplate;

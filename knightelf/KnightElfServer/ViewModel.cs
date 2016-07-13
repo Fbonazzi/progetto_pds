@@ -96,7 +96,6 @@ namespace KnightElfServer
         {
             // TODO: remove or comment this function
             Console.WriteLine("Closing connection...");
-            //throw new NotImplementedException();
             Console.WriteLine("Connection closed.");
         }
         #endregion
@@ -119,7 +118,6 @@ namespace KnightElfServer
                         SM.Fire(SMTriggers.Disconnect);
                         break;
                     case State.Connected:
-                        SM.Fire(SMTriggers.Connect);
                         break;
                     case State.Authenticated:
                         break;
