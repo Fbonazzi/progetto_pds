@@ -531,14 +531,9 @@ namespace KnightElfServer
                         #region RECEIVE
                         // Receive the event
                         // TODO: rationalize
-                        for (int i = 0; i < EventSize;)
-                        {
-                            ReceivingBuffer = new byte[PacketSize];
-                            ReceivedBytes = CurrentClient.DataSocket.Receive(ReceivingBuffer, 0, EventSize - ReceivedBytes, 0);
-                            i += ReceivedBytes;
-                            // Scrivo sullo stream i byte che ho letto
-                            MemoryS.Write(ReceivingBuffer, 0, ReceivedBytes);
-                        }
+                        ReceivingBuffer = new byte[EventSize];
+                        ReceivedBytes = CurrentClient.DataSocket.Receive(ReceivingBuffer, ReceivingBuffer.Length, 0);
+                        MemoryS.Write(ReceivingBuffer, 0, ReceivedBytes);
 
                         // Estraggo il messaggio
                         MemoryS.Seek(0, SeekOrigin.Begin);
