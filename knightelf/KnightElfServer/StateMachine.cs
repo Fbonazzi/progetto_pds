@@ -19,7 +19,7 @@ namespace KnightElfServer
         Run, Pause
     }
 
-    class StateMachine : Stateless.StateMachine<SMStates, SMTriggers>, INotifyPropertyChanged
+    public class StateMachine : Stateless.StateMachine<SMStates, SMTriggers>, INotifyPropertyChanged
     {
         public StateMachine(Action setConnectionAction,
                                 Action connectAction,
