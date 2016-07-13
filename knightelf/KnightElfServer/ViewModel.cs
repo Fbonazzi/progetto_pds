@@ -44,7 +44,7 @@ namespace KnightElfServer
 
             SetConnectionCommand = SM.CreateCommand(SMTriggers.SetConnection);
             ConnectCommand = SM.CreateCommand(SMTriggers.Connect);
-            //IntWaitCommand = SM.CreateCommand(SMTriggers.IntWaitClient);
+            IntWaitCommand = SM.CreateCommand(SMTriggers.IntWaitClient);
             DisconnectCommand = SM.CreateCommand(SMTriggers.Disconnect);
         }
 
@@ -55,7 +55,7 @@ namespace KnightElfServer
 
         public ICommand SetConnectionCommand { get; private set; }
         public ICommand ConnectCommand { get; private set; }
-        //public ICommand IntWaitCommand { get; private set; }
+        public ICommand IntWaitCommand { get; private set; }
         public ICommand DisconnectCommand { get; private set; }
         #endregion
 
@@ -83,7 +83,7 @@ namespace KnightElfServer
             remoteClient.PropertyChanged += this.OnServerStateChanged;
             // Wait Client Connection
             ServerInstance.ListenForClient(remoteClient);
-            Console.WriteLine("Waiting for client connection...");
+            //Console.WriteLine("Waiting for client connection...");
         }
 
         private void IntWaitClient()
