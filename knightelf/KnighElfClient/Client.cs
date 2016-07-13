@@ -85,7 +85,6 @@ namespace KnightElfClient
                         SetLocalKeyboardHook();
                         CurrentServer.ConnectionHandler = new Thread(new ThreadStart(Connect));
                         CurrentServer.ConnectionHandler.Name = "ConnectionHandler";
-                        // TODO: Why are we doing this?
                         CurrentServer.ConnectionHandler.SetApartmentState(ApartmentState.STA);
                         CurrentServer.ConnectionHandler.Start();
                         break;
@@ -169,7 +168,6 @@ namespace KnightElfClient
             {
                 CurrentServer.DataHandler = new Thread(new ThreadStart(HandleData));
                 CurrentServer.DataHandler.Name = "DataHandler";
-                // TODO: Why are we doing this?
                 CurrentServer.DataHandler.SetApartmentState(ApartmentState.STA);
                 CurrentServer.DataHandler.Start();
 
@@ -197,7 +195,6 @@ namespace KnightElfClient
             {
                 CurrentServer.ClipboardHandler = new Thread(new ThreadStart(HandleClipboard));
                 CurrentServer.ClipboardHandler.Name = "ClipboardHandler";
-                // TODO: Why are we doing this?
                 CurrentServer.ClipboardHandler.SetApartmentState(ApartmentState.STA);
                 CurrentServer.ClipboardHandler.Start();
 
