@@ -144,10 +144,11 @@ namespace KnightElfLibrary
         // PublicState
         public event PropertyChangedEventHandler PropertyChanged;
         public readonly object PublicStateLock = new object();
+        public State _PublicState;
         public State PublicState
         {
-            get { lock (this.PublicStateLock) { return this.PublicState; } }
-            set { lock (PublicStateLock) { this.PublicState = value; OnPropertyChanged("PublicState"); } }
+            get { lock (this.PublicStateLock) { return this._PublicState; } }
+            set { lock (PublicStateLock) { this._PublicState = value; OnPropertyChanged("PublicState"); } }
         }
 
 
@@ -548,10 +549,11 @@ namespace KnightElfLibrary
         // Public state to communicate with GUI thread
         public event PropertyChangedEventHandler PropertyChanged;
         public readonly object PublicStateLock = new object();
+        public State _PublicState;
         public State PublicState
         {
-            get { lock (this.PublicStateLock) { return this.PublicState; } }
-            set { lock (PublicStateLock) { PublicState = value; OnPropertyChanged("PublicState"); } }
+            get { lock (this.PublicStateLock) { return this._PublicState; } }
+            set { lock (PublicStateLock) { this._PublicState = value; OnPropertyChanged("PublicState"); } }
         }
 
         /// <summary>
