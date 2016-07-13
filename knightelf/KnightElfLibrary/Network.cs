@@ -141,8 +141,14 @@ namespace KnightElfLibrary
         // Network
         private int PacketSize = 4096;
 
+        // PublicState
         public event PropertyChangedEventHandler PropertyChanged;
-        public State PublicState { get { return this.PublicState; } set { PublicState = value; OnPropertyChanged("PublicState"); } }
+        public readonly object PublicStateLock = new object();
+        public State PublicState
+        {
+            get { lock (this.PublicStateLock) { return this.PublicState; } }
+            set { lock (PublicStateLock) { PublicState = value; OnPropertyChanged("PublicState"); } }
+        }
 
 
         /// <summary>
@@ -543,8 +549,11 @@ namespace KnightElfLibrary
         // Public state to communicate with GUI thread
         public event PropertyChangedEventHandler PropertyChanged;
         public readonly object PublicStateLock = new object();
-        public State PublicState { get { lock (this.PublicStateLock) { return this.PublicState; } }
-            set { lock (PublicStateLock) { PublicState = value; OnPropertyChanged("PublicState"); } } }
+        public State PublicState
+        {
+            get { lock (this.PublicStateLock) { return this.PublicState; } }
+            set { lock (PublicStateLock) { PublicState = value; OnPropertyChanged("PublicState"); } }
+        }
 
         /// <summary>
         /// Create a new RemoteClient with the specified parameters.
