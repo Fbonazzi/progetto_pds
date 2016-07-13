@@ -296,8 +296,11 @@ namespace KnightElfClient
                     case State.Suspended:
                         // The user is suspending the connection
                         // TODO: lock state lock?
-                        CurrentServer.CurrentState = State.Suspended;
-                        CurrentServer.PublicState = CurrentServer.CurrentState;
+                        lock (CurrentServer.StateLock)
+                        {
+                            CurrentServer.CurrentState = State.Suspended;
+                            CurrentServer.PublicState = CurrentServer.CurrentState;
+                        }
                         // Empty the queue and notify DataHandler to suspend
                         InputQueue.ClearAndSuspend();
 
