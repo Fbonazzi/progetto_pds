@@ -1020,7 +1020,8 @@ namespace KnightElfLibrary
             #region RECEIVE_CLIPBOARD_FULL_EMPTY
             // Receive the ClipboardFull/ClipboardEmpty message
             ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
-            Messages msg = UnwrapMessage(RecvBuf, ReceivedBytes);
+            byte[] RecvNonce;
+            Messages msg = UnwrapMessage(RecvBuf, ReceivedBytes, false, out RecvNonce);
             if (msg == Messages.Invalid)
             {
                 return;
@@ -1038,7 +1039,7 @@ namespace KnightElfLibrary
                     #region RECEIVE_CLIPBOARD_YES
                     #region RECEIVE_CLIPBOARD_NOTIFY_CLIPBOARDRECEIVE
                     // We want to receive the clipboard
-                    SendBuf = this.WrapMessage(Messages.ClipboardReceive);
+                    SendBuf = this.WrapMessage(Messages.ClipboardReceive, false, RecvNonce);
                     this.ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
                     #endregion
 
@@ -1048,7 +1049,7 @@ namespace KnightElfLibrary
                     {
                         i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
                     }
-                    byte[] message = UnwrapPacket(RecvBuf, RecvBuf.Length);
+                    byte[] message = UnwrapPacket(RecvBuf, RecvBuf.Length, true, out RecvNonce);
                     #endregion
                     if (message != null)
                     {
@@ -1066,7 +1067,7 @@ namespace KnightElfLibrary
                             SendBuf = new byte[9];
                             nonce.CopyTo(SendBuf, 0);
                             SendBuf[8] = (byte)Messages.FileDropReceive;
-                            SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                            SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                             ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
                             #endregion
 
@@ -1105,7 +1106,7 @@ namespace KnightElfLibrary
                                     if (Completed)
                                     { break; }
                                 }
-                                RecvBuf = UnwrapPacket(RecvBuf, ReceivedBytes);
+                                RecvBuf = UnwrapPacket(RecvBuf, ReceivedBytes, true, out RecvNonce);
                                 if (RecvBuf == null)
                                 {
                                     Console.WriteLine("Failed to receive file type and name, skipping file " + i + "...");
@@ -1114,7 +1115,7 @@ namespace KnightElfLibrary
                                     SendBuf = new byte[9];
                                     nonce.CopyTo(SendBuf, 0);
                                     SendBuf[8] = (byte)Messages.Invalid;
-                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                                     ClipboardStream.Flush();
                                     #endregion
@@ -1138,7 +1139,7 @@ namespace KnightElfLibrary
                                     SendBuf = new byte[9];
                                     nonce.CopyTo(SendBuf, 0);
                                     SendBuf[8] = (byte)Messages.FileReceive;
-                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                                     ClipboardStream.Flush();
                                     #endregion
@@ -1151,7 +1152,7 @@ namespace KnightElfLibrary
                                     {
                                         j += ClipboardStream.Read(RecvBuf, j, RecvBuf.Length - j);
                                     }
-                                    message = UnwrapPacket(RecvBuf, RecvBuf.Length);
+                                    message = UnwrapPacket(RecvBuf, RecvBuf.Length, true, out RecvNonce);
                                     if (message == null)
                                     {
                                         Console.WriteLine("Could not get transfer type and size, skipping file " + i + "...");
@@ -1167,7 +1168,7 @@ namespace KnightElfLibrary
                                     SendBuf = new byte[9];
                                     nonce.CopyTo(SendBuf, 0);
                                     SendBuf[8] = (byte)Messages.FileReceive;
-                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                                     ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
                                     #endregion
 
@@ -1209,7 +1210,7 @@ namespace KnightElfLibrary
                                             CurrentPacketSize = PacketSize - 40;
                                         }
                                         Array.Copy(RecvBuf, j * PacketSize, ReadBuf, 0, CurrentPacketSize + 40);
-                                        UnwrappedBuf = UnwrapPacket(ReadBuf, CurrentPacketSize + 40);
+                                        UnwrappedBuf = UnwrapPacket(ReadBuf, CurrentPacketSize + 40, false, out RecvNonce);
                                         // Malformed packet: abort
                                         if (UnwrappedBuf == null)
                                         {
@@ -1241,7 +1242,7 @@ namespace KnightElfLibrary
                                     SendBuf = new byte[9];
                                     nonce.CopyTo(SendBuf, 0);
                                     SendBuf[8] = (byte)Messages.DirReceive;
-                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                                     ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                                     ClipboardStream.Flush();
                                     #endregion
@@ -1254,7 +1255,7 @@ namespace KnightElfLibrary
                                     {
                                         j += ClipboardStream.Read(RecvBuf, j, RecvBuf.Length - j);
                                     }
-                                    message = UnwrapPacket(RecvBuf, RecvBuf.Length);
+                                    message = UnwrapPacket(RecvBuf, RecvBuf.Length, true, out RecvNonce);
                                     if (message == null)
                                     {
                                         Console.WriteLine("Could not get file type and size, skipping file " + i + "...");
@@ -1271,7 +1272,7 @@ namespace KnightElfLibrary
                                     SendBuf = new byte[9];
                                     nonce.CopyTo(SendBuf, 0);
                                     SendBuf[8] = (byte)Messages.FileReceive;
-                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                                     ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
                                     #endregion
 
@@ -1314,7 +1315,7 @@ namespace KnightElfLibrary
                                             CurrentPacketSize = PacketSize - 40;
                                         }
                                         Array.Copy(RecvBuf, j * PacketSize, ReadBuf, 0, CurrentPacketSize + 40);
-                                        UnwrappedBuf = UnwrapPacket(ReadBuf, CurrentPacketSize + 40);
+                                        UnwrappedBuf = UnwrapPacket(ReadBuf, CurrentPacketSize + 40, false, out RecvNonce);
                                         // Malformed packet: abort
                                         if (UnwrappedBuf == null)
                                         {
@@ -1363,7 +1364,7 @@ namespace KnightElfLibrary
                             SendBuf = new byte[9];
                             nonce.CopyTo(SendBuf, 0);
                             SendBuf[8] = (byte)Messages.FileReceive;
-                            SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                            SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                             ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
                             #endregion
 
@@ -1404,7 +1405,7 @@ namespace KnightElfLibrary
                                     CurrentPacketSize = PacketSize - 40;
                                 }
                                 Array.Copy(RecvBuf, i * PacketSize, ReadBuf, 0, CurrentPacketSize + 40);
-                                UnwrappedBuf = UnwrapPacket(ReadBuf, CurrentPacketSize + 40);
+                                UnwrappedBuf = UnwrapPacket(ReadBuf, CurrentPacketSize + 40, false, out RecvNonce);
                                 // Malformed packet: abort
                                 if (UnwrappedBuf == null)
                                 { return; }
@@ -1488,7 +1489,7 @@ namespace KnightElfLibrary
                 {
                     #region RECEIVE_CLIPBOARD_NO
                     // We don't want to receive the clipboard
-                    SendBuf = this.WrapMessage(Messages.ClipboardDontcare);
+                    SendBuf = this.WrapMessage(Messages.ClipboardDontcare, false, RecvNonce);
                     this.ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
                     #endregion
                 }
@@ -1525,15 +1526,17 @@ namespace KnightElfLibrary
                 // The clipboard contains some supported item
 
                 // Notify other end
-                SendBuf = this.WrapMessage(Messages.ClipboardFull);
+                byte[] Nonce = GetNonceBytes();
+                SendBuf = this.WrapMessage(Messages.ClipboardFull, false, Nonce);
                 ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
 
                 // Wait for response
                 RecvBuf = new byte[SendBuf.Length];
                 ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
-                Messages msg = this.UnwrapMessage(RecvBuf, ReceivedBytes);
+                byte[] RecvNonce;
+                Messages msg = this.UnwrapMessage(RecvBuf, ReceivedBytes, false, out RecvNonce);
 
-                if (msg == Messages.ClipboardReceive)
+                if (msg == Messages.ClipboardReceive && Nonce == RecvNonce)
                 {
                     #region SEND_CLIPBOARD_REQUESTED
                     Console.WriteLine("Sending clipboard...");
@@ -1606,7 +1609,7 @@ namespace KnightElfLibrary
                             byte[] nonce = GetNonceBytes();
                             nonce.CopyTo(SendBuf, 8);
                             SendBuf[16] = (byte)Type;
-                            SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                            SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                             ClipboardStream.Flush();
                             #endregion
@@ -1615,7 +1618,7 @@ namespace KnightElfLibrary
                             // Wait for a FileDropReceive ack
                             RecvBuf = new byte[49];
                             ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
-                            byte[] ack = UnwrapPacket(RecvBuf, ReceivedBytes);
+                            byte[] ack = UnwrapPacket(RecvBuf, ReceivedBytes, true, out Nonce);
                             #endregion
                             if (ack != null)
                             {
@@ -1644,7 +1647,7 @@ namespace KnightElfLibrary
                                             nonce.CopyTo(SendBuf, 0);
                                             SendBuf[8] = (byte)Type;
                                             Array.Copy(filename, 0, SendBuf, 8, filename.Length);
-                                            SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                            SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                                             ClipboardStream.Flush();
                                             #endregion
@@ -1656,7 +1659,7 @@ namespace KnightElfLibrary
                                             {
                                                 i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
                                             }
-                                            ack = UnwrapPacket(RecvBuf, RecvBuf.Length);
+                                            ack = UnwrapPacket(RecvBuf, RecvBuf.Length, true, out Nonce);
                                             #endregion
                                             if (ack != null)
                                             {
@@ -1690,7 +1693,7 @@ namespace KnightElfLibrary
                                             nonce.CopyTo(SendBuf, 0);
                                             SendBuf[8] = (byte)Type;
                                             Array.Copy(filename, 0, SendBuf, 8, filename.Length);
-                                            SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                                            SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                                             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                                             ClipboardStream.Flush();
                                             #endregion
@@ -1702,7 +1705,7 @@ namespace KnightElfLibrary
                                             {
                                                 i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
                                             }
-                                            ack = UnwrapPacket(RecvBuf, RecvBuf.Length);
+                                            ack = UnwrapPacket(RecvBuf, RecvBuf.Length, true, out Nonce);
                                             #endregion
                                             if (ack != null)
                                             {
@@ -1812,7 +1815,7 @@ namespace KnightElfLibrary
             byte[] nonce = GetNonceBytes();
             nonce.CopyTo(SendBuf, 8);
             SendBuf[16] = (byte)Type;
-            SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+            SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
             ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
             ClipboardStream.Flush();
             #endregion
@@ -1822,7 +1825,8 @@ namespace KnightElfLibrary
             byte[] RecvBuf = new byte[49];
             int ReceivedBytes;
             ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
-            byte[] ack = UnwrapPacket(RecvBuf, ReceivedBytes);
+            byte[] Nonce; // Ignore
+            byte[] ack = UnwrapPacket(RecvBuf, ReceivedBytes, true, out Nonce);
             #endregion
             if (ack != null)
             {
@@ -1853,7 +1857,7 @@ namespace KnightElfLibrary
                         SendBuf = new byte[CurrentPacketSize];
                         TheFile.Read(SendBuf, 0, CurrentPacketSize);
                         // Sign the packet
-                        SendBuf = WrapPacket(SendBuf, SendBuf.Length);
+                        SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
                         // Send the packet
                         ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
                         ClipboardStream.Flush();
@@ -1865,11 +1869,11 @@ namespace KnightElfLibrary
             ClipboardStream.Flush();
         }
 
-        private Messages UnwrapMessage(byte[] Buffer, int Size)
+        private Messages UnwrapMessage(byte[] Buffer, int Size, bool Timestamp, out byte[] Nonce)
         {
-            byte[] message = UnwrapPacket(Buffer, Size);
+            byte[] message = UnwrapPacket(Buffer, Size, Timestamp, out Nonce);
 
-            if (message == null || message.Length > 1)
+            if (message == null || message.Length > 1 || (!Timestamp && Nonce == null))
                 return Messages.Invalid;
 
             switch (message[0])
@@ -1893,11 +1897,11 @@ namespace KnightElfLibrary
             }
         }
 
-        private byte[] WrapMessage(Messages Message)
+        private byte[] WrapMessage(Messages Message, bool Timestamp = true, byte[] Nonce = null)
         {
             byte[] msg = new byte[1];
             msg[0] = (byte)Message;
-            return WrapPacket(msg, 1);
+            return WrapPacket(msg, 1, Timestamp, Nonce);
         }
 
         /// <summary>
@@ -1906,11 +1910,12 @@ namespace KnightElfLibrary
         /// <param name="Buffer">The packet as received</param>
         /// <param name="Size">The number of bytes received in the buffer</param>
         /// <returns>Returns a byte array 40B smaller than the original if valid. Returns null if invalid.</returns>
-        private byte[] UnwrapPacket(byte[] Buffer, int Size)
+        private byte[] UnwrapPacket(byte[] Buffer, int Size, bool Timestamp, out byte[] Nonce)
         {
             if (Buffer == null || Size <= 40)
             {
                 // The message is empty or too small
+                Nonce = null;
                 return null;
             }
             byte[] tag = new byte[32];
@@ -1924,21 +1929,35 @@ namespace KnightElfLibrary
             if (!VerifTag.SequenceEqual(tag))
             {
                 // Message not authenticated
+                Nonce = null;
                 return null;
             }
             #endregion
 
-            #region UNWRAP_VERIFY_TIMESTAMP
-            // Convert the 8-byte timestamp in position 32 in the Buffer to a long
-            long TimestampTicks = BitConverter.ToInt64(Buffer, 32);
-            long Ticks = DateTime.Now.Ticks;
-            // If the timestamp is more than 5 seconds away in either direction (50M ticks)
-            if ((TimestampTicks >= Ticks && TimestampTicks - Ticks > 50000000) || (TimestampTicks < Ticks && Ticks - TimestampTicks > 50000000))
+            if (Timestamp)
             {
-                // Timestamp too far
-                return null;
+                #region UNWRAP_VERIFY_TIMESTAMP
+                // Not dealing with a nonce
+                Nonce = null;
+                // Convert the 8-byte timestamp in position 32 in the Buffer to a long
+                long TimestampTicks = BitConverter.ToInt64(Buffer, 32);
+                long Ticks = DateTime.Now.Ticks;
+                // If the timestamp is more than 5 seconds away in either direction (50M ticks)
+                if ((TimestampTicks >= Ticks && TimestampTicks - Ticks > 50000000) || (TimestampTicks < Ticks && Ticks - TimestampTicks > 50000000))
+                {
+                    // Timestamp too far
+                    return null;
+                }
+                #endregion
             }
-            #endregion
+            else
+            {
+                #region UNWRAP_EXTRACT_NONCE
+                // Extract the 8-byte nonce
+                Nonce = new byte[8];
+                Array.Copy(Buffer, 32, Nonce, 0, 8);
+                #endregion
+            }
 
             // Copy the message out
             byte[] message = new byte[Size - 40];
@@ -1947,14 +1966,14 @@ namespace KnightElfLibrary
         }
 
         /// <summary>
-        /// Add a timestamp and tag to a packet.
+        /// Add a timestamp/nonce and tag to a packet.
         /// </summary>
         /// <param name="Buffer">The original packet</param>
         /// <param name="Size">The original size</param>
         /// <returns>A byte array 40B bigger than the original</returns>
-        private byte[] WrapPacket(byte[] Buffer, int Size)
+        private byte[] WrapPacket(byte[] Buffer, int Size, bool Timestamp, byte[] Nonce)
         {
-            if (Buffer == null || Size <= 0 || Size > this.PacketSize - 40)
+            if (Buffer == null || Size <= 0 || Size > this.PacketSize - 40 || (!Timestamp && Nonce == null) || (Timestamp && Nonce != null))
             {
                 // Invalid packet
                 return null;
@@ -1962,7 +1981,16 @@ namespace KnightElfLibrary
             byte[] newbuf = new byte[Size + 40];
             byte[] msg = new byte[Size + 8];
             byte[] tag;
-            byte[] timestamp = BitConverter.GetBytes(DateTime.Now.Ticks);
+            byte[] timestamp;
+
+            if (Timestamp)
+            {
+                timestamp = BitConverter.GetBytes(DateTime.Now.Ticks);
+            }
+            else
+            {
+                timestamp = Nonce;
+            }
 
             #region WRAP_PACKET_CREATE_MESSAGE
             timestamp.CopyTo(msg, 0);
