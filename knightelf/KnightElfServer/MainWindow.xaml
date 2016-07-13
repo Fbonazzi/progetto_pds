@@ -51,7 +51,11 @@
 
             <StatusBar DockPanel.Dock="Bottom" Grid.Row="3" Grid.ColumnSpan="2" Height="20" FontSize="10" FlowDirection="RightToLeft">
                 <StatusBarItem>
-                    <Binding Path="SM.State" Converter="{StaticResource StateToIconConverter}" Mode="OneWay"/>
+                    <ContentPresenter>
+                        <ContentPresenter.ContentTemplate>
+                            <Binding Path="SM.State" Converter="{StaticResource StateToIconConverter}" Mode="OneWay"/>
+                        </ContentPresenter.ContentTemplate>
+                    </ContentPresenter>
                 </StatusBarItem>
                 <Separator Background="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
                 <Label x:Name="labelPort"

@@ -110,7 +110,7 @@ namespace KnightElfClient
                 //TODO: check if selectedServer is already synch and use that
                 // or select current server by
                 SelectedServer = new Server(cSettingsDlg.ConnectionParams); //does it work?
-                ServerList.Add(new Server(cSettingsDlg.ConnectionParams));
+                ServerList.Add(SelectedServer);
 
                 Console.WriteLine("New Server Connection added.");
             }

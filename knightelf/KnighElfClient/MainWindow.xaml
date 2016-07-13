@@ -73,34 +73,42 @@
                              SelectedIndex="{Binding SelectedServerIdx, Mode=TwoWay}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid ClipToBounds="True">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
+                                <StackPanel Orientation="Horizontal">
                                     <StatusBarItem>
-                                        <Binding Path="State" Converter="{StaticResource StateToIconConverter}" Mode="OneWay"/>
+                                        <ContentPresenter>
+                                            <ContentPresenter.ContentTemplate>
+                                                <Binding Path="State" Converter="{StaticResource StateToIconConverter}" Mode="OneWay"/>
+                                            </ContentPresenter.ContentTemplate>
+                                        </ContentPresenter>
                                     </StatusBarItem>
-                                    <Label Content="{Binding IPaddr}" />
-                                    <Label Grid.Row="1" Content="{Binding Port}" />
+                                    <Grid ClipToBounds="True">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        
+                                        <Label Content="{Binding ConnectionParams.IPaddr}" />
+                                        <Label Grid.Row="1" Content="{Binding ConnectionParams.Port}" />
 
-                                    <!-- TODO: not working at the moment. Commands do not execute at all. -->
-                                    <Grid.InputBindings>
-                                        <MouseBinding Gesture="LeftDoubleClick"
+                                        <!-- TODO: not working at the moment. Commands do not execute at all. -->
+                                        <Grid.InputBindings>
+                                            <MouseBinding Gesture="LeftDoubleClick"
                                                       Command="{Binding ConnectCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
-                                    </Grid.InputBindings>
-                                    <Grid.ContextMenu>
-                                        <ContextMenu>
-                                            <ContextMenu.DataContext>
-                                                <local:ViewModel/>
-                                            </ContextMenu.DataContext>
-                                            <MenuItem Header="Connect" Command="{Binding ConnectCommand}"/>
-                                            <MenuItem Header="Disconnect" Command="{Binding DisconnectCommand}"/>
-                                            <MenuItem Header="Edit" Command="{Binding EditCommand}"/>
-                                            <MenuItem Header="Remove" Command="{Binding RemoveCommand}"/>
-                                        </ContextMenu>
-                                    </Grid.ContextMenu>
-                                </Grid>
+                                        </Grid.InputBindings>
+                                        <Grid.ContextMenu>
+                                            <ContextMenu>
+                                                <ContextMenu.DataContext>
+                                                    <local:ViewModel/>
+                                                </ContextMenu.DataContext>
+                                                <MenuItem Header="Connect" Command="{Binding ConnectCommand}"/>
+                                                <MenuItem Header="Disconnect" Command="{Binding DisconnectCommand}"/>
+                                                <MenuItem Header="Edit" Command="{Binding EditCommand}"/>
+                                                <MenuItem Header="Remove" Command="{Binding RemoveCommand}"/>
+                                            </ContextMenu>
+                                        </Grid.ContextMenu>
+                                    </Grid>
+                                </StackPanel>
+                                
                             </DataTemplate>
 
                         </ListBox.ItemTemplate>

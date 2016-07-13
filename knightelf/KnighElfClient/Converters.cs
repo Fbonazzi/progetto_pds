@@ -13,7 +13,7 @@ using KnightElfLibrary;
 
 namespace KnightElfClient
 {
-    [ValueConversion(typeof(State), typeof(Viewbox))]
+    [ValueConversion(typeof(State), typeof(DataTemplate))]
     public class StateToIconConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -21,19 +21,19 @@ namespace KnightElfClient
             switch ((State)value)
             {
                 case State.Authenticated:
-                    return Application.Current.FindResource("StatusAuthentication") as Viewbox;
+                    return Application.Current.FindResource("StatusAuthentication") as DataTemplate;
                 case State.Closed:
-                    return Application.Current.FindResource("StatusOffline") as Viewbox;
+                    return Application.Current.FindResource("StatusOffline") as DataTemplate;
                 case State.Connected:
-                    return Application.Current.FindResource("StatusHourglass") as Viewbox;
+                    return Application.Current.FindResource("StatusHourglass") as DataTemplate;
                 case State.Crashed:
-                    return Application.Current.FindResource("StatusOffline") as Viewbox;
+                    return Application.Current.FindResource("StatusOffline") as DataTemplate;
                 case State.New:
-                    return Application.Current.FindResource("StatusOffline") as Viewbox;
+                    return Application.Current.FindResource("StatusOffline") as DataTemplate;
                 case State.Running:
-                    return Application.Current.FindResource("StatusConnected") as Viewbox;
+                    return Application.Current.FindResource("StatusConnected") as DataTemplate;
                 case State.Suspended:
-                    return Application.Current.FindResource("StatusPaused") as Viewbox;
+                    return Application.Current.FindResource("StatusPaused") as DataTemplate;
                 default:
                     return DependencyProperty.UnsetValue;
             }

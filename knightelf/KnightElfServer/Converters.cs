@@ -11,7 +11,7 @@ using System.Windows.Data;
 
 namespace KnightElfServer
 {
-    [ValueConversion(typeof(SMStates), typeof(Viewbox))]
+    [ValueConversion(typeof(SMStates), typeof(DataTemplate))]
     public class StateToIconConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -19,19 +19,19 @@ namespace KnightElfServer
             switch ((SMStates)value)
             {
                 case SMStates.Connected:
-                    return Application.Current.FindResource("StatusConnected") as Viewbox;
+                    return Application.Current.FindResource("StatusConnected") as DataTemplate;
                 case SMStates.EditingConnection:
-                    return Application.Current.FindResource("StatusEditing") as Viewbox;
+                    return Application.Current.FindResource("StatusEditing") as DataTemplate;
                 case SMStates.Ready:
-                    return Application.Current.FindResource("StatusOffline") as Viewbox;
+                    return Application.Current.FindResource("StatusOffline") as DataTemplate;
                 case SMStates.SettingConnection:
-                    return Application.Current.FindResource("StatusEditing") as Viewbox;
+                    return Application.Current.FindResource("StatusEditing") as DataTemplate;
                 case SMStates.Start:
-                    return Application.Current.FindResource("StatusOffline") as Viewbox;
+                    return Application.Current.FindResource("StatusOffline") as DataTemplate;
                 case SMStates.WaitClientConnect:
-                    return Application.Current.FindResource("StatusOffline") as Viewbox;
+                    return Application.Current.FindResource("StatusOffline") as DataTemplate;
                 case SMStates.Paused:
-                    return Application.Current.FindResource("StatusPaused") as Viewbox;
+                    return Application.Current.FindResource("StatusPaused") as DataTemplate;
                 default:
                     return DependencyProperty.UnsetValue;
             }
