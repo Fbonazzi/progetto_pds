@@ -56,6 +56,11 @@ namespace KnightElfServer
             // TODO
         }
 
+        ~Server()
+        {
+            ClearPartialKeys();
+        }
+
         /// <summary>
         /// Start waiting for a client to connect to the specified RemoteClient
         /// </summary>
