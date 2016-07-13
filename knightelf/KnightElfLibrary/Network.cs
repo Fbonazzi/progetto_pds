@@ -2020,7 +2020,7 @@ namespace KnightElfLibrary
 
             #region WRAP_PACKET_CREATE_MESSAGE
             timestamp.CopyTo(msg, 0);
-            Buffer.CopyTo(msg, 8);
+            Array.Copy(Buffer, 0, msg, 8, Size);
             #endregion
 
             #region WRAP_PACKET_SIGN
