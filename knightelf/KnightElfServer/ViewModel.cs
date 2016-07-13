@@ -80,7 +80,8 @@ namespace KnightElfServer
         private void StartConnection()
         {
             remoteClient = new RemoteClient(ConnParams.IPaddr, ConnParams.Port, ConnParams.Password);
-            remoteClient.PropertyChanged += this.OnServerStateChanged;
+            remoteClient.PropertyChanged += new PropertyChangedEventHandler(this.OnServerStateChanged);//TODO: remove if not called anyway
+            // old version: remoteClient.PropertyChanged += this.OnServerStateChanged;
             // Wait Client Connection
             ServerInstance.ListenForClient(remoteClient);
             //Console.WriteLine("Waiting for client connection...");
@@ -106,8 +107,8 @@ namespace KnightElfServer
         /// <param name="sender">The sender.</param>
         /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         /// <exception cref="InvalidEnumArgumentException">Transitioned to unknown client state.</exception>
-        private void OnServerStateChanged(object sender, PropertyChangedEventArgs e) {
-            if(e.PropertyName == "State")
+        public void OnServerStateChanged(object sender, PropertyChangedEventArgs e) { //TODO: change to private if not called anyway
+            if(e.PropertyName == "PublicState")
             {
                 RemoteClient rc = sender as RemoteClient;
                 switch (rc.PublicState)
