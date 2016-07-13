@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace KnightElfClient
 {
-    class Server : INotifyPropertyChanged
+    public class Server : INotifyPropertyChanged
     {
         public ConnectionParams ConnectionParams {get; internal set; } //never changes after creation
         public State State {
