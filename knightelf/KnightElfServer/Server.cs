@@ -40,7 +40,7 @@ namespace KnightElfServer
             // Start server on startup
             using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
-                key.SetValue("KnightElf", "\"" + AppDomain.CurrentDomain.BaseDirectory + "\"");
+                key.SetValue("KnightElf", "\"" + System.Reflection.Assembly.GetExecutingAssembly().Location + "\"");
             }
 
             // Create temporary directory
