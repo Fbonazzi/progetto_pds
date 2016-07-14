@@ -309,17 +309,14 @@ namespace KnightElfServer
         private void Inject()
         {
             InputMessage m;
-            try
+            while (true)
             {
-                while (true)
-                {
-                    m = InputQueue.get();
-                    NativeMethod.SendInput(1, m.payload, Marshal.SizeOf(m.payload[0]));
-                }
-            }
-            catch (ThreadAbortException)
-            {
-                return;
+                m = InputQueue.get();
+
+                // Handle different states
+                if (m.CurrentConnectionState == State.Closed)
+                    return;
+                NativeMethod.SendInput(1, m.payload, Marshal.SizeOf(m.payload[0]));
             }
         }
 
