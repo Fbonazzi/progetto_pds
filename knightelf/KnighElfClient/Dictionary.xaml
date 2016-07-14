@@ -4,6 +4,7 @@
 
     <BitmapImage x:Key="KnightBlack" UriSource="/KnightElfClient;component/Resources/knight_black_transparent.png" />
     <local:StateToIconConverter x:Key="StateToIconConverter"/>
+    <local:StateToCursorConverter x:Key="StateToCursorConverter"/>
     
     <DataTemplate x:Key="ServerTemplate">
         <StackPanel Orientation="Horizontal">
