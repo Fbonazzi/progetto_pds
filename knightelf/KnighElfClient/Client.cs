@@ -45,9 +45,18 @@ namespace KnightElfClient
 
             // Initialize the input queue
             InputQueue = new EventQueue();
+            // // Enable mouse and keyboard hooks
+            // SetLocalMouseHook();
+            // SetLocalKeyboardHook();
 
             // TODO
         }
+
+        // ~Client()
+        // {
+            // RemoveLocalMouseHook();
+            // RemoveLocalKeyboardHook();
+        // }
 
         /// <summary>
         /// Connect to a server and start sending events
@@ -66,6 +75,7 @@ namespace KnightElfClient
                         // Enable mouse and keyboard hooks
                         SetLocalMouseHook();
                         SetLocalKeyboardHook();
+                        // InputQueue.Enable();
                         // Set the required state
                         lock (CurrentServer.StateLock)
                         {
@@ -80,6 +90,7 @@ namespace KnightElfClient
                     case State.New:
                         // Set the current server
                         this.CurrentServer = s;
+                        // InputQueue.Enable();
                         // Enable mouse and keyboard hooks
                         SetLocalMouseHook();
                         SetLocalKeyboardHook();
@@ -874,6 +885,10 @@ namespace KnightElfClient
                 // We have pressed Ctrl, Alt, Shift and Q in a row: close the connection
                 if (Ctrl && Alt && Shift && vkCode == Key.Q)
                 {
+                    // Ctrl = false;
+                    // Shift = false;
+                    // Alt = false;
+
                     #region CLOSE_CONNECTION
                     lock (CurrentServer.StateLock)
                     {
@@ -882,13 +897,12 @@ namespace KnightElfClient
                             // Remove the mouse and keyboard hooks
                             RemoveLocalMouseHook();
                             RemoveLocalKeyboardHook();
-                            // Acquisisco il lock per comunicare con il Connecter
+                            // InputQueue.Disable();
+                            // Tell the ConnectionHandler we are closing
                             lock (ConnectionLock)
                             {
-                                // Gli dico che deve chiudere la connessione ed i suoi thread
                                 ConnectionState = State.Closed;
-
-                                // Sblocco il Connecter
+                                // Wake him up
                                 Monitor.Pulse(ConnectionLock);
                             }
                             // Don't pass the key over
@@ -901,17 +915,20 @@ namespace KnightElfClient
                 // We have pressed Ctrl, Alt, Shift and P in a row: suspend the connection
                 if (Ctrl && Alt && Shift && vkCode == Key.P)
                 {
+                    // Ctrl = false;
+                    // Shift = false;
+                    // Alt = false;
+
                     #region SUSPEND_CONNECTION
                     // Remove the mouse and keyboard hooks
                     RemoveLocalMouseHook();
                     RemoveLocalKeyboardHook();
-                    // Acquisisco il lock per comunicare con il Connecter
+                    // InputQueue.Disable();
+                    // Tell the ConnectionHandler we are suspending
                     lock (ConnectionLock)
                     {
-                        // Gli dico che deve sospendere i suoi thread
                         ConnectionState = State.Suspended;
-
-                        // Sblocco il Connecter
+                        // Wake him up
                         Monitor.Pulse(ConnectionLock);
                     }
                     return HookCodes.HC_SKIP;
