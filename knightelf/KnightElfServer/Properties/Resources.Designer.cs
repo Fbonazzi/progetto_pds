@@ -63,9 +63,9 @@ namespace KnightElfServer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap knight_green {
+        internal static System.Drawing.Bitmap knight_green_transparent {
             get {
-                object obj = ResourceManager.GetObject("knight_green", resourceCulture);
+                object obj = ResourceManager.GetObject("knight_green_transparent", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace KnightElfServer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap knight_red {
+        internal static System.Drawing.Bitmap knight_red_transparent {
             get {
-                object obj = ResourceManager.GetObject("knight_red", resourceCulture);
+                object obj = ResourceManager.GetObject("knight_red_transparent", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace KnightElfServer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap knight_yellow {
+        internal static System.Drawing.Bitmap knight_yellow_transparent {
             get {
-                object obj = ResourceManager.GetObject("knight_yellow", resourceCulture);
+                object obj = ResourceManager.GetObject("knight_yellow_transparent", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

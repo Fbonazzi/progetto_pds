@@ -63,9 +63,9 @@ namespace KnightElfClient.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap knight_black {
+        internal static System.Drawing.Bitmap knight_black_transparent {
             get {
-                object obj = ResourceManager.GetObject("knight_black", resourceCulture);
+                object obj = ResourceManager.GetObject("knight_black_transparent", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
