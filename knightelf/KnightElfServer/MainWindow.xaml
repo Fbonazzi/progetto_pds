@@ -8,8 +8,11 @@
         xmlns:KnightElfWPFLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
         x:Class="KnightElfServer.MainWindow"
         mc:Ignorable="d"
-        Title="KnightElf ServerApp" Height="350" Width="525" Icon="{StaticResource KnightRed}">
-    
+        Title="KnightElf ServerApp" Height="350" Width="525">
+    <Window.Icon>
+        <Binding Path="SM.State" Converter="{StaticResource StateToAppIconConverter}"/>
+    </Window.Icon>
+
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

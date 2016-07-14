@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media.Imaging;
 
 namespace KnightElfServer
 {
@@ -67,6 +68,41 @@ namespace KnightElfServer
                     return Application.Current.FindResource("StatusIOffline") as Viewbox;
                 case SMStates.Paused:
                     return Application.Current.FindResource("StatusIPaused") as Viewbox;
+                default:
+                    return DependencyProperty.UnsetValue;
+            }
+
+            // or
+            //return Application.Current.FindResource(Enum.GetName(typeof(SMStates), value) + "Icon");
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    [ValueConversion(typeof(SMStates), typeof(BitmapImage))]
+    public class StateToAppIconConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            switch ((SMStates)value)
+            {
+                case SMStates.Running:
+                    return Application.Current.FindResource("KnightGreen") as BitmapImage;
+                case SMStates.EditingConnection:
+                    return Application.Current.FindResource("KnightRed") as BitmapImage;
+                case SMStates.Ready:
+                    return Application.Current.FindResource("KnightRed") as BitmapImage;
+                case SMStates.SettingConnection:
+                    return Application.Current.FindResource("KnightRed") as BitmapImage;
+                case SMStates.Start:
+                    return Application.Current.FindResource("KnightRed") as BitmapImage;
+                case SMStates.WaitClientConnect:
+                    return Application.Current.FindResource("KnightRed") as BitmapImage;
+                case SMStates.Paused:
+                    return Application.Current.FindResource("KnightYellow") as BitmapImage;
                 default:
                     return DependencyProperty.UnsetValue;
             }

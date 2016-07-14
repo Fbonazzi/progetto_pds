@@ -9,4 +9,6 @@
     <!-- Converters -->
     <local:StateToIconConverter x:Key="StateToIconConverter"/>
     <local:StateToIconTConverter x:Key="StateToIconTConverter"/>
+    <local:StateToAppIconConverter x:Key="StateToAppIconConverter"/>
+    
 </ResourceDictionary>
