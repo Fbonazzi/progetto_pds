@@ -107,8 +107,8 @@ namespace KnightElfClient
                 //get settings
                 SM.Fire(SMTriggers.Save);
                 //TODO: check if selectedServer is already synch and use that
-                // or select current server by
-                SelectedServer = new Server(cSettingsDlg.ConnectionParams); //does it work?
+                // or select current server by index
+                SelectedServer = new Server(cSettingsDlg.ConnectionParams, cSettingsDlg.tbName.Text);
                 ServerList.Add(SelectedServer);
 
                 Console.WriteLine("New Server Connection added.");
@@ -118,13 +118,15 @@ namespace KnightElfClient
 
         private void LaunchEditDlg()
         {
-            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog(SelectedServer.ConnectionParams);
+            ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog(SelectedServer.ConnectionParams, SelectedServer.Name);
             if (cSettingsDlg.ShowDialog() == true)
             {
                 SM.Fire(SMTriggers.Save);
 
-                //TODO: check if selectedServer is already synch and use that
-                SelectedServer = new Server(cSettingsDlg.ConnectionParams);
+                ServerList.Remove(SelectedServer);
+                Server tmp = new Server(cSettingsDlg.ConnectionParams, cSettingsDlg.tbName.Text);
+                ServerList.Add(tmp);
+                SelectedServer = tmp;
 
                 Console.WriteLine("Server edit saved.");
             }

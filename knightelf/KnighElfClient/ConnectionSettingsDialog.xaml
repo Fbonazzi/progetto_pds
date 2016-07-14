@@ -26,13 +26,14 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <WrapPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" Orientation="Vertical">
+        <WrapPanel Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Disabled" Orientation="Vertical">
             <Label Content="IP Address:" Target="{Binding ElementName=tbIPAddr}" HorizontalAlignment="Left" Width="71"/>
             <TextBox x:Name="tbIPAddr"
                      Margin="0" MinWidth="150" MinHeight="20">
@@ -46,7 +47,17 @@
                 </TextBox.Text>
             </TextBox>
         </WrapPanel>
-        <WrapPanel Grid.Column="1" Margin="15,0,0,0" Orientation="Vertical">
+
+        <Grid Grid.ColumnSpan="2" Margin="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Name:" Target="{Binding ElementName=tbName}"/>
+            <TextBox x:Name="tbName" ToolTip="This password will be required to client to connect to this server."
+                         MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20"/>
+        </Grid>
+        <WrapPanel Grid.Row="1" Grid.Column="1" Margin="15,0,0,0" Orientation="Vertical">
             <Label Content="Port:" Target="{Binding ElementName=tbPort}"/>
             <TextBox x:Name="tbPort"
                      TextAlignment="Right"
@@ -61,7 +72,7 @@
                 </TextBox.Text>
             </TextBox>
         </WrapPanel>
-        <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,15,0,0">
+        <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -70,7 +81,7 @@
             <PasswordBox x:Name="pswBox" ToolTip="This password will be required to client to connect to this server."
                          MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20" PasswordChanged="pswBox_PasswordChanged"/>
         </Grid>
-        <WrapPanel HorizontalAlignment="Right" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0" VerticalAlignment="Bottom">
+        <WrapPanel HorizontalAlignment="Right" Grid.Row="3" Grid.ColumnSpan="2" Margin="0,15,0,0" VerticalAlignment="Bottom">
             <Button IsDefault="True" x:Name="btnDialogAdd" MinWidth="60" Margin="0,0,10,0" Content="_Add" Click="btnDialogSave_Click">
                 <Button.IsEnabled>
                     <MultiBinding Converter="{StaticResource HasErrorToVisibilityConverter}" Mode="OneWay">

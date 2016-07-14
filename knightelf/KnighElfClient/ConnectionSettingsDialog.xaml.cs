@@ -24,12 +24,13 @@ namespace KnightElfClient
             btnDialogAdd.Content = "_Add";
         }
 
-        public ConnectionSettingsDialog( ConnectionParams connectionParams)
+        public ConnectionSettingsDialog( ConnectionParams connectionParams, string name)
         {
             InitializeComponent();
 
             _connectionParams = new ConnectionParams(connectionParams);
             DataContext = _connectionParams;
+            tbName.Text = name;
 
             btnDialogAdd.Content = "_Save";
 
