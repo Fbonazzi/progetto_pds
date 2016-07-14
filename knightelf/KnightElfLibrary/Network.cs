@@ -1380,136 +1380,179 @@ namespace KnightElfLibrary
                         else
                         {
                             #region RECEIVE_CLIPBOARD_STANDARD
+                            // Receive multiple standard clipboard formats
+                            long NumFiles = BitConverter.ToInt64(message, 0);
 
-                            long size = BitConverter.ToInt64(message, 0);
-
-                            #region RECEIVE_CLIPBOARD_STANDARD_ACK_FILE
+                            #region RECEIVE_CLIPBOARD_FILEDROP_SEND_ACK_FILESRECEIVE
                             byte[] nonce = new byte[8];
                             Array.Copy(message, 8, nonce, 0, 8);
                             SendBuf = new byte[9];
                             nonce.CopyTo(SendBuf, 0);
                             SendBuf[8] = (byte)Messages.FileReceive;
                             SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
-                            ClipboardSocket.Send(SendBuf);
+                            ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
                             #endregion
 
-                            // Create a filestream to hold the data
-                            FileStream Tmp = new FileStream(ClipboardFileName, FileMode.Create, FileAccess.ReadWrite);
-
-                            #region RECEIVE_CLIPBOARD_STANDARD_RECEIVE_FILE
-                            // Compute number of packets and outer size
-                            long LongPacketSize = PacketSize - 40;
-                            int LastPacketSize = (int)(size % LongPacketSize);
-                            int PacketNo = (int)(size / LongPacketSize);
-                            if (LastPacketSize != 0)
-                                PacketNo++;
-                            int OuterFileSize = ((PacketNo - 1) * PacketSize + LastPacketSize + 40);
-                            int ReceivedFileSize = PacketNo * PacketSize;
-                            // Receive the file
-                            RecvBuf = new byte[ReceivedFileSize];
-                            for (int i = 0; i < RecvBuf.Length;)
+                            Console.WriteLine("Receiving " + NumFiles + " formats.");
+                            for (int i=0; i < NumFiles; i++)
                             {
-                                i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
-                            }
-                            #endregion
+                                #region RECEIVE_CLIPBOARD_EACH_FORMAT
+                                // From here down we are talking to SendOverStream
 
-                            #region RECEIVE_CLIPBOARD_STANDARD_READ_FILE_IN
-                            // Read the file blob, unwrap each packet and write it into the stream
-                            byte[] ReadBuf = new byte[PacketSize];
-                            byte[] UnwrappedBuf;
-                            int CurrentPacketSize = 0;
-                            for (int i = 0; i < PacketNo; i++)
-                            {
-                                if (i == PacketNo - 1 && LastPacketSize != 0)
+                                #region RECEIVE_CLIPBOARD_FORMAT_TYPE_SIZE
+                                RecvBuf = new byte[64]; // Just 17
+                                for (int j = 0; j < RecvBuf.Length;)
                                 {
-                                    // If this is the last packet and it's not empty
-                                    CurrentPacketSize = LastPacketSize;
+                                    j += ClipboardStream.Read(RecvBuf, j, RecvBuf.Length - j);
                                 }
-                                else
+                                // Just the first 17B are the actual message
+                                message = UnwrapPacket(RecvBuf, 17 + 40, true, out RecvNonce);
+                                if (message == null)
                                 {
-                                    // Regular packet size
-                                    CurrentPacketSize = PacketSize - 40;
+                                    Console.WriteLine("Could not get transfer type and size, skipping file " + i + "...");
+                                    #region RECEIVE_FILE_SOCKET_SEND_NACK
+                                    // Nack the FileReceive
+                                    SendBuf = new byte[9]; // Just 9 valid
+                                    nonce.CopyTo(SendBuf, 0);
+                                    SendBuf[8] = (byte)Messages.Invalid;
+                                    SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                                    ClipboardSocket.Send(SendBuf, SendBuf.Length, 0);
+                                    #endregion
+                                    continue;
                                 }
-                                Array.Copy(RecvBuf, i * PacketSize, ReadBuf, 0, CurrentPacketSize + 40);
-                                UnwrappedBuf = UnwrapPacket(ReadBuf, CurrentPacketSize + 40, false, out RecvNonce);
-                                // Malformed packet: abort
-                                if (UnwrappedBuf == null)
+                                #endregion
+                                Type = (TransferType)message[16];
+                                long size = BitConverter.ToInt64(message, 0);
+                                
+                                #region RECEIVE_CLIPBOARD_STANDARD_SEND_ACK_FORMAT
+                                nonce = new byte[8];
+                                Array.Copy(message, 8, nonce, 0, 8);
+                                SendBuf = new byte[9];
+                                nonce.CopyTo(SendBuf, 0);
+                                SendBuf[8] = (byte)Messages.FileReceive;
+                                SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                                ClipboardSocket.Send(SendBuf);
+                                #endregion
+
+                                // Create a filestream to hold the data
+                                FileStream Tmp = new FileStream(ClipboardFileName, FileMode.Create, FileAccess.ReadWrite);
+
+                                #region RECEIVE_CLIPBOARD_STANDARD_RECEIVE_FILE
+                                // Compute number of packets and outer size
+                                long LongPacketSize = PacketSize - 40;
+                                int LastPacketSize = (int)(size % LongPacketSize);
+                                int PacketNo = (int)(size / LongPacketSize);
+                                if (LastPacketSize != 0)
+                                    PacketNo++;
+                                int OuterFileSize = ((PacketNo - 1) * PacketSize + LastPacketSize + 40);
+                                int ReceivedFileSize = PacketNo * PacketSize;
+                                // Receive the file
+                                RecvBuf = new byte[ReceivedFileSize];
+                                for (int j = 0; j < RecvBuf.Length;)
                                 {
-                                    Console.WriteLine("Found malformed packet when processing received clipboard!");
-                                    Debug.WriteLine("Found malformed packet when processing received clipboard!");
-                                    return;
+                                    j += ClipboardStream.Read(RecvBuf, j, RecvBuf.Length - j);
                                 }
-                                Tmp.Write(UnwrappedBuf, 0, UnwrappedBuf.Length);
+                                #endregion
+
+                                #region RECEIVE_CLIPBOARD_STANDARD_READ_FILE_IN
+                                // Read the file blob, unwrap each packet and write it into the stream
+                                byte[] ReadBuf = new byte[PacketSize];
+                                byte[] UnwrappedBuf;
+                                int CurrentPacketSize = 0;
+                                for (int j = 0; j < PacketNo; j++)
+                                {
+                                    if (j == PacketNo - 1 && LastPacketSize != 0)
+                                    {
+                                        // If this is the last packet and it's not empty
+                                        CurrentPacketSize = LastPacketSize;
+                                    }
+                                    else
+                                    {
+                                        // Regular packet size
+                                        CurrentPacketSize = PacketSize - 40;
+                                    }
+                                    Array.Copy(RecvBuf, j * PacketSize, ReadBuf, 0, CurrentPacketSize + 40);
+                                    UnwrappedBuf = UnwrapPacket(ReadBuf, CurrentPacketSize + 40, false, out RecvNonce);
+                                    // Malformed packet: abort
+                                    if (UnwrappedBuf == null)
+                                    {
+                                        Console.WriteLine("Found malformed packet when processing received clipboard! Skipping...");
+                                        Debug.WriteLine("Found malformed packet when processing received clipboard! Skipping...");
+                                        continue;
+                                    }
+                                    Tmp.Write(UnwrappedBuf, 0, UnwrappedBuf.Length);
+                                }
+                                #endregion
+
+                                Tmp.Seek(0, SeekOrigin.Begin);
+                                ClipboardUpdated = 2;
+
+                                #region DISPATCH_CLIPBOARD_CONTENT
+                                // Handle the various types of transfer
+                                switch (Type)
+                                {
+                                    case TransferType.Audio:
+                                        #region RECEIVE_CLIPBOARD_AUDIO
+                                        Clipboard.SetAudio(Tmp);
+                                        #endregion
+                                        break;
+                                    case TransferType.Bitmap:
+                                        #region RECEIVE_CLIPBOARD_BITMAP
+                                        BitmapDecoder decoder = new BmpBitmapDecoder(Tmp, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+                                        BitmapSource Image = decoder.Frames[0];
+                                        Clipboard.SetImage(Image);
+                                        #endregion
+                                        break;
+                                    case TransferType.Csv:
+                                        #region RECEIVE_CLIPBOARD_CSV
+                                        byte[] TextCsv = new byte[Tmp.Length];
+                                        Tmp.Read(TextCsv, 0, (int)Tmp.Length);
+                                        Clipboard.SetText(Encoding.Default.GetString(TextCsv), TextDataFormat.CommaSeparatedValue);
+                                        #endregion
+                                        break;
+                                    case TransferType.Html:
+                                        #region RECEIVE_CLIPBOARD_HTML
+                                        byte[] TextHtml = new byte[Tmp.Length];
+                                        Tmp.Read(TextHtml, 0, (int)Tmp.Length);
+                                        Clipboard.SetText(Encoding.Default.GetString(TextHtml), TextDataFormat.Html);
+                                        #endregion
+                                        break;
+                                    case TransferType.Rtf:
+                                        #region RECEIVE_CLIPBOARD_RTF
+                                        byte[] TextRtf = new byte[Tmp.Length];
+                                        Tmp.Read(TextRtf, 0, (int)Tmp.Length);
+                                        Clipboard.SetText(Encoding.Default.GetString(TextRtf), TextDataFormat.Rtf);
+                                        #endregion
+                                        break;
+                                    case TransferType.UnicodeText:
+                                        #region RECEIVE_CLIPBOARD_UNICODE
+                                        byte[] TextUnicode = new byte[Tmp.Length];
+                                        Tmp.Read(TextUnicode, 0, (int)Tmp.Length);
+                                        Clipboard.SetText(Encoding.Default.GetString(TextUnicode), TextDataFormat.UnicodeText);
+                                        #endregion
+                                        break;
+                                    case TransferType.Xaml:
+                                        #region RECEIVE_CLIPBOARD_XAML
+                                        byte[] TextXaml = new byte[Tmp.Length];
+                                        Tmp.Read(TextXaml, 0, (int)Tmp.Length);
+                                        Clipboard.SetText(Encoding.Default.GetString(TextXaml), TextDataFormat.Xaml);
+                                        #endregion
+                                        break;
+                                    case TransferType.Text:
+                                        #region RECEIVE_CLIPBOARD_TEXT
+                                        byte[] Text = new byte[Tmp.Length];
+                                        Tmp.Read(Text, 0, (int)Tmp.Length);
+                                        Clipboard.SetText(Encoding.Default.GetString(Text), TextDataFormat.Text);
+                                        #endregion
+                                        break;
+                                }
+                                #endregion
+
+                                Tmp.Close();
+                                // TODO: should I delete it?
+                                // File.Delete(ClipboardFile)
+                                #endregion
                             }
-                            #endregion
-
-                            Tmp.Seek(0, SeekOrigin.Begin);
-                            ClipboardUpdated = 2;
-
-                            #region DISPATCH_CLIPBOARD_CONTENT
-                            // Handle the various types of transfer
-                            switch (Type)
-                            {
-                                case TransferType.Audio:
-                                    #region RECEIVE_CLIPBOARD_AUDIO
-                                    Clipboard.SetAudio(Tmp);
-                                    #endregion
-                                    break;
-                                case TransferType.Bitmap:
-                                    #region RECEIVE_CLIPBOARD_BITMAP
-                                    BitmapDecoder decoder = new BmpBitmapDecoder(Tmp, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
-                                    BitmapSource Image = decoder.Frames[0];
-                                    Clipboard.SetImage(Image);
-                                    #endregion
-                                    break;
-                                case TransferType.Csv:
-                                    #region RECEIVE_CLIPBOARD_CSV
-                                    byte[] TextCsv = new byte[Tmp.Length];
-                                    Tmp.Read(TextCsv, 0, (int)Tmp.Length);
-                                    Clipboard.SetText(Encoding.Default.GetString(TextCsv), TextDataFormat.CommaSeparatedValue);
-                                    #endregion
-                                    break;
-                                case TransferType.Html:
-                                    #region RECEIVE_CLIPBOARD_HTML
-                                    byte[] TextHtml = new byte[Tmp.Length];
-                                    Tmp.Read(TextHtml, 0, (int)Tmp.Length);
-                                    Clipboard.SetText(Encoding.Default.GetString(TextHtml), TextDataFormat.Html);
-                                    #endregion
-                                    break;
-                                case TransferType.Rtf:
-                                    #region RECEIVE_CLIPBOARD_RTF
-                                    byte[] TextRtf = new byte[Tmp.Length];
-                                    Tmp.Read(TextRtf, 0, (int)Tmp.Length);
-                                    Clipboard.SetText(Encoding.Default.GetString(TextRtf), TextDataFormat.Rtf);
-                                    #endregion
-                                    break;
-                                case TransferType.UnicodeText:
-                                    #region RECEIVE_CLIPBOARD_UNICODE
-                                    byte[] TextUnicode = new byte[Tmp.Length];
-                                    Tmp.Read(TextUnicode, 0, (int)Tmp.Length);
-                                    Clipboard.SetText(Encoding.Default.GetString(TextUnicode), TextDataFormat.UnicodeText);
-                                    #endregion
-                                    break;
-                                case TransferType.Xaml:
-                                    #region RECEIVE_CLIPBOARD_XAML
-                                    byte[] TextXaml = new byte[Tmp.Length];
-                                    Tmp.Read(TextXaml, 0, (int)Tmp.Length);
-                                    Clipboard.SetText(Encoding.Default.GetString(TextXaml), TextDataFormat.Xaml);
-                                    #endregion
-                                    break;
-                                case TransferType.Text:
-                                    #region RECEIVE_CLIPBOARD_TEXT
-                                    byte[] Text = new byte[Tmp.Length];
-                                    Tmp.Read(Text, 0, (int)Tmp.Length);
-                                    Clipboard.SetText(Encoding.Default.GetString(Text), TextDataFormat.Text);
-                                    #endregion
-                                    break;
-                            }
-                            #endregion
-
-                            Tmp.Close();
-                            // TODO: should I delete it?
-                            // File.Delete(ClipboardFile)
                             #endregion
                         }
                         Console.WriteLine("Clipboard received.");
@@ -1555,8 +1598,8 @@ namespace KnightElfLibrary
             byte[] RecvBuf;
             int ReceivedBytes;
 
-            TransferType Type = ClipboardContains();
-            if (Type == TransferType.Empty)
+            List<TransferType> Types = ClipboardContains();
+            if (Types.Count == 0)
             {
                 #region SEND_CLIPBOARD_EMPTY
                 // The clipboard is empty or contains unsupported data: notify other end
@@ -1569,238 +1612,290 @@ namespace KnightElfLibrary
                 #region SEND_CLIPBOARD_FULL
                 // The clipboard contains some supported item
 
+                #region NOTIFY_CLIPBOARD_FULL
                 // Notify other end
                 byte[] Nonce = GetNonceBytes();
                 SendBuf = this.WrapMessage(Messages.ClipboardFull, false, Nonce);
                 ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
+                #endregion
 
+                #region RECEIVE_USER_WILL_SEND_OR_NOT
                 // Wait for response
                 RecvBuf = new byte[SendBuf.Length];
                 ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
                 byte[] RecvNonce;
                 Messages msg = this.UnwrapMessage(RecvBuf, ReceivedBytes, false, out RecvNonce);
+                #endregion
 
                 if (msg == Messages.ClipboardReceive && Nonce.SequenceEqual(RecvNonce))
                 {
                     #region SEND_CLIPBOARD_REQUESTED
                     Console.WriteLine("Sending clipboard...");
-
                     // Create a filestream to hold the data
-                    FileStream Tmp = new FileStream(ClipboardFileName, FileMode.Create, FileAccess.ReadWrite);
-                    // Fill the filestream depending on type
-                    switch (Type)
+                    // FileStream Tmp = new FileStream(ClipboardFileName, FileMode.Create, FileAccess.ReadWrite);
+                    if (Types[0] == TransferType.FileDrop)
                     {
-                        case TransferType.Audio:
-                            #region SEND_CLIPBOARD_AUDIO
-                            Tmp = (FileStream)Clipboard.GetAudioStream();
-                            #endregion
-                            break;
-                        case TransferType.Bitmap:
-                            #region SEND_CLIPBOARD_BITMAP
-                            BitmapSource Image = Clipboard.GetImage();
-                            BitmapEncoder encoder = new BmpBitmapEncoder();
-                            encoder.Frames.Add(BitmapFrame.Create(Image));
-                            encoder.Save(Tmp);
-                            #endregion
-                            break;
-                        case TransferType.Csv:
-                            #region SEND_CLIPBOARD_CSV
-                            string TextCsv = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
-                            Tmp.Write(Encoding.Default.GetBytes(TextCsv), 0, Encoding.Default.GetByteCount(TextCsv));
-                            #endregion
-                            break;
-                        case TransferType.Html:
-                            #region SEND_CLIPBOARD_HTML
-                            string TextHtml = Clipboard.GetText(TextDataFormat.Html);
-                            Tmp.Write(Encoding.Default.GetBytes(TextHtml), 0, Encoding.Default.GetByteCount(TextHtml));
-                            #endregion
-                            break;
-                        case TransferType.Rtf:
-                            #region SEND_CLIPBOARD_RTF
-                            string TextRtf = Clipboard.GetText(TextDataFormat.Rtf);
-                            Tmp.Write(Encoding.Default.GetBytes(TextRtf), 0, Encoding.Default.GetByteCount(TextRtf));
-                            #endregion
-                            break;
-                        case TransferType.UnicodeText:
-                            #region SEND_CLIPBOARD_UNICODE
-                            string TextUnicode = Clipboard.GetText(TextDataFormat.UnicodeText);
-                            Tmp.Write(Encoding.Default.GetBytes(TextUnicode), 0, Encoding.Default.GetByteCount(TextUnicode));
-                            #endregion
-                            break;
-                        case TransferType.Xaml:
-                            #region SEND_CLIPBOARD_XAML
-                            string TextXaml = Clipboard.GetText(TextDataFormat.Xaml);
-                            Tmp.Write(Encoding.Default.GetBytes(TextXaml), 0, Encoding.Default.GetByteCount(TextXaml));
-                            #endregion
-                            break;
-                        case TransferType.Text:
-                            #region SEND_CLIPBOARD_TEXT
-                            string Text = Clipboard.GetText();
-                            Tmp.Write(Encoding.Default.GetBytes(Text), 0, Encoding.Default.GetByteCount(Text));
-                            #endregion
-                            break;
-                        case TransferType.FileDrop:
-                            #region SEND_CLIPBOARD_FILEDROP
-                            // Get the list of files in the filedrop
-                            StringCollection Files = Clipboard.GetFileDropList();
+                        #region SEND_CLIPBOARD_FILEDROP
+                        TransferType Type = TransferType.FileDrop;
+                        // Get the list of files in the filedrop
+                        StringCollection Files = Clipboard.GetFileDropList();
 
-                            #region SEND_CLIPBOARD_NOTIFY_FILEDROP
-                            // Notify other end that this is a file drop
-                            // Send FileDrop type and number of elements
-                            SendBuf = new byte[64]; // Just 17B used
-                            byte[] TempBuf;
-                            byte[] size = BitConverter.GetBytes((long)Files.Count);
-                            size.CopyTo(SendBuf, 0);
-                            byte[] nonce = GetNonceBytes();
-                            nonce.CopyTo(SendBuf, 8);
-                            SendBuf[16] = (byte)Type;
-                            TempBuf = WrapPacket(SendBuf, 17, true, null);
-                            TempBuf.CopyTo(SendBuf, 0);
-                            ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
-                            ClipboardStream.Flush();
-                            #endregion
+                        #region SEND_CLIPBOARD_NOTIFY_FILEDROP
+                        // Notify other end that this is a file drop
+                        // Send FileDrop type and number of elements
+                        SendBuf = new byte[64]; // Just 17B used
+                        byte[] TempBuf;
+                        byte[] size = BitConverter.GetBytes((long)Files.Count);
+                        size.CopyTo(SendBuf, 0);
+                        byte[] nonce = GetNonceBytes();
+                        nonce.CopyTo(SendBuf, 8);
+                        SendBuf[16] = (byte)Type;
+                        TempBuf = WrapPacket(SendBuf, 17, true, null);
+                        TempBuf.CopyTo(SendBuf, 0);
+                        ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                        ClipboardStream.Flush();
+                        #endregion
 
-                            #region SEND_CLIPBOARD_FILEDROP_WAIT_FILEDROPRECEIVE
-                            // Wait for a FileDropReceive ack
-                            RecvBuf = new byte[49];
-                            ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
-                            byte[] ack = UnwrapPacket(RecvBuf, ReceivedBytes, true, out Nonce);
-                            #endregion
-                            if (ack != null)
+                        #region SEND_CLIPBOARD_FILEDROP_WAIT_FILEDROPRECEIVE
+                        // Wait for a FileDropReceive ack
+                        RecvBuf = new byte[49];
+                        ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
+                        byte[] ack = UnwrapPacket(RecvBuf, ReceivedBytes, true, out Nonce);
+                        #endregion
+                        if (ack != null)
+                        {
+                            // If the signature and timestamp were valid
+                            byte[] ack_nonce = new byte[8];
+                            Array.Copy(ack, ack_nonce, 8);
+                            if (ack[8] == (byte)Messages.FileDropReceive && nonce.SequenceEqual(ack_nonce))
                             {
-                                // If the signature and timestamp were valid
-                                byte[] ack_nonce = new byte[8];
-                                Array.Copy(ack, ack_nonce, 8);
-                                if (ack[8] == (byte)Messages.FileDropReceive && nonce.SequenceEqual(ack_nonce))
+                                // If the other end acknowledged the FileDrop
+                                foreach (string Element in Files)
                                 {
-                                    // If the other end acknowledged the FileDrop
-                                    foreach (string Element in Files)
+                                    #region SEND_EACH_FILE
+                                    // Process file attributes
+                                    FileAttributes Attributes = File.GetAttributes(Element) & FileAttributes.Directory;
+
+                                    if (Attributes != FileAttributes.Directory)
                                     {
-                                        #region SEND_EACH_FILE
-                                        // Process file attributes
-                                        FileAttributes Attributes = File.GetAttributes(Element) & FileAttributes.Directory;
+                                        #region SEND_CLIPBOARD_FILEDROP_FILE
+                                        // Just a file: override Type to signal it
+                                        Type = TransferType.FileDropFile;
+                                        #region SEND_CLIPBOARD_NOTIFY_FILEDROP_FILE
+                                        // Send FileDropFile type and File name
+                                        byte[] filename = Encoding.Default.GetBytes(Element + "\0");
+                                        SendBuf = new byte[PacketSize]; // 8 + 1 + filename.Length];
+                                        nonce = GetNonceBytes();
+                                        nonce.CopyTo(SendBuf, 0);
+                                        SendBuf[8] = (byte)Type;
+                                        Array.Copy(filename, 0, SendBuf, 9, filename.Length);
+                                        TempBuf = WrapPacket(SendBuf, 8 + 1 + filename.Length, true, null);
+                                        TempBuf.CopyTo(SendBuf, 0);
+                                        ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                        ClipboardStream.Flush();
+                                        #endregion
 
-                                        if (Attributes != FileAttributes.Directory)
+                                        #region SEND_CLIPBOARD_WAIT_FILEDROP_FILERECEIVE
+                                        // Wait for a FileReceive ack
+                                        RecvBuf = new byte[64]; // Just 49
+                                        for (int i = 0; i < RecvBuf.Length;)
                                         {
-                                            #region SEND_CLIPBOARD_FILEDROP_FILE
-                                            // Just a file: override Type to signal it
-                                            Type = TransferType.FileDropFile;
-                                            #region SEND_CLIPBOARD_NOTIFY_FILEDROP_FILE
-                                            // Send FileDropFile type and File name
-                                            byte[] filename = Encoding.Default.GetBytes(Element + "\0");
-                                            SendBuf = new byte[PacketSize]; // 8 + 1 + filename.Length];
-                                            nonce = GetNonceBytes();
-                                            nonce.CopyTo(SendBuf, 0);
-                                            SendBuf[8] = (byte)Type;
-                                            Array.Copy(filename, 0, SendBuf, 9, filename.Length);
-                                            TempBuf = WrapPacket(SendBuf, 8 + 1 + filename.Length, true, null);
-                                            TempBuf.CopyTo(SendBuf, 0);
-                                            ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
-                                            ClipboardStream.Flush();
-                                            #endregion
-
-                                            #region SEND_CLIPBOARD_WAIT_FILEDROP_FILERECEIVE
-                                            // Wait for a FileReceive ack
-                                            RecvBuf = new byte[64]; // Just 49
-                                            for (int i = 0; i < RecvBuf.Length;)
-                                            {
-                                                i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
-                                            }
-                                            ack = UnwrapPacket(RecvBuf, 49, true, out Nonce);
-                                            #endregion
-                                            if (ack != null)
-                                            {
-                                                // If the signature and timestamp were valid
-                                                ack_nonce = new byte[8];
-                                                Array.Copy(ack, ack_nonce, 8);
-                                                if (ack[8] == (byte)Messages.FileReceive && nonce.SequenceEqual(ack_nonce))
-                                                {
-                                                    #region SEND_CLIPBOARD_SEND_FILEDROP_FILE
-                                                    // If the other end acknowledged the File
-                                                    // Create the FileStream
-                                                    Tmp = new FileStream(Element, FileMode.Open, FileAccess.Read);
-                                                    Console.WriteLine("Transferring " + Element + "...");
-                                                    SendOverStream(Tmp, Type);
-                                                    Console.WriteLine("Transferred " + Element + ".");
-                                                    #endregion
-                                                }
-                                            }
-                                            #endregion
+                                            i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
                                         }
-                                        else
+                                        ack = UnwrapPacket(RecvBuf, 49, true, out Nonce);
+                                        #endregion
+                                        if (ack != null)
                                         {
-                                            #region SEND_CLIPBOARD_FILEDROP_DIR
-                                            // A directory: override Type to signal it
-                                            Type = TransferType.FileDropDir;
-                                            #region SEND_CLIPBOARD_NOTIFY_FILEDROP_DIR
-                                            // Send FileDropDir type and Dir name
-                                            byte[] filename = Encoding.Default.GetBytes(Element + "\0");
-                                            SendBuf = new byte[PacketSize];//8 + 1 + filename.Length];
-                                            nonce = GetNonceBytes();
-                                            nonce.CopyTo(SendBuf, 0);
-                                            SendBuf[8] = (byte)Type;
-                                            Array.Copy(filename, 0, SendBuf, 9, filename.Length);
-                                            TempBuf = WrapPacket(SendBuf, 8 + 1 + filename.Length, true, null);
-                                            TempBuf.CopyTo(SendBuf, 0);
-                                            ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
-                                            ClipboardStream.Flush();
-                                            #endregion
-
-                                            #region SEND_CLIPBOARD_WAIT_FILEDROP_DIRRECEIVE
-                                            // Wait for a DirReceive ack
-                                            RecvBuf = new byte[64]; // Just 49
-                                            for (int i = 0; i < RecvBuf.Length;)
+                                            // If the signature and timestamp were valid
+                                            ack_nonce = new byte[8];
+                                            Array.Copy(ack, ack_nonce, 8);
+                                            if (ack[8] == (byte)Messages.FileReceive && nonce.SequenceEqual(ack_nonce))
                                             {
-                                                i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
+                                                #region SEND_CLIPBOARD_SEND_FILEDROP_FILE
+                                                // If the other end acknowledged the File
+                                                // Create the FileStream
+                                                FileStream Tmp = new FileStream(Element, FileMode.Open, FileAccess.Read);
+                                                Console.WriteLine("Transferring " + Element + "...");
+                                                SendOverStream(Tmp, Type);
+                                                Tmp.Close();
+                                                Console.WriteLine("Transferred " + Element + ".");
+                                                #endregion
                                             }
-                                            ack = UnwrapPacket(RecvBuf, 49, true, out Nonce);
-                                            #endregion
-                                            if (ack != null)
-                                            {
-                                                // If the signature and timestamp were valid
-                                                ack_nonce = new byte[8];
-                                                Array.Copy(ack, ack_nonce, 8);
-                                                if (ack[8] == (byte)Messages.DirReceive && nonce.SequenceEqual(ack_nonce))
-                                                {
-                                                    #region SEND_CLIPBOARD_SEND_FILEDROP_DIR
-                                                    // If the other end acknowledged the Dir
-                                                    // Zip directory
-                                                    string Archive = Path.Combine(TempDirName, "Archive.zip");
-                                                    File.Delete(Archive);
-
-                                                    Console.WriteLine("Preparing " + Element + " for transfer...");
-                                                    ZipFile.CreateFromDirectory(Element, Archive);
-                                                    Console.WriteLine("Transferring " + Element + "...");
-
-                                                    // Create the FileStream
-                                                    Tmp = new FileStream(Archive, FileMode.Open, FileAccess.Read);
-                                                    SendOverStream(Tmp, Type);
-                                                    Console.WriteLine("Transferred " + Element + ".");
-                                                    #endregion
-                                                }
-                                            }
-                                            #endregion
                                         }
                                         #endregion
                                     }
+                                    else
+                                    {
+                                        #region SEND_CLIPBOARD_FILEDROP_DIR
+                                        // A directory: override Type to signal it
+                                        Type = TransferType.FileDropDir;
+                                        #region SEND_CLIPBOARD_NOTIFY_FILEDROP_DIR
+                                        // Send FileDropDir type and Dir name
+                                        byte[] filename = Encoding.Default.GetBytes(Element + "\0");
+                                        SendBuf = new byte[PacketSize];//8 + 1 + filename.Length];
+                                        nonce = GetNonceBytes();
+                                        nonce.CopyTo(SendBuf, 0);
+                                        SendBuf[8] = (byte)Type;
+                                        Array.Copy(filename, 0, SendBuf, 9, filename.Length);
+                                        TempBuf = WrapPacket(SendBuf, 8 + 1 + filename.Length, true, null);
+                                        TempBuf.CopyTo(SendBuf, 0);
+                                        ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                                        ClipboardStream.Flush();
+                                        #endregion
+
+                                        #region SEND_CLIPBOARD_WAIT_FILEDROP_DIRRECEIVE
+                                        // Wait for a DirReceive ack
+                                        RecvBuf = new byte[64]; // Just 49
+                                        for (int i = 0; i < RecvBuf.Length;)
+                                        {
+                                            i += ClipboardStream.Read(RecvBuf, i, RecvBuf.Length - i);
+                                        }
+                                        ack = UnwrapPacket(RecvBuf, 49, true, out Nonce);
+                                        #endregion
+                                        if (ack != null)
+                                        {
+                                            // If the signature and timestamp were valid
+                                            ack_nonce = new byte[8];
+                                            Array.Copy(ack, ack_nonce, 8);
+                                            if (ack[8] == (byte)Messages.DirReceive && nonce.SequenceEqual(ack_nonce))
+                                            {
+                                                #region SEND_CLIPBOARD_SEND_FILEDROP_DIR
+                                                // If the other end acknowledged the Dir
+                                                // Zip directory
+                                                string Archive = Path.Combine(TempDirName, "Archive.zip");
+                                                File.Delete(Archive);
+
+                                                Console.WriteLine("Preparing " + Element + " for transfer...");
+                                                ZipFile.CreateFromDirectory(Element, Archive);
+                                                Console.WriteLine("Transferring " + Element + "...");
+
+                                                // Create the FileStream
+                                                FileStream Tmp = new FileStream(Archive, FileMode.Open, FileAccess.Read);
+                                                SendOverStream(Tmp, Type);
+                                                Tmp.Close();
+                                                Console.WriteLine("Transferred " + Element + ".");
+                                                #endregion
+                                            }
+                                        }
+                                        #endregion
+                                    }
+                                    #endregion
                                 }
                             }
+                        }
 
-                            #endregion
-                            break;
-                    }
-                    if (Clipboard.ContainsFileDropList())
-                    {
-                        Tmp.Close();
+                        #endregion
                     }
                     else
                     {
-                        SendOverStream(Tmp, Type);
-                        Tmp.Close();
-                        // TODO: should I delete it?
-                        // File.Delete(ClipboardFile)
+                        #region SEND_CLIPBOARD_STANDARD
+
+                        #region SEND_CLIPBOARD_NOTIFY_FORMATS
+                        // Notify other end that we want to transfer multiple formats
+                        // Send any type except FileDrop and number of elements
+                        SendBuf = new byte[64]; // Just 17B used
+                        byte[] TempBuf;
+                        byte[] size = BitConverter.GetBytes((long)Types.Count);
+                        size.CopyTo(SendBuf, 0);
+                        byte[] nonce = GetNonceBytes();
+                        nonce.CopyTo(SendBuf, 8);
+                        SendBuf[16] = (byte)TransferType.Text; // TODO: check that this value is not read, text just means "not filedrop"
+                        TempBuf = WrapPacket(SendBuf, 17, true, null);
+                        TempBuf.CopyTo(SendBuf, 0);
+                        ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
+                        ClipboardStream.Flush();
+                        #endregion
+
+                        #region SEND_CLIPBOARD_FILEDROP_WAIT_FILESRECEIVE
+                        // Wait for a FileReceive ack
+                        RecvBuf = new byte[49];
+                        ReceivedBytes = ClipboardSocket.Receive(RecvBuf);
+                        byte[] ack = UnwrapPacket(RecvBuf, ReceivedBytes, true, out Nonce);
+                        #endregion
+                        if (ack != null)
+                        {
+                            // If the signature and timestamp were valid
+                            byte[] ack_nonce = new byte[8];
+                            Array.Copy(ack, ack_nonce, 8);
+                            if (ack[8] == (byte)Messages.FileReceive && nonce.SequenceEqual(ack_nonce))
+                            {  
+                                // If the other end acknowledged the FileDrop
+                                foreach (TransferType Type in Types)
+                                {
+                                    #region SEND_EACH_FORMAT
+                                    // Create a filestream to hold the data
+                                    FileStream Tmp = new FileStream(ClipboardFileName, FileMode.Create, FileAccess.ReadWrite);
+                                    // Fill the filestream depending on type
+                                    switch (Type)
+                                    {
+                                        case TransferType.Audio:
+                                            #region SEND_CLIPBOARD_AUDIO
+                                            Tmp = (FileStream)Clipboard.GetAudioStream();
+                                            #endregion
+                                            break;
+                                        case TransferType.Bitmap:
+                                            #region SEND_CLIPBOARD_BITMAP
+                                            BitmapSource Image = Clipboard.GetImage();
+                                            BitmapEncoder encoder = new BmpBitmapEncoder();
+                                            encoder.Frames.Add(BitmapFrame.Create(Image));
+                                            encoder.Save(Tmp);
+                                            #endregion
+                                            break;
+                                        case TransferType.Csv:
+                                            #region SEND_CLIPBOARD_CSV
+                                            string TextCsv = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
+                                            Tmp.Write(Encoding.Default.GetBytes(TextCsv), 0, Encoding.Default.GetByteCount(TextCsv));
+                                            #endregion
+                                            break;
+                                        case TransferType.Html:
+                                            #region SEND_CLIPBOARD_HTML
+                                            string TextHtml = Clipboard.GetText(TextDataFormat.Html);
+                                            Tmp.Write(Encoding.Default.GetBytes(TextHtml), 0, Encoding.Default.GetByteCount(TextHtml));
+                                            #endregion
+                                            break;
+                                        case TransferType.Rtf:
+                                            #region SEND_CLIPBOARD_RTF
+                                            string TextRtf = Clipboard.GetText(TextDataFormat.Rtf);
+                                            Tmp.Write(Encoding.Default.GetBytes(TextRtf), 0, Encoding.Default.GetByteCount(TextRtf));
+                                            #endregion
+                                            break;
+                                        case TransferType.UnicodeText:
+                                            #region SEND_CLIPBOARD_UNICODE
+                                            string TextUnicode = Clipboard.GetText(TextDataFormat.UnicodeText);
+                                            Tmp.Write(Encoding.Default.GetBytes(TextUnicode), 0, Encoding.Default.GetByteCount(TextUnicode));
+                                            #endregion
+                                            break;
+                                        case TransferType.Xaml:
+                                            #region SEND_CLIPBOARD_XAML
+                                            string TextXaml = Clipboard.GetText(TextDataFormat.Xaml);
+                                            Tmp.Write(Encoding.Default.GetBytes(TextXaml), 0, Encoding.Default.GetByteCount(TextXaml));
+                                            #endregion
+                                            break;
+                                        case TransferType.Text:
+                                            #region SEND_CLIPBOARD_TEXT
+                                            string Text = Clipboard.GetText();
+                                            Tmp.Write(Encoding.Default.GetBytes(Text), 0, Encoding.Default.GetByteCount(Text));
+                                            #endregion
+                                            break;
+                                    }
+                                    SendOverStream(Tmp, Type);
+                                    Tmp.Close();
+                                    #endregion
+                                }
+                            }
+                            else
+                            {
+                                Debug.WriteLine("Other end is hanging on " + Types.Count + " read(s).");
+                            }
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Other end is hanging on " + Types.Count + " read(s).");
+                        }
+
+                        Console.WriteLine("Clipboard sent.");
+                        #endregion
                     }
-                    Console.WriteLine("Clipboard sent.");
                     #endregion
                 }
                 #endregion
@@ -1816,29 +1911,32 @@ namespace KnightElfLibrary
         /// <summary>
         /// Check what supported items does the clipboard contain.
         /// </summary>
-        /// <returns>A TransferType value.</returns>
-        private TransferType ClipboardContains()
+        /// <returns>A list of TransferType values.</returns>
+        private List<TransferType> ClipboardContains()
         {
+            List<TransferType> what = new List<TransferType>();
+            if (Clipboard.ContainsFileDropList())
+            {
+                what.Add(TransferType.FileDrop);
+                return what;
+            }
             if (Clipboard.ContainsAudio())
-                return TransferType.Audio;
-            else if (Clipboard.ContainsImage())
-                return TransferType.Bitmap;
-            else if (Clipboard.ContainsFileDropList())
-                return TransferType.FileDrop;
-            else if (Clipboard.ContainsText(TextDataFormat.CommaSeparatedValue))
-                return TransferType.Csv;
-            else if (Clipboard.ContainsText(TextDataFormat.Html))
-                return TransferType.Html;
-            else if (Clipboard.ContainsText(TextDataFormat.Rtf))
-                return TransferType.Rtf;
-            else if (Clipboard.ContainsText(TextDataFormat.UnicodeText))
-                return TransferType.UnicodeText;
-            else if (Clipboard.ContainsText(TextDataFormat.Xaml))
-                return TransferType.Xaml;
-            else if (Clipboard.ContainsText(TextDataFormat.Text))
-                return TransferType.Text;
-            else
-                return TransferType.Empty;
+                what.Add(TransferType.Audio);
+            if (Clipboard.ContainsImage())
+                what.Add(TransferType.Bitmap);
+            if (Clipboard.ContainsText(TextDataFormat.CommaSeparatedValue))
+                what.Add(TransferType.Csv);
+            if (Clipboard.ContainsText(TextDataFormat.Html))
+                what.Add(TransferType.Html);
+            if (Clipboard.ContainsText(TextDataFormat.Rtf))
+                what.Add(TransferType.Rtf);
+            if (Clipboard.ContainsText(TextDataFormat.UnicodeText))
+                what.Add(TransferType.UnicodeText);
+            if (Clipboard.ContainsText(TextDataFormat.Xaml))
+                what.Add(TransferType.Xaml);
+            if (Clipboard.ContainsText(TextDataFormat.Text))
+                what.Add(TransferType.Text);
+            return what;
         }
 
         /// <summary>
