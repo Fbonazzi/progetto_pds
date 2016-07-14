@@ -583,7 +583,7 @@ namespace KnightElfServer
                 InputMessage.INPUT[] i = new InputMessage.INPUT[1];
                 i[0].type = InputMessage.InputType.Keyboard;
 
-                i[0].ki.wVk = (ushort)v;
+                i[0].ki.wVk = (ushort)KeyInterop.VirtualKeyFromKey(v);
 
                 i[0].ki.dwFlags = (uint)KeyboardMessages.KEYEVENTF_KEYUP;
 
@@ -650,11 +650,11 @@ namespace KnightElfServer
                 {
                     case (uint)KeyboardMessages.KEYEVENTF_KEYDOWN:
                         // If connection drops, it will be necessary to perform a KeyUp event
-                        KeyboardResidues.Add(KeyInterop.KeyFromVirtualKey((int)ReceivedMessage.payload[0].ki.wVk));
+                        KeyboardResidues.Add(KeyInterop.KeyFromVirtualKey(ReceivedMessage.payload[0].ki.wVk));
                         break;
                     case (uint)KeyboardMessages.KEYEVENTF_KEYUP:
                         // It's not necessary to complete the previous KeyDown Event anymore
-                        KeyboardResidues.Remove(KeyInterop.KeyFromVirtualKey((int)ReceivedMessage.payload[0].ki.wVk));
+                        KeyboardResidues.Remove(KeyInterop.KeyFromVirtualKey(ReceivedMessage.payload[0].ki.wVk));
                         break;
                 }
                 #endregion
