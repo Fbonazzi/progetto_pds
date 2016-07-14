@@ -1402,6 +1402,7 @@ namespace KnightElfLibrary
                             ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
                             #endregion
 
+                            DataObject dobj = new DataObject();
                             Console.WriteLine("Receiving " + NumFiles + " formats.");
                             for (int i=0; i < NumFiles; i++)
                             {
@@ -1502,28 +1503,28 @@ namespace KnightElfLibrary
                                 {
                                     case TransferType.Audio:
                                         #region RECEIVE_CLIPBOARD_AUDIO
-                                        Clipboard.SetAudio(Tmp);
+                                        dobj.SetAudio(Tmp);
                                         #endregion
                                         break;
                                     case TransferType.Bitmap:
                                         #region RECEIVE_CLIPBOARD_BITMAP
                                         BitmapDecoder decoder = new BmpBitmapDecoder(Tmp, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
                                         BitmapSource Image = decoder.Frames[0];
-                                        Clipboard.SetImage(Image);
+                                        dobj.SetImage(Image);
                                         #endregion
                                         break;
                                     case TransferType.Csv:
                                         #region RECEIVE_CLIPBOARD_CSV
                                         byte[] TextCsv = new byte[Tmp.Length];
                                         Tmp.Read(TextCsv, 0, (int)Tmp.Length);
-                                        Clipboard.SetText(Encoding.Default.GetString(TextCsv), TextDataFormat.CommaSeparatedValue);
+                                        dobj.SetText(Encoding.Default.GetString(TextCsv), TextDataFormat.CommaSeparatedValue);
                                         #endregion
                                         break;
                                     case TransferType.Html:
                                         #region RECEIVE_CLIPBOARD_HTML
                                         byte[] TextHtml = new byte[Tmp.Length];
                                         Tmp.Read(TextHtml, 0, (int)Tmp.Length);
-                                        Clipboard.SetText(Encoding.Default.GetString(TextHtml), TextDataFormat.Html);
+                                        dobj.SetText(Encoding.Default.GetString(TextHtml), TextDataFormat.Html);
                                         #endregion
                                         break;
                                     case TransferType.Rtf:
@@ -1537,21 +1538,21 @@ namespace KnightElfLibrary
                                         #region RECEIVE_CLIPBOARD_UNICODE
                                         byte[] TextUnicode = new byte[Tmp.Length];
                                         Tmp.Read(TextUnicode, 0, (int)Tmp.Length);
-                                        Clipboard.SetText(Encoding.Default.GetString(TextUnicode), TextDataFormat.UnicodeText);
+                                        dobj.SetText(Encoding.Default.GetString(TextUnicode), TextDataFormat.UnicodeText);
                                         #endregion
                                         break;
                                     case TransferType.Xaml:
                                         #region RECEIVE_CLIPBOARD_XAML
                                         byte[] TextXaml = new byte[Tmp.Length];
                                         Tmp.Read(TextXaml, 0, (int)Tmp.Length);
-                                        Clipboard.SetText(Encoding.Default.GetString(TextXaml), TextDataFormat.Xaml);
+                                        dobj.SetText(Encoding.Default.GetString(TextXaml), TextDataFormat.Xaml);
                                         #endregion
                                         break;
                                     case TransferType.Text:
                                         #region RECEIVE_CLIPBOARD_TEXT
                                         byte[] Text = new byte[Tmp.Length];
                                         Tmp.Read(Text, 0, (int)Tmp.Length);
-                                        Clipboard.SetText(Encoding.Default.GetString(Text), TextDataFormat.Text);
+                                        dobj.SetText(Encoding.Default.GetString(Text), TextDataFormat.Text);
                                         #endregion
                                         break;
                                 }
@@ -1562,6 +1563,7 @@ namespace KnightElfLibrary
                                 // File.Delete(ClipboardFile)
                                 #endregion
                             }
+                            Clipboard.SetDataObject(dobj, true);
                             #endregion
                         }
                         Console.WriteLine("Clipboard received.");
