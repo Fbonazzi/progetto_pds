@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -1046,6 +1047,8 @@ namespace KnightElfLibrary
                     this.ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
                     #endregion
 
+                    Console.WriteLine("Receiving clipboard...");
+
                     #region RECEIVE_CLIPBOARD_TYPE_SIZE
                     RecvBuf = new byte[64]; // Just 17
                     for (int i = 0; i < RecvBuf.Length;)
@@ -1386,7 +1389,7 @@ namespace KnightElfLibrary
                             nonce.CopyTo(SendBuf, 0);
                             SendBuf[8] = (byte)Messages.FileReceive;
                             SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
-                            ClipboardSocket.Send(SendBuf, 0, SendBuf.Length, 0);
+                            ClipboardSocket.Send(SendBuf);
                             #endregion
 
                             // Create a filestream to hold the data
@@ -1430,7 +1433,11 @@ namespace KnightElfLibrary
                                 UnwrappedBuf = UnwrapPacket(ReadBuf, CurrentPacketSize + 40, false, out RecvNonce);
                                 // Malformed packet: abort
                                 if (UnwrappedBuf == null)
-                                { return; }
+                                {
+                                    Console.WriteLine("Found malformed packet when processing received clipboard!");
+                                    Debug.WriteLine("Found malformed packet when processing received clipboard!");
+                                    return;
+                                }
                                 Tmp.Write(UnwrappedBuf, 0, UnwrappedBuf.Length);
                             }
                             #endregion
@@ -1504,6 +1511,7 @@ namespace KnightElfLibrary
                             // File.Delete(ClipboardFile)
                             #endregion
                         }
+                        Console.WriteLine("Clipboard received.");
                     }
                     #endregion
                 }
