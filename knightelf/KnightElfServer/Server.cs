@@ -538,6 +538,7 @@ namespace KnightElfServer
                         // Estraggo il messaggio
                         MemoryS.Seek(0, SeekOrigin.Begin);
                         ReceivedMessage = (InputMessage)Formatter.Deserialize(MemoryS);
+                        //TODO: check why gives an exception when trying to close connection
                         #endregion
 
                         // Prepare residuous keys
@@ -554,6 +555,10 @@ namespace KnightElfServer
                         CurrentClient.DataListenerSocket.Close();
                         CurrentClient.DataSocket.Close();
                         return;
+                    }
+                    catch (SerializationException)
+                    {
+                        continue;
                     }
                     #endregion
                 }
