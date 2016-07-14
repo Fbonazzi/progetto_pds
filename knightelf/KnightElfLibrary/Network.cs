@@ -1099,11 +1099,19 @@ namespace KnightElfLibrary
                                 ReceivedBytes = 0;
                                 // There must be at least 51 bytes in the buffer (40 + 8 + 1 + 2)
                                 //Look for two zero bytes in the newly received ones
-                                for (int k = 49; k < PacketSize - 1; k += 2)
+                                //for (int k = 49; k < PacketSize - 1; k += 2)
+                                //{
+                                //    if (RecvBuf[k] == 0 && RecvBuf[k + 1] == 0)
+                                //    {
+                                //        ReceivedBytes = k + 2;
+                                //        break;
+                                //    }
+                                //}
+                                for (int k = 49; k < PacketSize; k++)
                                 {
-                                    if (RecvBuf[k] == 0 && RecvBuf[k + 1] == 0)
+                                    if (RecvBuf[k] == 0)
                                     {
-                                        ReceivedBytes = k + 2;
+                                        ReceivedBytes = k + 1;
                                         break;
                                     }
                                 }
@@ -1131,7 +1139,7 @@ namespace KnightElfLibrary
                                 // Save the nonce
                                 Array.Copy(RecvBuf, 0, nonce, 0, 8);
                                 // Save the file name
-                                string FileName = Encoding.Default.GetString(RecvBuf, 9, RecvBuf.Length - 9);
+                                string FileName = Encoding.Default.GetString(RecvBuf, 9, RecvBuf.Length - 10);
 
                                 Console.WriteLine("Receiving " + FileName + "...");
                                 if (Type == TransferType.FileDropFile)
