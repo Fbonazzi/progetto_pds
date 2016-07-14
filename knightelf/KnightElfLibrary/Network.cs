@@ -1010,6 +1010,7 @@ namespace KnightElfLibrary
             ClipboardListener.Start();
             // Wait for a socket connection from the client
             this.ClipboardSocket = ClipboardListener.AcceptSocket();
+            ClipboardListener.Stop();
             // ClipboardStream = new BidirectionalCryptoStream(ClipboardSocket, this.ClipboardKey);
             ClipboardStream = new NetworkStream(this.ClipboardSocket);
         }
