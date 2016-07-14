@@ -59,7 +59,7 @@ namespace KnightElfServer
         ~Server()
         {
             ClearPartialKeys();
-            Injector.Abort();
+            InputQueue.ClearAndClose();
         }
 
         /// <summary>
@@ -573,20 +573,6 @@ namespace KnightElfServer
                 CurrentClient.DataSocket.Close();
                 // Terminate
             }
-        }
-
-        private void Close()
-        {
-            // TODO: adapt
-            CurrentClient.IntentionallyClosing = true;
-            // Chiamo la chiusura forzata
-            // ChiusuraForzataMaster();
-
-            if (Injector != null)
-                Injector.Abort();
-
-            // Necessario per uccidere il main thread
-            // Application.ExitThread(); // Change to WPF version
         }
 
         #region Partial keys
