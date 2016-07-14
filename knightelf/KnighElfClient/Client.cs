@@ -295,9 +295,15 @@ namespace KnightElfClient
                         {
                             Monitor.Pulse(CurrentServer.ClipboardLock);
                         }
-                        // Wait for other threads
-                        CurrentServer.ClipboardHandler.Join();
-                        CurrentServer.DataHandler.Join();
+                        // Empty the input queue and signal the DataHandler to terminate
+                        // InputQueue.ClearAndClose();
+                        //// Wait for other threads
+                        //lock (CurrentServer.ClipboardLock)
+                        //{
+                        //    Monitor.Wait(CurrentServer.ClipboardLock);
+                        //}
+                        //CurrentServer.ClipboardHandler.Join();
+                        //CurrentServer.DataHandler.Join();
                         // TODO: Close sockets?
 
                         // We're done here
@@ -608,6 +614,8 @@ namespace KnightElfClient
                                 break;
                             default:
                                 Console.WriteLine("Wtf is this state I don't even");
+                                // Notify ConnectionHandler we are done
+                                Monitor.Pulse(CurrentServer.ClipboardLock);
                                 return;
 
                         }
