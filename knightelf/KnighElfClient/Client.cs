@@ -939,7 +939,7 @@ namespace KnightElfClient
                 // Create object
                 InputMessage.INPUT[] payload = new InputMessage.INPUT[1];
                 payload[0].type = InputMessage.InputType.Keyboard;
-                payload[0].ki.wVk = (ushort)KeyInterop.VirtualKeyFromKey(vkCode);
+                payload[0].ki.wVk = (ushort)wParam;
 
                 // Down and Up Events
                 if (flag == 0)
@@ -958,6 +958,7 @@ namespace KnightElfClient
                 #endregion
             }
 
+            // Don't pass the key over if we are running
             lock (ConnectionLock)
             {
                 if (ConnectionState == State.Running)
