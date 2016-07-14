@@ -45,7 +45,7 @@ namespace KnightElfServer
             SetConnectionCommand = SM.CreateCommand(SMTriggers.SetConnection);
             ConnectCommand = SM.CreateCommand(SMTriggers.Connect);
             IntWaitCommand = SM.CreateCommand(SMTriggers.IntWaitClient);
-            DisconnectCommand = SM.CreateCommand(SMTriggers.Disconnect);
+            DisconnectCommand = SM.CreateCommand(SMTriggers.Disconnect); //TODO: not supported, maybe remove
         }
 
         #region State Machine

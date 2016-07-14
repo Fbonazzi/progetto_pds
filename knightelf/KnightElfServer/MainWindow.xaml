@@ -8,7 +8,7 @@
         xmlns:KnightElfWPFLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
         x:Class="KnightElfServer.MainWindow"
         mc:Ignorable="d"
-        Title="KnightElf ServerApp" Height="350" Width="525">
+        Title="KnightElf ServerApp" Height="350" Width="525" Visibility="Hidden" WindowStartupLocation="CenterScreen">
     <Window.Icon>
         <Binding Path="SM.State" Converter="{StaticResource StateToAppIconConverter}"/>
     </Window.Icon>
