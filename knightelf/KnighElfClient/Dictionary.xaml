@@ -8,25 +8,31 @@
     
     <DataTemplate x:Key="ServerTemplate">
         <StackPanel Orientation="Horizontal">
-            <ContentPresenter>
+            <ContentPresenter Margin="5">
                 <ContentPresenter.ContentTemplate>
                     <Binding Path="State" Converter="{StaticResource StateToIconConverter}" Mode="OneWay"/>
                 </ContentPresenter.ContentTemplate>
             </ContentPresenter>
-            <Grid ClipToBounds="True">
+            <Grid ClipToBounds="True" Margin="5,3,3,3">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
-                    <RowDefinition/>
                 </Grid.RowDefinitions>
-
-                <Label Content="{Binding ConnectionParams.IPaddr}" />
-                <Label Grid.Row="1" Content="{Binding ConnectionParams.Port}" />
-                <Label Grid.Row="2" Content="{Binding State}" />
-                <!-- TODO: remove.. is for debug purpose -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,2,2,2">
+                    <Label Content="{Binding Name}" Padding="0" Margin="0,0,10,0" FontWeight="Bold"/>
+                    <Label Content="(" Padding="1,0"/><Label Content="{Binding State}" Padding="0"/>
+                    <Label Content=")" Padding="1,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10,0,0,0">
+                    <Label Content="IP: " Padding="0,0,2,0" FontStyle="Italic"/>
+                    <Label Content="{Binding ConnectionParams.IPaddr}" Padding="0" MinWidth="100" />
+                    <Label Content="Port: " Padding="10,0,2,0" FontStyle="Italic"/>
+                    <Label Content="{Binding ConnectionParams.Port}" Padding="0"/>
+                </StackPanel>
+                
 
                 <!-- TODO: not working at the moment. Commands do not execute at all. -->
-                <Grid.InputBindings>
+                <!--<Grid.InputBindings>
                     <MouseBinding Gesture="LeftDoubleClick"
                                                       Command="{Binding ConnectCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
                 </Grid.InputBindings>
@@ -40,7 +46,7 @@
                         <MenuItem Header="Edit" Command="{Binding EditCommand}"/>
                         <MenuItem Header="Remove" Command="{Binding RemoveCommand}"/>
                     </ContextMenu>
-                </Grid.ContextMenu>
+                </Grid.ContextMenu>-->
             </Grid>
         </StackPanel>
     </DataTemplate>

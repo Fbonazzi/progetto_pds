@@ -75,14 +75,13 @@ namespace KnightElfClient
             ServerList.Add(new Server(new ConnectionParams() {
                 IPaddr = IPAddress.Parse("169.254.117.114"),
                 Port = 50000,
-                Password = "00000" }));
+                Password = "00000" }, "Computer Filippo"));
 
             ServerList.Add(new Server(new ConnectionParams()
             {
                 IPaddr = IPAddress.Parse("169.254.22.246"),
                 Port = 50000,
-                Password = "00000"
-            }));
+                Password = "00000" }, "Computer Lucia"));
         }
 
         #region Commands
