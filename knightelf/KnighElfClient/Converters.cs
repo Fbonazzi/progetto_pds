@@ -47,4 +47,24 @@ namespace KnightElfClient
             throw new NotSupportedException();
         }
     }
+
+    [ValueConversion(typeof(SMStates), typeof(String))]
+    public class StateToCursorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            switch ((SMStates)value)
+            {
+                case SMStates.WorkingRemote:
+                    return "None";
+                default:
+                    return "Arrow";
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
 }

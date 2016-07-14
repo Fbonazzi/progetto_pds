@@ -16,8 +16,11 @@
         <CommandBinding Command="{x:Static SystemCommands.CloseWindowCommand}" Executed="CommandBinding_CloseExecuted" />
         <CommandBinding Command="{x:Static SystemCommands.MinimizeWindowCommand}" Executed="CommandBinding_MinimizeExecuted" />
     </Window.CommandBindings>
+    <Window.Cursor>
+        <Binding Path="SM.State" Converter="{StaticResource StateToCursorConverter}"/>
+    </Window.Cursor>
 
-    <Grid>
+<Grid>
         <DockPanel x:Name="dockPanel" Margin="0">
             <DockPanel DockPanel.Dock="Top" MinHeight="25"
                        Background = "{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"
