@@ -52,11 +52,11 @@ namespace KnightElfClient
             // TODO
         }
 
-        // ~Client()
-        // {
-            // RemoveLocalMouseHook();
-            // RemoveLocalKeyboardHook();
-        // }
+        ~Client()
+        {
+            RemoveLocalMouseHook();
+            RemoveLocalKeyboardHook();
+        }
 
         /// <summary>
         /// Connect to a server and start sending events
