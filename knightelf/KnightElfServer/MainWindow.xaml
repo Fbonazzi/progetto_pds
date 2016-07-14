@@ -73,10 +73,11 @@
 
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="3*"/>
                 </Grid.ColumnDefinitions>
                 
+                <!-- Clipboard Content -->                    
                 <GroupBox Header="Clipboard content" Grid.Column="1" Margin="16.8,54,10.4,9.8" FontSize="10" BorderThickness="0">
                     <Border BorderThickness="1" BorderBrush="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="10,10,3.6,3">
                         <ScrollViewer>
@@ -84,16 +85,16 @@
                         </ScrollViewer>
                     </Border>
                 </GroupBox>
-                <Expander IsExpanded="True" ExpandDirection="Left">
-                    <!-- TODO: meh.. fa un po' cagare l'expander -->
-                        <GroupBox Margin="10,54,3.2,9.8" Header="Log console" BorderThickness="0" FontSize="10">
-                        <Border BorderThickness="1" BorderBrush="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="10,10,-2.8,3">
-                            <ScrollViewer MinWidth="150">
-                                <TextBox x:Name="tbLogger" Background="Black" Foreground="White" TextWrapping="Wrap"/>
-                            </ScrollViewer>
-                        </Border>
-                    </GroupBox>
-                </Expander>
+                
+                <!-- Log Console -->
+                <GroupBox Margin="10,54,3.2,9.8" Header="Log console" BorderThickness="0" FontSize="10">
+                    <Border BorderThickness="1" BorderBrush="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="10,10,-2.8,3">
+                        <ScrollViewer MinWidth="150">
+                            <TextBox x:Name="tbLogger" Background="Black" Foreground="White" TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </Border>
+                </GroupBox>
+
             </Grid>
 
         </DockPanel>
