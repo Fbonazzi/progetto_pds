@@ -1060,6 +1060,7 @@ namespace KnightElfLibrary
                     #endregion
                     if (message != null)
                     {
+                        #region RECEIVE_CLIPBOARD_RECEIVED_TYPE_SIZE
                         Type = (TransferType)message[16];
                         // If the message is valid
                         if (Type == TransferType.FileDrop)
@@ -1512,6 +1513,19 @@ namespace KnightElfLibrary
                             #endregion
                         }
                         Console.WriteLine("Clipboard received.");
+                        #endregion
+                    }
+                    else
+                    {
+                        #region RECEIVE_CLIPBOARD_NACK_TYPE_SIZE
+                        byte[] nonce = new byte[8];
+                        Array.Copy(message, 8, nonce, 0, 8);
+                        SendBuf = new byte[9];
+                        nonce.CopyTo(SendBuf, 0);
+                        SendBuf[8] = (byte)Messages.Invalid;
+                        SendBuf = WrapPacket(SendBuf, SendBuf.Length, true, null);
+                        ClipboardSocket.Send(SendBuf);
+                        #endregion
                     }
                     #endregion
                 }
