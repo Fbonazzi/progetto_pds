@@ -335,32 +335,31 @@ namespace KnightElfClient
                             Console.WriteLine("Network error, connection closed.");
                             CurrentServer.CurrentState = State.Crashed;
                             CurrentServer.PublicState = CurrentServer.CurrentState;
-
-                            // TODO: Signal crash?
                         }
-                        Console.WriteLine("Suspended.");
 
                         // Notify ClipboardHandler of suspension, must e.g. copy across
                         lock (CurrentServer.ClipboardLock)
                         {
                             Monitor.Pulse(CurrentServer.ClipboardLock);
-                        }
-                        // TODO: this lock below was inside the one above: check that moving it does not break anything
-                        lock (CurrentServer.StateLock)
-                        {
-                            // TODO: this can happen??
-                            if (CurrentServer.CurrentState == State.Crashed)
+
+                            // TODO: this lock below was inside the one above: check that moving it does not break anything
+                            lock (CurrentServer.StateLock)
                             {
-                                Console.WriteLine("Clipboard failed, aborting...");
-                                // Kill the DataHandler and return
-                                CurrentServer.DataHandler.Abort();
-                                // Wait for threads etc
-                                CurrentServer.ClipboardHandler.Join();
-                                CurrentServer.DataHandler.Join();
-                                // TODO: close sockets?
-                                return;
+                                // TODO: this can happen??
+                                if (CurrentServer.CurrentState == State.Crashed)
+                                {
+                                    Console.WriteLine("Clipboard failed, aborting...");
+                                    // Kill the DataHandler and return
+                                    CurrentServer.DataHandler.Abort();
+                                    // Wait for threads etc
+                                    CurrentServer.ClipboardHandler.Join();
+                                    // CurrentServer.DataHandler.Join();
+                                    // TODO: close sockets?
+                                    return;
+                                }
                             }
                         }
+                        Console.WriteLine("Suspended.");
 
                         // Give back control to client and wait
                         lock (CurrentServer.RunningLock)

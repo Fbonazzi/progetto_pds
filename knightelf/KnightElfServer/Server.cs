@@ -59,7 +59,7 @@ namespace KnightElfServer
         ~Server()
         {
             ClearPartialKeys();
-            Injector.Abort();
+            InputQueue.ClearAndClose();
         }
 
         /// <summary>
@@ -309,17 +309,14 @@ namespace KnightElfServer
         private void Inject()
         {
             InputMessage m;
-            try
+            while (true)
             {
-                while (true)
-                {
-                    m = InputQueue.get();
-                    NativeMethod.SendInput(1, m.payload, Marshal.SizeOf(m.payload[0]));
-                }
-            }
-            catch (ThreadAbortException)
-            {
-                return;
+                m = InputQueue.get();
+
+                // Handle different states
+                if (m.CurrentConnectionState == State.Closed)
+                    return;
+                NativeMethod.SendInput(1, m.payload, Marshal.SizeOf(m.payload[0]));
             }
         }
 
@@ -578,20 +575,6 @@ namespace KnightElfServer
             }
         }
 
-        private void Close()
-        {
-            // TODO: adapt
-            CurrentClient.IntentionallyClosing = true;
-            // Chiamo la chiusura forzata
-            // ChiusuraForzataMaster();
-
-            if (Injector != null)
-                Injector.Abort();
-
-            // Necessario per uccidere il main thread
-            // Application.ExitThread(); // Change to WPF version
-        }
-
         #region Partial keys
         private void ClearPartialKeys()
         {
@@ -600,7 +583,7 @@ namespace KnightElfServer
                 InputMessage.INPUT[] i = new InputMessage.INPUT[1];
                 i[0].type = InputMessage.InputType.Keyboard;
 
-                i[0].ki.wVk = (ushort)v;
+                i[0].ki.wVk = (ushort)KeyInterop.VirtualKeyFromKey(v);
 
                 i[0].ki.dwFlags = (uint)KeyboardMessages.KEYEVENTF_KEYUP;
 
@@ -667,11 +650,11 @@ namespace KnightElfServer
                 {
                     case (uint)KeyboardMessages.KEYEVENTF_KEYDOWN:
                         // If connection drops, it will be necessary to perform a KeyUp event
-                        KeyboardResidues.Add(KeyInterop.KeyFromVirtualKey((int)ReceivedMessage.payload[0].ki.wVk));
+                        KeyboardResidues.Add(KeyInterop.KeyFromVirtualKey(ReceivedMessage.payload[0].ki.wVk));
                         break;
                     case (uint)KeyboardMessages.KEYEVENTF_KEYUP:
                         // It's not necessary to complete the previous KeyDown Event anymore
-                        KeyboardResidues.Remove(KeyInterop.KeyFromVirtualKey((int)ReceivedMessage.payload[0].ki.wVk));
+                        KeyboardResidues.Remove(KeyInterop.KeyFromVirtualKey(ReceivedMessage.payload[0].ki.wVk));
                         break;
                 }
                 #endregion
