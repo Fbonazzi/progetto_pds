@@ -255,7 +255,7 @@ namespace KnightElfServer
                         // Kill the data handler
                         CurrentClient.DataHandler.Abort();
                         // Wait for the clipboard handler
-                        // CurrentClient.ClipboardHandler.Join();
+                        CurrentClient.ClipboardHandler.Join();
                         CurrentClient.DataHandler.Join();
                         Console.WriteLine("Connection closed.");
                         // Close sockets
