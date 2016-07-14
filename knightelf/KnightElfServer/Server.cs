@@ -59,6 +59,7 @@ namespace KnightElfServer
         ~Server()
         {
             ClearPartialKeys();
+            Injector.Abort();
         }
 
         /// <summary>
@@ -308,11 +309,17 @@ namespace KnightElfServer
         private void Inject()
         {
             InputMessage m;
-
-            while (true)
+            try
             {
-                m = InputQueue.get();
-                NativeMethod.SendInput(1, m.payload, Marshal.SizeOf(m.payload[0]));
+                while (true)
+                {
+                    m = InputQueue.get();
+                    NativeMethod.SendInput(1, m.payload, Marshal.SizeOf(m.payload[0]));
+                }
+            }
+            catch (ThreadAbortException)
+            {
+                return;
             }
         }
 
