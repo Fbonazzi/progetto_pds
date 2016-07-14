@@ -17,6 +17,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using KnightElfLibrary;
 using System.IO;
+using System.ComponentModel;
 
 namespace KnightElfServer
 {
@@ -40,6 +41,11 @@ namespace KnightElfServer
             viewModel = new ViewModel();
             viewModel.ServerInstance = new Server(); 
             DataContext = viewModel;
+        }
+
+        public void SubscribeToSMStateChanges(PropertyChangedEventHandler handler)
+        {
+            viewModel.SM.PropertyChanged += handler;
         }
     }
 }

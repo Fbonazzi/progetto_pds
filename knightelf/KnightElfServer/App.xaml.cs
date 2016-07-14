@@ -24,6 +24,7 @@ namespace KnightElfServer
             base.OnStartup(e);
             MainWindow = new MainWindow();
             MainWindow.Closing += MainWindow_Closing;
+            ((KnightElfServer.MainWindow)MainWindow).SubscribeToSMStateChanges(new PropertyChangedEventHandler(ChangeIcon));
 
             _notifyIcon = new System.Windows.Forms.NotifyIcon();
             _notifyIcon.DoubleClick += (s, args) => ShowMainWindow();
@@ -70,6 +71,23 @@ namespace KnightElfServer
             {
                 e.Cancel = true;
                 MainWindow.Hide(); // A hidden window can be shown again, a closed one not
+            }
+        }
+
+        private void ChangeIcon(object sender, PropertyChangedEventArgs e)
+        {
+            StateMachine sm = sender as StateMachine;
+            switch (sm.State)
+            {
+                case SMStates.Running:
+                    _notifyIcon.Icon = Icon.FromHandle(KnightElfServer.Properties.Resources.knight_green_transparent.GetHicon());
+                    break;
+                case SMStates.Paused:
+                    _notifyIcon.Icon = Icon.FromHandle(KnightElfServer.Properties.Resources.knight_yellow_transparent.GetHicon());
+                    break;
+                default:
+                    _notifyIcon.Icon = Icon.FromHandle(KnightElfServer.Properties.Resources.knight_red_transparent.GetHicon());
+                    break;
             }
         }
     }

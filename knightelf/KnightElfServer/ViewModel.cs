@@ -107,7 +107,7 @@ namespace KnightElfServer
         /// <param name="sender">The sender.</param>
         /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         /// <exception cref="InvalidEnumArgumentException">Transitioned to unknown client state.</exception>
-        public void OnServerStateChanged(object sender, PropertyChangedEventArgs e) { //TODO: change to private if not called anyway
+        private void OnServerStateChanged(object sender, PropertyChangedEventArgs e) { //TODO: change to private if not called anyway
             if(e.PropertyName == "PublicState")
             {
                 RemoteClient rc = sender as RemoteClient;

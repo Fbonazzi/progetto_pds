@@ -7,7 +7,8 @@
         xmlns:KnightElfLibrary="clr-namespace:KnightElfLibrary;assembly=KnightElfLibrary" x:Class="KnightElfServer.ConnectionSettingsDialog"
         xmlns:KnightElfWpfLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
         mc:Ignorable="d"
-        Title="Connection Settings" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+        Title="Connection Settings" Icon="{DynamicResource KnightRed}"
+        SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
 
     <Window.Resources>
         <ResourceDictionary>
@@ -19,7 +20,7 @@
     <Window.DataContext>
         <KnightElfLibrary:ConnectionParams/>
     </Window.DataContext>
-    
+
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
