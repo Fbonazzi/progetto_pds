@@ -6,42 +6,53 @@
         xmlns:local="clr-namespace:KnightElfClient"
         xmlns:KnightElfWPFLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500" Width="800" ResizeMode="CanMinimize" WindowState="Maximized">
+        Title="MainWindow"  WindowStyle="None" ResizeMode="CanMinimize" WindowState="Maximized">
 
     <Window.DataContext>
         <local:ViewModel/>
     </Window.DataContext>
 
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static SystemCommands.CloseWindowCommand}" Executed="CommandBinding_CloseExecuted" />
+        <CommandBinding Command="{x:Static SystemCommands.MinimizeWindowCommand}" Executed="CommandBinding_MinimizeExecuted" />
+    </Window.CommandBindings>
+
     <Grid>
         <DockPanel x:Name="dockPanel" Margin="0">
-            <ToolBarPanel DockPanel.Dock="Top" MinHeight="25"
-                          Orientation="Horizontal"
-                          Background = "{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
-                <Button x:Name="btnAdd" Style="{StaticResource IconBtnStyle}"
-                        Content="{StaticResource AddIcon}"
-                        Command="{Binding AddCommand}"/>
-                <Button x:Name="btnRemove" Style="{StaticResource IconBtnStyle}"
-                        Content="{StaticResource RemoveIcon}"
-                        Command="{Binding RemoveCommand}"/>
-                <Button x:Name="btnEdit" Style="{StaticResource IconBtnStyle}"
-                        Content="{StaticResource EditIcon}"
-                        Command="{Binding EditCommand}"/>
-                <!-- TODO: remove, this is only for debug purpose-->
-                <Button x:Name="btnConnect" Style="{StaticResource IconBtnStyle}"
-                        Content="{StaticResource ConnectIcon}"
-                        Command="{Binding ConnectCommand}"/>
-                <Button x:Name="btnDisconnect" Style="{StaticResource IconBtnStyle}"
-                        Content="{StaticResource DisconnectIcon}"
-                        Command="{Binding DisconnectCommand}"/>
+            <DockPanel DockPanel.Dock="Top" MinHeight="25"
+                       Background = "{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"
+                       LastChildFill="False">
+                <StackPanel Orientation="Horizontal"
+                                DockPanel.Dock="Left">
+                    <Button x:Name="btnAdd" Style="{StaticResource IconBtnStyle}"
+                                Content="{StaticResource AddIcon}"
+                                Command="{Binding AddCommand}"/>
+                    <Button x:Name="btnRemove" Style="{StaticResource IconBtnStyle}"
+                                Content="{StaticResource RemoveIcon}"
+                                Command="{Binding RemoveCommand}"/>
+                    <Button x:Name="btnEdit" Style="{StaticResource IconBtnStyle}"
+                                Content="{StaticResource EditIcon}"
+                                Command="{Binding EditCommand}"/>
+                    <!-- TODO: remove, this is only for debug purpose-->
+                    <Button x:Name="btnConnect" Style="{StaticResource IconBtnStyle}"
+                                Content="{StaticResource ConnectIcon}"
+                                Command="{Binding ConnectCommand}"/>
+                    <Button x:Name="btnDisconnect" Style="{StaticResource IconBtnStyle}"
+                                Content="{StaticResource DisconnectIcon}"
+                                Command="{Binding DisconnectCommand}"/>
+                </StackPanel>
                 <!-- Custom windows buttons -->
-                <!--<Button x:Name="btnMin" Style="{StaticResource IconBtnStyle}"
-                        Content="{StaticResource AddIcon}"
-                        Command="ApplicationCommands.Close"/>
-                <Button x:Name="btnClose" Style="{StaticResource IconBtnStyle}"
-                        Content="{StaticResource RemoveIcon}"
-                        Command="ApplicationCommands.Close"/>-->
-            </ToolBarPanel>
-
+                <StackPanel Orientation="Horizontal"
+                                DockPanel.Dock="Right">
+                    <Button x:Name="btnMin" Style="{StaticResource IconBtnStyle}"
+                            Content="{StaticResource MinimizeIcon}"
+                            Command="{x:Static SystemCommands.MinimizeWindowCommand}"/>
+                    <Button x:Name="btnClose" Style="{StaticResource IconBtnStyle}"
+                            Content="{StaticResource CloseIcon}"
+                            Command="{x:Static SystemCommands.CloseWindowCommand}"/>
+                </StackPanel>
+            </DockPanel>
+            
             <StatusBar DockPanel.Dock="Bottom"
                        VerticalAlignment="Bottom"
                        Margin="0" Height="20"

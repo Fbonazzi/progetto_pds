@@ -37,5 +37,15 @@ namespace KnightElfClient
             _viewModel.ClientInstance = _client;
             DataContext = _viewModel;
         }
+
+        private void CommandBinding_MinimizeExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            SystemCommands.MinimizeWindow(this);
+        }
+
+        private void CommandBinding_CloseExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            SystemCommands.CloseWindow(this);
+        }
     }
 }
