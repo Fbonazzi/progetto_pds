@@ -1503,56 +1503,64 @@ namespace KnightElfLibrary
                                 {
                                     case TransferType.Audio:
                                         #region RECEIVE_CLIPBOARD_AUDIO
-                                        dobj.SetAudio(Tmp);
+                                        // dobj.SetAudio(Tmp);
+                                        dobj.SetData(DataFormats.WaveAudio, Tmp);
                                         #endregion
                                         break;
                                     case TransferType.Bitmap:
                                         #region RECEIVE_CLIPBOARD_BITMAP
                                         BitmapDecoder decoder = new BmpBitmapDecoder(Tmp, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
                                         BitmapSource Image = decoder.Frames[0];
-                                        dobj.SetImage(Image);
+                                        // dobj.SetImage(Image);
+                                        dobj.SetData(DataFormats.Bitmap, Image);
                                         #endregion
                                         break;
                                     case TransferType.Csv:
                                         #region RECEIVE_CLIPBOARD_CSV
                                         byte[] TextCsv = new byte[Tmp.Length];
                                         Tmp.Read(TextCsv, 0, (int)Tmp.Length);
-                                        dobj.SetText(Encoding.Default.GetString(TextCsv), TextDataFormat.CommaSeparatedValue);
+                                        // dobj.SetText(Encoding.Default.GetString(TextCsv), TextDataFormat.CommaSeparatedValue);
+                                        dobj.SetData(DataFormats.CommaSeparatedValue, Encoding.Default.GetString(TextCsv));
                                         #endregion
                                         break;
                                     case TransferType.Html:
                                         #region RECEIVE_CLIPBOARD_HTML
                                         byte[] TextHtml = new byte[Tmp.Length];
                                         Tmp.Read(TextHtml, 0, (int)Tmp.Length);
-                                        dobj.SetText(Encoding.Default.GetString(TextHtml), TextDataFormat.Html);
+                                        // dobj.SetText(Encoding.Default.GetString(TextHtml), TextDataFormat.Html);
+                                        dobj.SetData(DataFormats.Html, Encoding.Default.GetString(TextHtml));
                                         #endregion
                                         break;
                                     case TransferType.Rtf:
                                         #region RECEIVE_CLIPBOARD_RTF
                                         byte[] TextRtf = new byte[Tmp.Length];
                                         Tmp.Read(TextRtf, 0, (int)Tmp.Length);
-                                        Clipboard.SetText(Encoding.Default.GetString(TextRtf), TextDataFormat.Rtf);
+                                        // dobj.SetText(Encoding.Default.GetString(TextRtf), TextDataFormat.Rtf);
+                                        dobj.SetData(DataFormats.Rtf, Encoding.Default.GetString(TextRtf));
                                         #endregion
                                         break;
                                     case TransferType.UnicodeText:
                                         #region RECEIVE_CLIPBOARD_UNICODE
                                         byte[] TextUnicode = new byte[Tmp.Length];
                                         Tmp.Read(TextUnicode, 0, (int)Tmp.Length);
-                                        dobj.SetText(Encoding.Default.GetString(TextUnicode), TextDataFormat.UnicodeText);
+                                        // dobj.SetText(Encoding.Default.GetString(TextUnicode), TextDataFormat.UnicodeText);
+                                        dobj.SetData(DataFormats.UnicodeText, Encoding.Default.GetString(TextUnicode));
                                         #endregion
                                         break;
                                     case TransferType.Xaml:
                                         #region RECEIVE_CLIPBOARD_XAML
                                         byte[] TextXaml = new byte[Tmp.Length];
                                         Tmp.Read(TextXaml, 0, (int)Tmp.Length);
-                                        dobj.SetText(Encoding.Default.GetString(TextXaml), TextDataFormat.Xaml);
+                                        // dobj.SetText(Encoding.Default.GetString(TextXaml), TextDataFormat.Xaml);
+                                        dobj.SetData(DataFormats.Xaml, Encoding.Default.GetString(TextXaml));
                                         #endregion
                                         break;
                                     case TransferType.Text:
                                         #region RECEIVE_CLIPBOARD_TEXT
                                         byte[] Text = new byte[Tmp.Length];
                                         Tmp.Read(Text, 0, (int)Tmp.Length);
-                                        dobj.SetText(Encoding.Default.GetString(Text), TextDataFormat.Text);
+                                        // dobj.SetText(Encoding.Default.GetString(Text), TextDataFormat.Text);
+                                        dobj.SetData(DataFormats.Text, Encoding.Default.GetString(Text));
                                         #endregion
                                         break;
                                 }
