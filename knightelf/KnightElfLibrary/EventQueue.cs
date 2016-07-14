@@ -10,6 +10,7 @@ namespace KnightElfLibrary
     public class EventQueue
     {
         Queue<InputMessage> queue;
+        bool discard = false;
 
         public EventQueue()
         {
@@ -25,6 +26,8 @@ namespace KnightElfLibrary
         {
             lock (queue)
             {
+                if (discard)
+                    return;
                 // Add the item to the queue
                 queue.Enqueue(input);
                 // Notify possible getters
@@ -45,6 +48,30 @@ namespace KnightElfLibrary
                     // Wait for a Put to notify us
                     Monitor.Wait(queue);
                 }
+            }
+        }
+
+        public void Disable()
+        {
+            lock(queue)
+            {
+                discard = true;
+            }
+        }
+
+        public void Enable()
+        {
+            lock (queue)
+            {
+                discard = false;
+            }
+        }
+
+        public bool isEnabled()
+        {
+            lock(queue)
+            {
+                return !discard;
             }
         }
 
