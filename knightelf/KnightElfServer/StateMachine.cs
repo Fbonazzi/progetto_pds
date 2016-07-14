@@ -47,15 +47,17 @@ namespace KnightElfServer
             Configure(SMStates.WaitClientConnect)
                 .OnEntry(connectAction)
                 .Permit(SMTriggers.Run, SMStates.Running)
+                .Permit(SMTriggers.Disconnect, SMStates.Ready)
                 .Permit(SMTriggers.IntWaitClient, SMStates.Ready);
 
             Configure(SMStates.Running)
                 .Permit(SMTriggers.Disconnect, SMStates.Ready)
+                .Permit(SMTriggers.Pause, SMStates.Paused)
                 .OnExit(disconnectAction);
 
             Configure(SMStates.Paused)
                 .SubstateOf(SMStates.Running)
-                .Permit(SMTriggers.Connect, SMStates.Running)
+                .Permit(SMTriggers.Run, SMStates.Running)
                 .Permit(SMTriggers.Disconnect, SMStates.Ready);
 
             OnTransitioned (
