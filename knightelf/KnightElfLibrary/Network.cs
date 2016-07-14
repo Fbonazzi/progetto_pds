@@ -953,7 +953,6 @@ namespace KnightElfLibrary
         // Clipboard
         private string TempDirName;
         private string ClipboardFileName;
-        private int ClipboardUpdated;
 
         // Network
         //private BidirectionalCryptoStream ClipboardStream;
@@ -1381,7 +1380,6 @@ namespace KnightElfLibrary
                                 #endregion
                             }
 
-                            ClipboardUpdated = 2;
                             Clipboard.SetFileDropList(Files);
 
                             #endregion
@@ -1495,7 +1493,6 @@ namespace KnightElfLibrary
                                 #endregion
 
                                 Tmp.Seek(0, SeekOrigin.Begin);
-                                ClipboardUpdated = 2;
 
                                 #region DISPATCH_CLIPBOARD_CONTENT
                                 // Handle the various types of transfer
