@@ -1691,7 +1691,7 @@ namespace KnightElfLibrary
                                         Type = TransferType.FileDropFile;
                                         #region SEND_CLIPBOARD_NOTIFY_FILEDROP_FILE
                                         // Send FileDropFile type and File name
-                                        byte[] filename = Encoding.Default.GetBytes(Element + "\0");
+                                        byte[] filename = Encoding.Default.GetBytes(Path.GetFileName(Element) + "\0");
                                         SendBuf = new byte[PacketSize]; // 8 + 1 + filename.Length];
                                         nonce = GetNonceBytes();
                                         nonce.CopyTo(SendBuf, 0);
@@ -1739,7 +1739,8 @@ namespace KnightElfLibrary
                                         Type = TransferType.FileDropDir;
                                         #region SEND_CLIPBOARD_NOTIFY_FILEDROP_DIR
                                         // Send FileDropDir type and Dir name
-                                        byte[] filename = Encoding.Default.GetBytes(Element + "\0");
+                                        char[] trimSeparator = { '\\' };
+                                        byte[] filename = Encoding.Default.GetBytes(Path.GetFileName(Element.TrimEnd(trimSeparator)) + "\0");
                                         SendBuf = new byte[PacketSize];//8 + 1 + filename.Length];
                                         nonce = GetNonceBytes();
                                         nonce.CopyTo(SendBuf, 0);
