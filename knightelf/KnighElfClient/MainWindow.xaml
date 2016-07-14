@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:KnightElfClient"
         xmlns:KnightElfWPFLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
         mc:Ignorable="d"
-        Title="MainWindow"  WindowStyle="None" ResizeMode="CanMinimize" WindowState="Maximized">
+        Title="MainWindow"  WindowStyle="None" ResizeMode="CanMinimize" WindowState="Maximized" Icon="{StaticResource KnightBlack}">
 
     <Window.DataContext>
         <local:ViewModel/>

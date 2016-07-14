@@ -2,6 +2,10 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:KnightElfServer">
 
+    <BitmapImage x:Key="KnightRed" UriSource="/KnightElfServer;component/Resources/knight_red.png" />
+    <BitmapImage x:Key="KnightYellow" UriSource="/KnightElfServer;component/Resources/knight_yellow.png" />
+    <BitmapImage x:Key="KnightGreen" UriSource="/KnightElfServer;component/Resources/knight_green.png" />
+    
     <!-- Converters -->
     <local:StateToIconConverter x:Key="StateToIconConverter"/>
     <local:StateToIconTConverter x:Key="StateToIconTConverter"/>

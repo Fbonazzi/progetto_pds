@@ -34,6 +34,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -48,6 +49,9 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="UPasswordBox.xaml.cs">
+      <DependentUpon>UPasswordBox.xaml</DependentUpon>
+    </Compile>
     <Page Include="BindingsDictionary.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -61,6 +65,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Compile Include="Converters.cs" />
+    <Page Include="UPasswordBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -85,6 +93,18 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\knight_black.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\knight_green.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\knight_red.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\knight_yellow.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

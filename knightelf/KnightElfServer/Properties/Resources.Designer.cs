@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace KnightElfWpfControlLibrary.Properties {
+namespace KnightElfServer.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace KnightElfWpfControlLibrary.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("KnightElfWpfControlLibrary.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("KnightElfServer.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -57,16 +57,6 @@ namespace KnightElfWpfControlLibrary.Properties {
             }
             set {
                 resourceCulture = value;
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap knight_black {
-            get {
-                object obj = ResourceManager.GetObject("knight_black", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

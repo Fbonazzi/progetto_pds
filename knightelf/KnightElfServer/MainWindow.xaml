@@ -8,7 +8,7 @@
         xmlns:KnightElfWPFLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
         x:Class="KnightElfServer.MainWindow"
         mc:Ignorable="d"
-        Title="KnightElf ServerApp" Height="350" Width="525">
+        Title="KnightElf ServerApp" Height="350" Width="525" Icon="{StaticResource KnightRed}">
     
     <Window.Resources>
         <ResourceDictionary>
