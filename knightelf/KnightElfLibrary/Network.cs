@@ -568,7 +568,6 @@ namespace KnightElfLibrary
             this.IP = IP; // My local IP
             this.Port = Port; // My local port
             this.Password = Password;
-            // TODO: necessary? Or different when we listen?
             this.EndPoint = new IPEndPoint(IP, Port);
 
             this.ControlSocket = null;
@@ -628,14 +627,12 @@ namespace KnightElfLibrary
                     if (!IntentionallyClosing)
                     {
                         Console.WriteLine("Waiting aborted.");
-                        // TODO: close sockets?
                     }
                 }
                 else
                 {
                     // Network error
                     Console.WriteLine("Network error!");
-                    // TODO: close sockets?
                     ListenerSocket.Close();
                 }
                 throw e;
@@ -1816,7 +1813,7 @@ namespace KnightElfLibrary
                         size.CopyTo(SendBuf, 0);
                         byte[] nonce = GetNonceBytes();
                         nonce.CopyTo(SendBuf, 8);
-                        SendBuf[16] = (byte)TransferType.Text; // TODO: check that this value is not read, text just means "not filedrop"
+                        SendBuf[16] = (byte)TransferType.Text; // Text here just means "not filedrop"
                         TempBuf = WrapPacket(SendBuf, 17, true, null);
                         TempBuf.CopyTo(SendBuf, 0);
                         ClipboardStream.Write(SendBuf, 0, SendBuf.Length);
@@ -1917,12 +1914,6 @@ namespace KnightElfLibrary
                 }
                 #endregion
             }
-        }
-
-        public void Close()
-        {
-            // TODO: implement
-            // Close all sockets and threads? how?
         }
 
         /// <summary>

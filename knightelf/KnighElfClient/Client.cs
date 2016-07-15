@@ -17,7 +17,7 @@ namespace KnightElfClient
 {
     class Client
     {
-        public RemoteServer CurrentServer { get/* TODO: add a lock to protect it while reading*/; private set; }
+        public RemoteServer CurrentServer { get; private set; }
         private State ConnectionState;
         private readonly object ConnectionLock = new object();
         // Temporary directory
@@ -48,8 +48,6 @@ namespace KnightElfClient
             // // Enable mouse and keyboard hooks
             // SetLocalMouseHook();
             // SetLocalKeyboardHook();
-
-            // TODO
         }
 
         ~Client()
@@ -175,7 +173,7 @@ namespace KnightElfClient
             CurrentServer.CurrentState = State.Running;
             CurrentServer.PublicState = CurrentServer.CurrentState;
 
-            // TODO: Hide mouse, etc
+            // Hide mouse, etc
             Mouse.OverrideCursor = Cursors.None;
 
             #region START_DATA
@@ -198,8 +196,6 @@ namespace KnightElfClient
                     // Dispose of resources and return
                     CurrentServer.DataSocket.Close();
                     CurrentServer.ControlSocket.Close();
-
-                    // TODO: notify that we crashed?
                     return;
                 }
             }
@@ -227,8 +223,6 @@ namespace KnightElfClient
                     // Dispose of resources and return
                     CurrentServer.DataSocket.Close();
                     CurrentServer.ControlSocket.Close();
-
-                    // TODO: notify that we crashed?
                     return;
                 }
             }
@@ -287,7 +281,7 @@ namespace KnightElfClient
                         }
                         // If we intentionally disconnected or crashed
 
-                        // TODO: Show mouse again etc.
+                        // Show mouse again etc.
                         Mouse.OverrideCursor = Cursors.Arrow;
 
                         // Notify ClipboardHandler of termination
@@ -297,22 +291,12 @@ namespace KnightElfClient
                         }
                         // Empty the input queue and signal the DataHandler to terminate
                         // InputQueue.ClearAndClose();
-                        //// Wait for other threads
-                        //lock (CurrentServer.ClipboardLock)
-                        //{
-                        //    Monitor.Wait(CurrentServer.ClipboardLock);
-                        //}
-                        //CurrentServer.ClipboardHandler.Join();
-                        //CurrentServer.DataHandler.Join();
-                        // TODO: Close sockets?
-
                         // We're done here
                         return;
                     #endregion
                     #region SUSPENDED
                     case State.Suspended:
                         // The user is suspending the connection
-                        // TODO: lock state lock?
                         lock (CurrentServer.StateLock)
                         {
                             CurrentServer.CurrentState = State.Suspended;
@@ -327,7 +311,7 @@ namespace KnightElfClient
                             Console.WriteLine("Suspending connection...");
                             CurrentServer.Suspend();
 
-                            // TODO: show mouse etc
+                            // Show mouse etc
                             Mouse.OverrideCursor = Cursors.Arrow;
                         }
                         catch (SocketException)
@@ -341,11 +325,8 @@ namespace KnightElfClient
                         lock (CurrentServer.ClipboardLock)
                         {
                             Monitor.Pulse(CurrentServer.ClipboardLock);
-
-                            // TODO: this lock below was inside the one above: check that moving it does not break anything
                             lock (CurrentServer.StateLock)
                             {
-                                // TODO: this can happen??
                                 if (CurrentServer.CurrentState == State.Crashed)
                                 {
                                     Console.WriteLine("Clipboard failed, aborting...");
@@ -354,7 +335,6 @@ namespace KnightElfClient
                                     // Wait for threads etc
                                     CurrentServer.ClipboardHandler.Join();
                                     // CurrentServer.DataHandler.Join();
-                                    // TODO: close sockets?
                                     return;
                                 }
                             }
@@ -407,7 +387,7 @@ namespace KnightElfClient
                             Console.WriteLine("Resuming...");
                             CurrentServer.Resume();
 
-                            // TODO: Hide mouse etc.
+                            // Hide mouse etc.
                             Mouse.OverrideCursor = Cursors.None;
                         }
                         catch
@@ -428,10 +408,8 @@ namespace KnightElfClient
                         lock (CurrentServer.ClipboardLock)
                         {
                             Monitor.Pulse(CurrentServer.ClipboardLock);
-                            // TODO: move this lock outside the above lock?
                             lock (CurrentServer.StateLock)
                             {
-                                // TODO: Why would this happen??
                                 if (CurrentServer.CurrentState == State.Crashed)
                                 {
                                     Console.WriteLine("Clipboard crashed.");
@@ -688,7 +666,6 @@ namespace KnightElfClient
                         Formatter.Serialize(stream, msg);
                         byte[] SendBuf = stream.ToArray();
                         // TODO: add encryption, authentication
-
                         try
                         {
                             CurrentServer.DataSocket.Send(SendBuf, 0, SendBuf.Length, 0);
