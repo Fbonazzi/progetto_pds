@@ -75,7 +75,7 @@
             </StatusBar>
             
             <!-- Log Console -->
-            <GroupBox Margin="10,54,3.2,9.8" Header="Log console" BorderThickness="0" FontSize="10">
+            <GroupBox Margin="10" Header="Log console" BorderThickness="0" FontSize="10">
                 <Border BorderThickness="1" BorderBrush="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Margin="10,10,-2.8,3">
                     <ScrollViewer MinWidth="150">
                         <TextBox x:Name="tbLogger" Background="Black" Foreground="White" TextWrapping="Wrap"/>
