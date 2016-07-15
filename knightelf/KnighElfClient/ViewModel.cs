@@ -8,6 +8,7 @@ using KnightElfLibrary;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.ComponentModel;
+using System.Windows;
 
 namespace KnightElfClient
 {
@@ -135,10 +136,14 @@ namespace KnightElfClient
 
         private void RemoveServer()
         {
-            Disconnect(); //if it wasn't connected nothing happens
-            ServerList.Remove(SelectedServer);
-            Console.WriteLine("Server successfully removed.");
-
+            MessageBoxResult result = MessageBox.Show("Remove the selected remote server?",
+                    "KnightElf", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                Disconnect(); //if it wasn't connected nothing happens
+                ServerList.Remove(SelectedServer);
+                Console.WriteLine("Server successfully removed.");
+            }
             SM.Fire(SMTriggers.Removed);
         }
 
