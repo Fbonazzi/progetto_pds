@@ -36,7 +36,7 @@
         <WrapPanel Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Disabled" Orientation="Vertical">
             <Label Content="IP Address:" Target="{Binding ElementName=tbIPAddr}" HorizontalAlignment="Left" Width="71"/>
             <TextBox x:Name="tbIPAddr"
-                     Margin="0" MinWidth="150" MinHeight="20">
+                     Margin="0" MinWidth="150" MinHeight="20" ToolTip="The IP address of the remote server.">
                 <TextBox.Text>
                     <Binding Path="IPaddr" Converter="{StaticResource StringIPConverter}" Mode="TwoWay">
                         <!--UpdateSourceTrigger="PropertyChanged"-->
@@ -54,14 +54,14 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Content="Name:" Target="{Binding ElementName=tbName}"/>
-            <TextBox x:Name="tbName" ToolTip="This password will be required to client to connect to this server."
+            <TextBox x:Name="tbName" ToolTip="An optional name for the remote server."
                          MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20"/>
         </Grid>
         <WrapPanel Grid.Row="1" Grid.Column="1" Margin="15,0,0,0" Orientation="Vertical">
             <Label Content="Port:" Target="{Binding ElementName=tbPort}"/>
             <TextBox x:Name="tbPort"
                      TextAlignment="Right"
-                     Width="60" Height="20" MinWidth="40" Margin="0">
+                     Width="60" Height="20" MinWidth="40" Margin="0" ToolTip="The port on which the remote server is listening.">
                 <TextBox.Text>
                     <Binding Path="Port" Mode="TwoWay" >
                         <!--UpdateSourceTrigger="PropertyChanged"-->
@@ -78,11 +78,11 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Content="Password:" Target="{Binding ElementName=pswBox}"/>
-            <PasswordBox x:Name="pswBox" ToolTip="This password will be required to client to connect to this server."
+            <PasswordBox x:Name="pswBox" ToolTip="The password shared with the remote server."
                          MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20" PasswordChanged="pswBox_PasswordChanged"/>
         </Grid>
         <WrapPanel HorizontalAlignment="Right" Grid.Row="3" Grid.ColumnSpan="2" Margin="0,15,0,0" VerticalAlignment="Bottom">
-            <Button IsDefault="True" x:Name="btnDialogAdd" MinWidth="60" Margin="0,0,10,0" Content="_Add" Click="btnDialogSave_Click">
+            <Button IsDefault="True" x:Name="btnDialogAdd" MinWidth="60" Margin="0,0,10,0" Content="_Add" Click="btnDialogSave_Click" ToolTip="">
                 <Button.IsEnabled>
                     <MultiBinding Converter="{StaticResource HasErrorToVisibilityConverter}" Mode="OneWay">
                         <Binding ElementName="tbIPAddr" Path="(Validation.HasError)" />
