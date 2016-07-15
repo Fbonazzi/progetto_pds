@@ -37,6 +37,9 @@ namespace KnightElfServer
         {
             _notifyIcon.ContextMenuStrip = new System.Windows.Forms.ContextMenuStrip();
             _notifyIcon.ContextMenuStrip.Items.Add("Show KnightElf").Click += (s, e) => ShowMainWindow();
+            System.Windows.Forms.ToolStripSeparator separator = new System.Windows.Forms.ToolStripSeparator();
+            separator.Size = new System.Drawing.Size(173, 6);
+            _notifyIcon.ContextMenuStrip.Items.Add(separator);
             _notifyIcon.ContextMenuStrip.Items.Add("Exit").Click += (s, e) => ExitApplication();
         }
 
