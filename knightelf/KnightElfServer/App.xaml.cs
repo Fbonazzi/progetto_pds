@@ -28,9 +28,14 @@ namespace KnightElfServer
             _notifyIcon = new System.Windows.Forms.NotifyIcon();
             _notifyIcon.DoubleClick += (s, args) => ShowMainWindow();
             _notifyIcon.Icon = Icon.FromHandle(KnightElfServer.Properties.Resources.knight_red_transparent.GetHicon());
+            _notifyIcon.Text = "KnightElf";
+            _notifyIcon.BalloonTipTitle = "KnightElf";
+            _notifyIcon.BalloonTipText = "KnightElf is now in the tray area, right-click on the icon to show the menu.";
             _notifyIcon.Visible = true;
 
             CreateContextMenu();
+
+            _notifyIcon.ShowBalloonTip(50);
         }
 
         private void CreateContextMenu()
@@ -73,6 +78,7 @@ namespace KnightElfServer
             {
                 e.Cancel = true;
                 MainWindow.Hide(); // A hidden window can be shown again, a closed one not
+                _notifyIcon.ShowBalloonTip(50);
             }
         }
 
