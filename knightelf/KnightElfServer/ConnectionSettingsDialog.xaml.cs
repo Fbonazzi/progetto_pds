@@ -24,6 +24,7 @@ namespace KnightElfServer
 
             //Populate the ListBox with feasible  IPv4 addresses
             lbIPAddr.ItemsSource = LocalAddress();
+            lbIPAddr.SelectedIndex = 0;
             
             //Password doesn't support data binding for security reasons
             pswBox.Password = _connectionParams.Password;

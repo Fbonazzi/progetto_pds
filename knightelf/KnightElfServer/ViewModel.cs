@@ -38,14 +38,12 @@ namespace KnightElfServer
             SM = new StateMachine(
                 setConnectionAction: () => SetConnection(),
                 connectAction: () => StartConnection(),
-                disconnectAction: () => Disconnect(),
                 intWaitAction: () => IntWaitClient()
                 );
 
             SetConnectionCommand = SM.CreateCommand(SMTriggers.SetConnection);
             ConnectCommand = SM.CreateCommand(SMTriggers.Connect);
             IntWaitCommand = SM.CreateCommand(SMTriggers.IntWaitClient);
-            DisconnectCommand = SM.CreateCommand(SMTriggers.Disconnect); //TODO: not supported, maybe remove
         }
 
         #region State Machine
@@ -80,11 +78,10 @@ namespace KnightElfServer
         private void StartConnection()
         {
             remoteClient = new RemoteClient(ConnParams.IPaddr, ConnParams.Port, ConnParams.Password);
-            remoteClient.PropertyChanged += new PropertyChangedEventHandler(this.OnServerStateChanged);//TODO: remove if not called anyway
-            // old version: remoteClient.PropertyChanged += this.OnServerStateChanged;
+            remoteClient.PropertyChanged += new PropertyChangedEventHandler(this.OnServerStateChanged);
+
             // Wait Client Connection
             ServerInstance.ListenForClient(remoteClient);
-            //Console.WriteLine("Waiting for client connection...");
         }
 
         private void IntWaitClient()
@@ -93,12 +90,6 @@ namespace KnightElfServer
             Console.WriteLine("Waiting interrupted.");
         }
 
-        private void Disconnect()
-        {
-            // TODO: remove or comment this function
-            Console.WriteLine("Closing connection...");
-            Console.WriteLine("Connection closed.");
-        }
         #endregion
 
         /// <summary>
@@ -107,8 +98,9 @@ namespace KnightElfServer
         /// <param name="sender">The sender.</param>
         /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         /// <exception cref="InvalidEnumArgumentException">Transitioned to unknown client state.</exception>
-        private void OnServerStateChanged(object sender, PropertyChangedEventArgs e) { //TODO: change to private if not called anyway
-            if(e.PropertyName == "PublicState")
+        private void OnServerStateChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == "PublicState") //we are interested only in state property here
             {
                 RemoteClient rc = sender as RemoteClient;
                 switch (rc.PublicState)
@@ -134,7 +126,7 @@ namespace KnightElfServer
                     default:
                         throw new InvalidEnumArgumentException("Transitioned to unknown client state: " + rc.PublicState);
                 }
-            } //we are interested only in state property here
+            } 
         }
     }
 }

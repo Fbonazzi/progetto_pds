@@ -72,7 +72,7 @@ namespace KnightElfClient
             RunCommand = SM.CreateCommand(SMTriggers.Run);
             PauseCommand = SM.CreateCommand(SMTriggers.Pause);
 
-            //TODO: remove fake list
+            // Default servers used for debug 
             ServerList.Add(new Server(new ConnectionParams() {
                 IPaddr = IPAddress.Parse("169.254.117.114"),
                 Port = 50000,
@@ -101,14 +101,11 @@ namespace KnightElfClient
 
         private void LaunchAddDlg()
         {
-            //TODO: add name property to servers in order to display them in the interface
             ConnectionSettingsDialog cSettingsDlg = new ConnectionSettingsDialog();
             if (cSettingsDlg.ShowDialog() == true)
             {
                 //get settings
                 SM.Fire(SMTriggers.Save);
-                //TODO: check if selectedServer is already synch and use that
-                // or select current server by index
                 SelectedServer = new Server(cSettingsDlg.ConnectionParams, cSettingsDlg.tbName.Text);
                 ServerList.Add(SelectedServer);
 
@@ -175,7 +172,6 @@ namespace KnightElfClient
             {
                 switch (SelectedServer.State)
                 {
-                    //TODO: check states transitions
                     case State.New:
                         break;
                     case State.Crashed:
