@@ -8,7 +8,7 @@
         xmlns:KnightElfWpfLibrary="clr-namespace:KnightElfWpfControlLibrary;assembly=KnightElfWpfControlLibrary"
         x:Class="KnightElfClient.ConnectionSettingsDialog"
         mc:Ignorable="d"
-        Title="Connection Settings" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+        Title="Connection Settings" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Icon="knight_black_transparent.ico">
 
     <Window.Resources>
         <ResourceDictionary>
