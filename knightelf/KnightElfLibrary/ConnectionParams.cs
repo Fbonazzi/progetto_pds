@@ -112,7 +112,7 @@ namespace KnightElfLibrary
         public override ValidationResult Validate(object value, System.Globalization.CultureInfo cultureInfo)
         {
             UInt16 port;
-            if (UInt16.TryParse(value.ToString(), out port)) //TODO: verify reserved ports
+            if (UInt16.TryParse(value.ToString(), out port))
             {
                 return new ValidationResult(true, null);
             }

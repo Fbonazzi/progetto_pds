@@ -23,11 +23,9 @@ namespace KnightElfServer
     {
         public StateMachine(Action setConnectionAction,
                                 Action connectAction,
-                                Action disconnectAction,
                                 Action intWaitAction) : base(SMStates.Start)
         {
             Configure(SMStates.Start)
-                //.OnEntryFrom(SMTriggers.IntWaitClient, intWaitAction)
                 .Permit(SMTriggers.SetConnection, SMStates.SettingConnection);
 
             Configure(SMStates.SettingConnection)
@@ -52,8 +50,7 @@ namespace KnightElfServer
 
             Configure(SMStates.Running)
                 .Permit(SMTriggers.Disconnect, SMStates.Ready)
-                .Permit(SMTriggers.Pause, SMStates.Paused)
-                .OnExit(disconnectAction);
+                .Permit(SMTriggers.Pause, SMStates.Paused);
 
             Configure(SMStates.Paused)
                 .SubstateOf(SMStates.Running)
