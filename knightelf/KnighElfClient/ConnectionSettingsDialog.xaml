@@ -32,11 +32,23 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-
+        
+        <!-- Server Name -->
+        <Grid Grid.ColumnSpan="2" Margin="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Name:" Target="{Binding ElementName=tbName}"/>
+            <TextBox x:Name="tbName" ToolTip="An optional name for the remote server."
+                         MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20" TabIndex="1"/>
+        </Grid>
+        
+        <!-- IP Address -->
         <WrapPanel Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Disabled" Orientation="Vertical">
             <Label Content="IP Address:" Target="{Binding ElementName=tbIPAddr}" HorizontalAlignment="Left" Width="71"/>
             <TextBox x:Name="tbIPAddr"
-                     Margin="0" MinWidth="150" MinHeight="20" ToolTip="The IP address of the remote server.">
+                     Margin="0" MinWidth="150" MinHeight="20" ToolTip="The IP address of the remote server." TabIndex="2">
                 <TextBox.Text>
                     <Binding Path="IPaddr" Converter="{StaticResource StringIPConverter}" Mode="TwoWay">
                         <!--UpdateSourceTrigger="PropertyChanged"-->
@@ -48,20 +60,12 @@
             </TextBox>
         </WrapPanel>
 
-        <Grid Grid.ColumnSpan="2" Margin="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Label Content="Name:" Target="{Binding ElementName=tbName}"/>
-            <TextBox x:Name="tbName" ToolTip="An optional name for the remote server."
-                         MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20"/>
-        </Grid>
+        <!-- Port -->
         <WrapPanel Grid.Row="1" Grid.Column="1" Margin="15,0,0,0" Orientation="Vertical">
             <Label Content="Port:" Target="{Binding ElementName=tbPort}"/>
             <TextBox x:Name="tbPort"
                      TextAlignment="Right"
-                     Width="60" Height="20" MinWidth="40" Margin="0" ToolTip="The port on which the remote server is listening.">
+                     Width="60" Height="20" MinWidth="40" Margin="0" ToolTip="The port on which the remote server is listening." TabIndex="3">
                 <TextBox.Text>
                     <Binding Path="Port" Mode="TwoWay" >
                         <!--UpdateSourceTrigger="PropertyChanged"-->
@@ -81,12 +85,12 @@
             </Grid.ColumnDefinitions>
             <Label Content="Password:" Target="{Binding ElementName=pswBox}"/>
             <PasswordBox x:Name="pswBox" ToolTip="The password shared with the remote server."
-                         MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20" PasswordChanged="pswBox_PasswordChanged"/>
+                         MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20" PasswordChanged="pswBox_PasswordChanged" TabIndex="4"/>
         </Grid>
         
         <!-- Save and Cancel buttons -->
         <WrapPanel HorizontalAlignment="Right" Grid.Row="3" Grid.ColumnSpan="2" Margin="0,15,0,0" VerticalAlignment="Bottom">
-            <Button IsDefault="True" x:Name="btnDialogAdd" MinWidth="60" Margin="0,0,10,0" Content="_Add" Click="btnDialogSave_Click">
+            <Button IsDefault="True" x:Name="btnDialogAdd" MinWidth="60" Margin="0,0,10,0" Content="_Add" Click="btnDialogSave_Click" TabIndex="5">
                 <Button.IsEnabled>
                     <MultiBinding Converter="{StaticResource HasErrorToVisibilityConverter}" Mode="OneWay">
                         <Binding ElementName="tbIPAddr" Path="(Validation.HasError)" />
@@ -95,7 +99,7 @@
                     </MultiBinding>
                 </Button.IsEnabled>
             </Button>
-            <Button IsCancel="True" MinWidth="60" Content="_Cancel"/>
+            <Button IsCancel="True" MinWidth="60" Content="_Cancel" TabIndex="6"/>
         </WrapPanel>
 
     </Grid>
