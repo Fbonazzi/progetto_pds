@@ -26,7 +26,6 @@ namespace KnightElfLibrary
             _port = connectionParams.Port;
             _password = connectionParams.Password;
         }
-
         
         public IPAddress IPaddr {
             get { return _IPaddr; }
@@ -40,7 +39,6 @@ namespace KnightElfLibrary
                 OnPropertyChanged("IsValid");
             }
         }
-  
         public int Port {
             get { return _port; }
             set
@@ -54,7 +52,6 @@ namespace KnightElfLibrary
                 OnPropertyChanged("IsValid");
             }
         }
-
         public string Password {
             get { return _password; }
             set

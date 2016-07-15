@@ -54,7 +54,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Content="Name:" Target="{Binding ElementName=tbName}"/>
-            <TextBox x:Name="tbName" ToolTip="This password will be required to client to connect to this server."
+            <TextBox x:Name="tbName" ToolTip="Set a user friendly name for the server."
                          MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20"/>
         </Grid>
         <WrapPanel Grid.Row="1" Grid.Column="1" Margin="15,0,0,0" Orientation="Vertical">
@@ -72,6 +72,8 @@
                 </TextBox.Text>
             </TextBox>
         </WrapPanel>
+        
+        <!-- Password -->
         <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -81,6 +83,8 @@
             <PasswordBox x:Name="pswBox" ToolTip="This password will be required to client to connect to this server."
                          MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20" PasswordChanged="pswBox_PasswordChanged"/>
         </Grid>
+        
+        <!-- Save and Cancel buttons -->
         <WrapPanel HorizontalAlignment="Right" Grid.Row="3" Grid.ColumnSpan="2" Margin="0,15,0,0" VerticalAlignment="Bottom">
             <Button IsDefault="True" x:Name="btnDialogAdd" MinWidth="60" Margin="0,0,10,0" Content="_Add" Click="btnDialogSave_Click">
                 <Button.IsEnabled>

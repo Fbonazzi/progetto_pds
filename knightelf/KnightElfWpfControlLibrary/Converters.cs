@@ -54,4 +54,46 @@ namespace KnightElfWpfControlLibrary
             throw new NotImplementedException();
         }
     }
+
+    class SelectedIndexToBoolConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value != null)
+            {
+                if ((int)value == -1) return true;      // No Item selected => there is an error
+                else return false;                      // No Item selected => there is an error
+            }
+            else
+            {
+                return DependencyProperty.UnsetValue;
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    class PasswordToErrorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value != null)
+            {
+                if ((string)value == "") return true;      // No Item selected => there is an error
+                else return false;                      // No Item selected => there is an error
+            }
+            else
+            {
+                return DependencyProperty.UnsetValue;
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

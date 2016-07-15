@@ -4,5 +4,7 @@
     <!-- Converters -->
     <local:StringIPConverter x:Key="StringIPConverter"/>
     <local:HasErrorToVisibilityConverter x:Key="HasErrorToVisibilityConverter"/>
-
+    <local:SelectedIndexToBoolConverter x:Key="SelectedIndexToBoolConverter" />
+    <local:PasswordToErrorConverter x:Key="PasswordToErrorConverter" />
+    
 </ResourceDictionary>
