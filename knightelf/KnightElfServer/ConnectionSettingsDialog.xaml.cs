@@ -32,7 +32,7 @@ namespace KnightElfServer
 
         private void btnDialogSave_Click(object sender, RoutedEventArgs e)
         {
-            Debug.Assert(_connectionParams.IsValid, "Add was enabled even if the connection params were invalid!");
+            Debug.Assert(_connectionParams.IsValid, "Add was enabled even if the connection parameters were invalid!");
             DialogResult = true;
         }
 

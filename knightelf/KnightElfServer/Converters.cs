@@ -36,9 +36,6 @@ namespace KnightElfServer
                 default:
                     return DependencyProperty.UnsetValue;
             }
-
-            // or
-            //return Application.Current.FindResource(Enum.GetName(typeof(SMStates), value) + "Icon");
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -106,9 +103,6 @@ namespace KnightElfServer
                 default:
                     return DependencyProperty.UnsetValue;
             }
-
-            // or
-            //return Application.Current.FindResource(Enum.GetName(typeof(SMStates), value) + "Icon");
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
