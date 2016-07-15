@@ -72,6 +72,8 @@
                 </TextBox.Text>
             </TextBox>
         </WrapPanel>
+        
+        <!-- Password -->
         <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -81,8 +83,10 @@
             <PasswordBox x:Name="pswBox" ToolTip="The password shared with the remote server."
                          MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Height="20" PasswordChanged="pswBox_PasswordChanged"/>
         </Grid>
+        
+        <!-- Save and Cancel buttons -->
         <WrapPanel HorizontalAlignment="Right" Grid.Row="3" Grid.ColumnSpan="2" Margin="0,15,0,0" VerticalAlignment="Bottom">
-            <Button IsDefault="True" x:Name="btnDialogAdd" MinWidth="60" Margin="0,0,10,0" Content="_Add" Click="btnDialogSave_Click" ToolTip="">
+            <Button IsDefault="True" x:Name="btnDialogAdd" MinWidth="60" Margin="0,0,10,0" Content="_Add" Click="btnDialogSave_Click">
                 <Button.IsEnabled>
                     <MultiBinding Converter="{StaticResource HasErrorToVisibilityConverter}" Mode="OneWay">
                         <Binding ElementName="tbIPAddr" Path="(Validation.HasError)" />

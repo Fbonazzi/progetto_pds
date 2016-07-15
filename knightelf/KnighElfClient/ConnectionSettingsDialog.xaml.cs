@@ -46,17 +46,6 @@ namespace KnightElfClient
 
         public ConnectionParams ConnectionParams{ get { return _connectionParams; } }
 
-        /// <summary>
-        /// Retrieve host's IPv4 addresses.
-        /// </summary>
-        /// <returns>An array containing all the corresponding IPAddress objects</returns>
-        private IPAddress[] LocalAddress()
-        {
-            IPHostEntry host;
-            host = Dns.GetHostEntry(Dns.GetHostName());
-            return Array.FindAll(host.AddressList, ip =>ip.AddressFamily == AddressFamily.InterNetwork);
-        }
-
         private void pswBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
             _connectionParams.Password = pswBox.Password;

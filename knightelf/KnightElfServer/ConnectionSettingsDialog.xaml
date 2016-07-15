@@ -32,12 +32,14 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
+        <!-- IP Address List -->
         <WrapPanel ScrollViewer.VerticalScrollBarVisibility="Disabled" Orientation="Vertical">
             <Label Content="IP Address:" Target="{Binding ElementName=lbIPAddr}" HorizontalAlignment="Left" Width="71"/>
-            <ListBox x:Name="lbIPAddr" Margin="0" MinWidth="150" MinHeight="20"/>
-            <!-- TODO: This is not the way things will be done in the MVVM model, maybe change it in future -->
-            <!--SelectedItem="{Binding IPaddr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/-->
+            <ListBox x:Name="lbIPAddr" Margin="0" MinWidth="150" MinHeight="20"
+                     SelectedItem="{Binding IPaddr, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </WrapPanel>
+
+        <!-- Port -->
         <WrapPanel Grid.Column="1" HorizontalAlignment="Right" Margin="15,25,0,0" VerticalAlignment="Center">
             <Label Target="{Binding ElementName=tbPort}"  Content="Port:"/>
             <TextBox x:Name="tbPort"
@@ -52,24 +54,29 @@
                 </TextBox.Text>
             </TextBox>
         </WrapPanel>
+
+        <!-- Password -->
         <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,15,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Content="Password:" Target="{Binding ElementName=pswBox}"/>
-            <PasswordBox x:Name="pswBox" ToolTip="This password will be required to client to connect to this server." MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Width="195" />
+            <PasswordBox x:Name="pswBox" ToolTip="This password will be required to client to connect to this server."
+                         MinWidth="100" Margin="10,0,0,0" Grid.Column="2" VerticalContentAlignment="Center" Width="195"
+                         PasswordChanged="pswBox_PasswordChanged"/>
         </Grid>
+        
+        <!-- Save and Cancel buttons-->
         <WrapPanel HorizontalAlignment="Right" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0" VerticalAlignment="Bottom">
             <Button IsDefault="True" x:Name="btnDialogSave" Click="btnDialogSave_Click" MinWidth="60" Margin="0,0,10,0" Content="_Save">
-                <!-- TODO: doesn't work without data binding -->
-                <!--<Button.IsEnabled>
+                <Button.IsEnabled>
                     <MultiBinding Converter="{StaticResource HasErrorToVisibilityConverter}" Mode="OneWay">
-                        <Binding ElementName="tbIPAddr" Path="(Validation.HasError)" />
+                        <Binding ElementName="lbIPAddr" Path="SelectedIndex" Converter="{StaticResource SelectedIndexToBoolConverter}"/>
                         <Binding ElementName="tbPort" Path="(Validation.HasError)" />
                         <Binding Path="HasError" />
                     </MultiBinding>
-                </Button.IsEnabled>-->
+                </Button.IsEnabled>
             </Button>
             <Button IsCancel="True" MinWidth="60" Content="_Cancel"/>
         </WrapPanel>

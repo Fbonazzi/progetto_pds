@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Input;
 using KnightElfLibrary;
+using System.Diagnostics;
 
 namespace KnightElfServer
 {
@@ -12,7 +13,7 @@ namespace KnightElfServer
     /// </summary>
     public partial class ConnectionSettingsDialog : Window
     {
-        private ConnectionParams _connectionParams; //TODO: add Data Binding
+        private ConnectionParams _connectionParams;
 
         public ConnectionSettingsDialog(ConnectionParams connectionParams)
         {
@@ -23,30 +24,21 @@ namespace KnightElfServer
 
             //Populate the ListBox with feasible  IPv4 addresses
             lbIPAddr.ItemsSource = LocalAddress();
-
-            //Set previous settings in the UI
-            lbIPAddr.SelectedIndex = lbIPAddr.Items.IndexOf(_connectionParams.IPaddr);
-            //tbPort.Text = _connectionParams.Port.ToString();
+            
+            //Password doesn't support data binding for security reasons
             pswBox.Password = _connectionParams.Password;
         }
 
         private void btnDialogSave_Click(object sender, RoutedEventArgs e)
         {
-            //TODO: change dialog logic in order to work by data binding as in Client application.
-            int port;
-            if (lbIPAddr.SelectedItem != null &&
-                int.TryParse(tbPort.Text, out port) &&
-                pswBox.Password != ""                 )
-            {
-                _connectionParams.IPaddr = (IPAddress) lbIPAddr.SelectedItem;
-                _connectionParams.Port = port;
-                _connectionParams.Password = pswBox.Password;
-
-                DialogResult = true;
-            }
-            else DialogResult = false;            
+            Debug.Assert(_connectionParams.IsValid, "Add was enabled even if the connection params were invalid!");
+            DialogResult = true;
         }
 
+        private void pswBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            _connectionParams.Password = pswBox.Password;
+        }
 
         public ConnectionParams ConnectionParams{ get { return _connectionParams; } }
 
