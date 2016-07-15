@@ -48,12 +48,10 @@ namespace KnightElfServer
             TempDirName = Path.Combine(TempDirName, "KnightElf");
             if (Directory.Exists(TempDirName))
             {
-                // La cartella esista già, la elimino
+                // Delete the temporary directory if already existing
                 Directory.Delete(TempDirName, true);
             }
             Directory.CreateDirectory(TempDirName);
-
-            // TODO
         }
 
         ~Server()
@@ -113,7 +111,6 @@ namespace KnightElfServer
 
                 // Dispose of resources and return
                 CurrentClient.DataSocket.Close();
-                //CurrentClient.ControlSocket.Close();
                 return;
             }
             #endregion
@@ -159,7 +156,7 @@ namespace KnightElfServer
             #region START_DATA
             lock (CurrentClient.StateLock)
             {
-                // Sgancio il thread che riceverà gli eventi
+                // Prepare DataHandler
                 CurrentClient.DataHandler = new Thread(new ThreadStart(HandleData));
                 CurrentClient.DataHandler.Name = "DataHandler";
                 CurrentClient.DataHandler.SetApartmentState(ApartmentState.STA);
@@ -203,8 +200,6 @@ namespace KnightElfServer
                 }
             }
             #endregion
-
-            // TODO: notify graphics thread we're running
 
             #region DISPATCH
             Messages msg;
@@ -363,14 +358,6 @@ namespace KnightElfServer
                 {
                     Console.WriteLine("Clipboard busy, aborting...");
                 }
-
-
-                // TODO: adapt
-                // Libero i socket
-                // CurrentClient.Clipboard.ChiudiSocket();
-                // Termino il loader
-                // ConnessioneClipboard.ChiudiCaricamento();
-
                 return;
             }
             #endregion
@@ -406,13 +393,6 @@ namespace KnightElfServer
                                 {
                                     Console.WriteLine("Clipboard busy, aborting...");
                                 }
-
-                                // TODO: adapt
-                                // Libero i socket
-                                // CurrentClient.Clipboard.ChiudiSocket();
-                                // Termino il loader
-                                // ConnessioneClipboard.ChiudiCaricamento();
-
                                 return;
                             }
                             #endregion
@@ -471,7 +451,7 @@ namespace KnightElfServer
                 IFormatter Formatter = new BinaryFormatter();
                 MemoryStream MemoryS;
                 InputMessage ReceivedMessage;
-                // TODO: how did we get this size
+                // We got this size by checking manually
                 int EventSize = 1078;
                 byte[] ReceivingBuffer;
                 int ReceivedBytes;
@@ -515,21 +495,19 @@ namespace KnightElfServer
                     {
                         #region RECEIVE
                         // Receive the event
-                        // TODO: rationalize
                         ReceivingBuffer = new byte[EventSize];
                         ReceivedBytes = CurrentClient.DataSocket.Receive(ReceivingBuffer, ReceivingBuffer.Length, 0);
                         MemoryS.Write(ReceivingBuffer, 0, ReceivedBytes);
 
-                        // Estraggo il messaggio
+                        // Read the message
                         MemoryS.Seek(0, SeekOrigin.Begin);
                         ReceivedMessage = (InputMessage)Formatter.Deserialize(MemoryS);
-                        //TODO: check why gives an exception when trying to close connection
                         #endregion
 
                         // Prepare residuous keys
                         SetPartialKeys(ReceivedMessage);
 
-                        // Metto l'evento in coda
+                        // Enqueue the event
                         InputQueue.put(ReceivedMessage);
                     }
                     catch (SocketException)
