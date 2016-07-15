@@ -71,6 +71,16 @@ namespace KnightElfServer.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon knight_green_transparent1 {
+            get {
+                object obj = ResourceManager.GetObject("knight_green_transparent1", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap knight_red_transparent {
@@ -81,12 +91,32 @@ namespace KnightElfServer.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon knight_red_transparent1 {
+            get {
+                object obj = ResourceManager.GetObject("knight_red_transparent1", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap knight_yellow_transparent {
             get {
                 object obj = ResourceManager.GetObject("knight_yellow_transparent", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon knight_yellow_transparent1 {
+            get {
+                object obj = ResourceManager.GetObject("knight_yellow_transparent1", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
     }

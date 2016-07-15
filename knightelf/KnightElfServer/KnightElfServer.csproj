@@ -135,6 +135,15 @@
   <ItemGroup>
     <Resource Include="knight_black.ico" />
     <Resource Include="knight_black_transparent.ico" />
+    <Content Include="Resources\knight_green_transparent.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\knight_red_transparent.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\knight_yellow_transparent.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\knight_yellow_transparent.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -27,7 +27,8 @@ namespace KnightElfServer
 
             _notifyIcon = new System.Windows.Forms.NotifyIcon();
             _notifyIcon.DoubleClick += (s, args) => ShowMainWindow();
-            _notifyIcon.Icon = Icon.FromHandle(KnightElfServer.Properties.Resources.knight_red_transparent.GetHicon());
+            _notifyIcon.Icon = _notifyIcon.Icon = KnightElfServer.Properties.Resources.knight_red_transparent1;
+
             _notifyIcon.Text = "KnightElf";
             _notifyIcon.BalloonTipTitle = "KnightElf";
             _notifyIcon.BalloonTipText = "KnightElf is now in the tray area, right-click on the icon to show the menu.";
@@ -88,13 +89,13 @@ namespace KnightElfServer
             switch (sm.State)
             {
                 case SMStates.Running:
-                    _notifyIcon.Icon = Icon.FromHandle(KnightElfServer.Properties.Resources.knight_green_transparent.GetHicon());
+                    _notifyIcon.Icon = KnightElfServer.Properties.Resources.knight_green_transparent1;
                     break;
                 case SMStates.Paused:
-                    _notifyIcon.Icon = Icon.FromHandle(KnightElfServer.Properties.Resources.knight_yellow_transparent.GetHicon());
+                    _notifyIcon.Icon = KnightElfServer.Properties.Resources.knight_yellow_transparent1;
                     break;
                 default:
-                    _notifyIcon.Icon = Icon.FromHandle(KnightElfServer.Properties.Resources.knight_red_transparent.GetHicon());
+                    _notifyIcon.Icon = KnightElfServer.Properties.Resources.knight_red_transparent1;
                     break;
             }
         }
