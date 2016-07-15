@@ -20,14 +20,15 @@
                 </Grid.RowDefinitions>
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,2,2,2">
                     <Label Content="{Binding Name}" Padding="0" Margin="0,0,10,0" FontWeight="Bold"/>
-                    <Label Content="(" Padding="1,0"/><Label Content="{Binding State}" Padding="0"/>
-                    <Label Content=")" Padding="1,0"/>
                 </StackPanel>
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10,0,0,0">
-                    <Label Content="IP: " Padding="0,0,2,0" FontStyle="Italic"/>
+                    <Label Content="IP: " Padding="0,0,2,0"/>
                     <Label Content="{Binding ConnectionParams.IPaddr}" Padding="0" MinWidth="100" />
-                    <Label Content="Port: " Padding="10,0,2,0" FontStyle="Italic"/>
-                    <Label Content="{Binding ConnectionParams.Port}" Padding="0"/>
+                    <Label Content="Port: " Padding="10,0,2,0"/>
+                    <Label Content="{Binding ConnectionParams.Port}" Padding="0" Margin="0,0,10,0"/>
+                    <Label Content="(" Padding="1,0"/>
+                    <Label Content="{Binding State}" Padding="0"/>
+                    <Label Content=")" Padding="1,0"/>
                 </StackPanel>
                 
 
