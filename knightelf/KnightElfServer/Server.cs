@@ -431,19 +431,9 @@ namespace KnightElfServer
                                 {
                                     Console.WriteLine("Clipboard busy, aborting...");
                                 }
-
-                                // TODO: adapt
-                                // Libero i socket
-                                // CurrentClient.Clipboard.ChiudiSocket();
-                                // Termino il loader
-                                // ConnessioneClipboard.ChiudiCaricamento();
-
                                 return;
                             }
-
-                            // TODO: adapt
-                            // Libero i socket
-                            //CurrentClient.Clipboard.ChiudiSocket();
+                            Console.WriteLine("Clipboard closed.");
                             #endregion
                             return;
                         case State.Running:
@@ -460,15 +450,9 @@ namespace KnightElfServer
                                 {
                                     Console.WriteLine("Clipboard busy, aborting...");
                                 }
-
-                                // TODO: adapt
-                                // Libero i socket
-                                // CurrentClient.Clipboard.ChiudiSocket();
-                                // Termino il loader
-                                // ConnessioneClipboard.ChiudiCaricamento();
-
                                 return;
                             }
+                            Console.WriteLine("Clipboard resumed.");
                             #endregion
                             break;
                     }
